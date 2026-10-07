@@ -356,6 +356,15 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
     for (let n = 1; n < FOCUS_STAGES.length; n++) if (cumulativeRatio >= FOCUS_STAGES[n].at) k = n
     return { name: FOCUS_STAGES[k].name, next: FOCUS_STAGES[k + 1]?.name }
   })()
+  // The focus bar shows THIS session (fills to 100% at the end). Stage dots sit where the
+  // session reaches each stage; stages it won't reach before it ends aren't shown.
+  const sessionTotalMin = total > 0 ? total / 60 : 0
+  const sessionRatio = total > 0 ? Math.min(1, elapsed / total) : 0
+  const stageMarks = FOCUS_STAGES.slice(1)
+    .map(st => ({ ...st, pos: sessionTotalMin > 0 ? (st.at * growthTarget - priorMinutes) / sessionTotalMin : 2 }))
+    .filter(st => st.pos > 0 && st.pos <= 1)
+  const nextMark = stageMarks.find(st => sessionRatio < st.pos)
+  const minsToNext = nextMark ? Math.max(1, Math.ceil((nextMark.pos - sessionRatio) * sessionTotalMin)) : 0
   // In focus mode the panel shrinks to fit the gap beside the page (the hill scales with it).
   const panelW = focusMode && pageLeft != null ? Math.max(100, Math.min(250, pageLeft - sidebarRight - 16)) : 250
   const onFocusGiveUp = () => {
@@ -674,16 +683,16 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         ) : (
                           <motion.span key="stage" initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -3 }} transition={{ duration: 0.15 }}
                             style={{ fontFamily: serifFont, fontSize: 14, color: textColor, lineHeight: 1, letterSpacing: '0.02em' }}>
-                            {focusStage.name}{focusStage.next && <span style={{ fontSize: 11.5, color: subtleColor }}> · next {focusStage.next.toLowerCase()}</span>}
+                            {focusStage.name}{nextMark && <span style={{ fontSize: 11.5, color: subtleColor }}> · {nextMark.name.toLowerCase()} in {minsToNext}m</span>}
                           </motion.span>
                         )}
                       </AnimatePresence>
                     </div>
                     <div className="relative mx-auto" style={{ width: '82%', height: 12 }}>
                       <div style={{ position: 'absolute', top: 4, left: 0, right: 0, height: 4, borderRadius: 2, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
-                      <div style={{ position: 'absolute', top: 4, left: 0, width: `${Math.min(100, cumulativeRatio * 100)}%`, height: 4, borderRadius: 2, background: mainColor, boxShadow: `0 0 8px ${mainColor}66`, transition: 'width 0.6s ease' }} />
-                      {FOCUS_STAGES.slice(1).map(st => (
-                        <div key={st.at} style={{ position: 'absolute', left: `${st.at * 100}%`, top: 2, width: 8, height: 8, borderRadius: '50%', transform: 'translateX(-4px)', background: cumulativeRatio >= st.at ? mainColor : (isDark ? '#27272a' : '#e4e4e7'), boxShadow: `0 0 0 2px ${isDark ? '#0a0a0b' : '#fdfcf9'}`, transition: 'background 0.3s' }} />
+                      <div style={{ position: 'absolute', top: 4, left: 0, width: `${sessionRatio * 100}%`, height: 4, borderRadius: 2, background: mainColor, boxShadow: `0 0 8px ${mainColor}66`, transition: 'width 1s linear' }} />
+                      {stageMarks.map(st => (
+                        <div key={st.at} title={st.name} style={{ position: 'absolute', left: `${st.pos * 100}%`, top: 2, width: 8, height: 8, borderRadius: '50%', transform: 'translateX(-4px)', background: sessionRatio >= st.pos ? mainColor : (isDark ? '#27272a' : '#e4e4e7'), boxShadow: `0 0 0 2px ${isDark ? '#0a0a0b' : '#fdfcf9'}`, transition: 'background 0.3s' }} />
                       ))}
                     </div>
                   </div>
