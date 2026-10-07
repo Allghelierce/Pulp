@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { ilikeExact } from "@/lib/usernames"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
@@ -62,7 +63,9 @@ export async function POST(req: Request) {
   const changed: Record<string, string> = profile?.identity_changed_at ?? {}
   const last = changed[field] ? new Date(changed[field]).getTime() : 0
   const now = Date.now()
-  if (last && now - last < COOLDOWN_MS) {
+  // A generated username can be swapped freely until they pick their own.
+  const freeRename = field === 'username' && changed.username_auto === '1'
+  if (!freeRename && last && now - last < COOLDOWN_MS) {
     const until = new Date(last + COOLDOWN_MS).toISOString()
     return NextResponse.json({ error: "On cooldown", cooldown_until: until }, { status: 429 })
   }
@@ -74,7 +77,7 @@ export async function POST(req: Request) {
     if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 })
     value = v.value
     const { data: existing } = await supabaseAdmin
-      .from('player_profiles').select('user_id').ilike('username', value).maybeSingle()
+      .from('player_profiles').select('user_id').ilike('username', ilikeExact(value)).maybeSingle()
     if (existing && existing.user_id !== user.id) {
       return NextResponse.json({ error: "Username taken" }, { status: 409 })
     }
@@ -86,7 +89,8 @@ export async function POST(req: Request) {
     if (value.length < 2) return NextResponse.json({ error: "Too short" }, { status: 400 })
   }
 
-  const nextChanged = { ...changed, [field]: new Date(now).toISOString() }
+  const nextChanged: Record<string, string> = { ...changed, [field]: new Date(now).toISOString() }
+  if (field === 'username') delete nextChanged.username_auto
   const updates: Record<string, unknown> = { [field]: value, identity_changed_at: nextChanged }
 
   // Changing school year: snapshot the current grove into the archive (keyed by the

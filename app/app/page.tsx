@@ -1259,6 +1259,17 @@ export default function NoteApp() {
     vinesRef.current?.style.setProperty('--vine-p', p.toFixed(4))
   }, [])
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
+  const [suggestedUsername, setSuggestedUsername] = useState<string | undefined>(undefined)
+  // Every account gets a generated name right away ("ClammyElm823"); the welcome pop-up lets them keep or change it.
+  const ensureUsername = useCallback(async (): Promise<string | undefined> => {
+    try {
+      const r = await apiFetch('/api/profile/ensure-username', { method: 'POST' })
+      if (!r.ok) return undefined
+      const j = await r.json()
+      if (j.friend_code) setFriendCode(j.friend_code)
+      return j.username ?? undefined
+    } catch { return undefined }
+  }, [])
   const [friendCode, setFriendCode] = useState<string | null>(null)
   const [communityOpen, setCommunityOpen] = useState(false)
   const [activeGroupId, setActiveGroupId] = useState<number | null>(null)
@@ -1478,8 +1489,11 @@ export default function NoteApp() {
           if (items.length) setInventory(items)
         }
         if (profile.unlocked_cosmetics?.length) setUnlockedCosmetics(profile.unlocked_cosmetics)
-        setNeedsOnboarding(!(profile as any).username)
         setFriendCode((profile as any).friend_code ?? null)
+        const uname = (profile as any).username || await ensureUsername()
+        setSuggestedUsername(uname)
+        // The welcome pop-up also collects school + grade; it's done once a school is saved.
+        setNeedsOnboarding(!(profile as any).username || !(profile as any).school)
         setGrade((profile as any).grade ?? null)
       } else {
         // First time — create profile from localStorage state, then migrate legacy
@@ -1493,6 +1507,7 @@ export default function NoteApp() {
         })
         // Migrate legacy user_settings blob
         await db.migrateFromLegacy(user.id)
+        setSuggestedUsername(await ensureUsername())
         setNeedsOnboarding(true)
       }
 
@@ -4982,7 +4997,7 @@ export default function NoteApp() {
         {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
         <PlantImagePreloader />
         {needsOnboarding && user && (
-          <OnboardingModal theme={theme} onDone={(r) => { setFriendCode(r.friend_code); if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
+          <OnboardingModal theme={theme} initialUsername={suggestedUsername} onDone={(r) => { setFriendCode(r.friend_code); if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
         )}
       </>
     </LazyMotion>

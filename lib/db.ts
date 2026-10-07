@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { ilikeExact } from "@/lib/usernames"
 import type { Tree, Achievement, FolderData } from '@/app/types'
 
 // ─── Player Profile ───
@@ -347,7 +348,7 @@ export async function getProfileByUsername(username: string): Promise<PublicProf
   const { data } = await supabase
     .from('player_profiles')
     .select('user_id, username, friend_code')
-    .ilike('username', username)
+    .ilike('username', ilikeExact(username))
     .single()
   return data
 }

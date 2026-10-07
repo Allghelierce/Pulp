@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { ilikeExact } from "@/lib/usernames"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
       target = data
     } else if (typeof body.username === 'string') {
       const { data } = await supabaseAdmin.from('player_profiles')
-        .select('user_id').ilike('username', body.username.trim()).maybeSingle()
+        .select('user_id').ilike('username', ilikeExact(body.username.trim())).maybeSingle()
       target = data
     }
     if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 })

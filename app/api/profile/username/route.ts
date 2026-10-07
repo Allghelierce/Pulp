@@ -3,6 +3,7 @@ import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { validateUsername, generateFriendCode } from "@/lib/social"
+import { ilikeExact } from "@/lib/usernames"
 
 export async function POST(req: Request) {
   const ip = getRateLimitKey(req)
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
   const { data: existing } = await supabaseAdmin
     .from('player_profiles')
     .select('user_id')
-    .ilike('username', v.value)
+    .ilike('username', ilikeExact(v.value))
     .maybeSingle()
   if (existing && existing.user_id !== user.id) {
     return NextResponse.json({ error: "Username taken" }, { status: 409 })
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
 
   // Ensure a friend code (generate-and-retry on the rare unique collision).
   const { data: current } = await supabaseAdmin
-    .from('player_profiles').select('friend_code').eq('user_id', user.id).single()
+    .from('player_profiles').select('friend_code, username, identity_changed_at').eq('user_id', user.id).single()
   let friendCode = current?.friend_code as string | null
   if (!friendCode) {
     for (let attempt = 0; attempt < 5 && !friendCode; attempt++) {
@@ -43,8 +44,13 @@ export async function POST(req: Request) {
     }
   }
 
+  // Kept the generated name -> still free to rename later; picked their own -> it's theirs.
+  const changedAt: Record<string, string> = { ...((current?.identity_changed_at ?? {}) as Record<string, string>) }
+  const keptAuto = changedAt.username_auto === '1' && current?.username === v.value
+  const nextChanged = { ...changedAt, onboarded: new Date().toISOString() } as Record<string, string>
+  if (!keptAuto) delete nextChanged.username_auto
   const { error } = await supabaseAdmin.from('player_profiles')
-    .update({ username: v.value, school, ...(grade ? { grade } : {}) }).eq('user_id', user.id)
+    .update({ username: v.value, school, ...(grade ? { grade } : {}), identity_changed_at: nextChanged }).eq('user_id', user.id)
   if (error) return NextResponse.json({ error: "Could not save" }, { status: 500 })
 
   return NextResponse.json({ username: v.value, friend_code: friendCode, grade })

@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
+import { generateUsername } from "@/lib/usernames"
 import { getSoundPrefs, setSoundPrefs, playSound, type SoundPrefs } from "@/lib/sound"
 import { supabase } from "@/lib/supabase"
 import { SettingToggle } from "./SettingToggle"
@@ -209,8 +210,11 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
     apiFetch('/api/profile/identity').then(r => r.ok ? r.json() : null).then(d => { if (d) setIdentity(d) }).catch(() => {})
   }, [user])
 
+  // Generated usernames ("ClammyElm823") can be changed freely until they pick their own.
+  const autoUsername = identity?.changed_at?.username_auto === '1'
   const cooldownLeft = useCallback((field: string): number => {
     if (!identity) return 0
+    if (field === 'username' && identity.changed_at?.username_auto === '1') return 0
     const last = identity.changed_at?.[field] ? new Date(identity.changed_at[field]).getTime() : 0
     if (!last) return 0
     const rem = last + identity.cooldown_ms - Date.now()
@@ -550,7 +554,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                         <SettingRow
                           title={label}
                           isDark={isDark}
-                          description={locked ? `Editable again in ${fmtCooldown(left)}` : "One change per week"}
+                          description={locked ? `Editable again in ${fmtCooldown(left)}` : field === 'username' && autoUsername ? "Generated for you — change it free anytime" : "One change per week"}
                           control={
                             <div className="flex items-center gap-2.5">
                               <span className={`text-[12px] font-normal max-w-[140px] truncate ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>{value ?? "—"}</span>
@@ -567,10 +571,14 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                         {editField === field && (
                           <div className={`mx-5 mb-4 flex flex-col gap-2 p-3 rounded-lg border ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-50 border-zinc-200"}`}>
                             {field === 'username' ? (
-                              <input
-                                autoFocus value={editDraft} onChange={e => setEditDraft(e.target.value)} placeholder="username"
-                                className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
-                              />
+                              <div className="flex gap-2">
+                                <input
+                                  autoFocus value={editDraft} onChange={e => setEditDraft(e.target.value)} placeholder="username" maxLength={20}
+                                  className={`flex-1 text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
+                                />
+                                <button type="button" title="Roll a new name" aria-label="Roll a new name" onClick={() => setEditDraft(generateUsername())}
+                                  className={`px-2.5 rounded-lg border text-[14px] ${isDark ? "border-zinc-700 bg-zinc-800 hover:bg-zinc-700" : "border-zinc-200 bg-white hover:bg-zinc-100"}`}>🎲</button>
+                              </div>
                             ) : (
                               <select
                                 autoFocus value={editDraft} onChange={e => setEditDraft(e.target.value)}
@@ -590,7 +598,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                                     })()}
                               </select>
                             )}
-                            <p className={`text-[10.5px] ${isDark ? "text-amber-500/80" : "text-amber-600"}`}>Heads up — you can only change this once a week.</p>
+                            <p className={`text-[10.5px] ${isDark ? "text-amber-500/80" : "text-amber-600"}`}>{field === 'username' && autoUsername ? "Once you pick your own name, changes are limited to once a week." : "Heads up — you can only change this once a week."}</p>
                             {idError && <p className="text-[11px] text-red-500">{idError}</p>}
                             <div className="flex gap-2 mt-0.5">
                               <button

@@ -3,13 +3,17 @@ import { useState, memo } from "react"
 import { apiFetch } from "@/lib/apiFetch"
 import { SCHOOLS } from "@/lib/schools"
 import { GRADES } from "@/lib/term"
+import { generateUsername } from "@/lib/usernames"
 
 const accent = '#d97706'
 
 export const OnboardingModal = memo(function OnboardingModal({
-  theme, onDone,
-}: { theme: "light" | "dark"; onDone: (r: { username: string; friend_code: string; grade?: string }) => void }) {
-  const [username, setUsername] = useState("")
+  theme, onDone, initialUsername,
+}: { theme: "light" | "dark"; initialUsername?: string; onDone: (r: { username: string; friend_code: string; grade?: string }) => void }) {
+  const [username, setUsername] = useState(initialUsername ?? "")
+  // The generated name arrives after the profile loads; adopt it unless they've typed.
+  const [touched, setTouched] = useState(false)
+  if (initialUsername && !touched && !username) setUsername(initialUsername)
   const [school, setSchool] = useState(SCHOOLS[0])
   const [grade, setGrade] = useState(GRADES[7]) // 7th Grade default
   const [busy, setBusy] = useState(false)
@@ -33,15 +37,22 @@ export const OnboardingModal = memo(function OnboardingModal({
       <div style={{ width: 360, padding: 28, borderRadius: 20, fontFamily: 'Crimson Pro, serif',
         background: isDark ? '#18181b' : '#fdfcf9', border: `1px solid ${isDark ? '#27272a' : '#e7e2d8'}` }}>
         <h2 style={{ fontSize: 22, margin: '0 0 4px', color: isDark ? '#fafafa' : '#0f0f10' }}>Claim your name</h2>
-        <p style={{ fontSize: 14, color: '#8a857e', margin: '0 0 18px' }}>Pick a username, your school, and your grade.</p>
+        <p style={{ fontSize: 14, color: '#8a857e', margin: '0 0 18px' }}>Here&apos;s a name to start — keep it, roll a new one, or type your own. Then your school and grade.</p>
+        <div style={{ position: 'relative', marginBottom: 12 }}>
         <input
           autoFocus value={username}
-          onChange={e => setUsername(e.target.value)}
+          onChange={e => { setTouched(true); setUsername(e.target.value) }}
           placeholder="username"
-          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, marginBottom: 12,
+          maxLength={20}
+          style={{ width: '100%', padding: '10px 44px 10px 12px', borderRadius: 10,
             border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`, outline: 'none',
             background: isDark ? '#0e0c09' : '#fff', color: isDark ? '#fafafa' : '#0f0f10' }}
         />
+        <button type="button" title="Roll a new name" aria-label="Roll a new name"
+          onClick={() => { setTouched(true); setUsername(generateUsername()) }}
+          style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 32, height: 30, borderRadius: 8,
+            border: 'none', background: 'rgba(217,119,6,0.12)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>🎲</button>
+        </div>
         <select value={school} onChange={e => setSchool(e.target.value)}
           style={{ width: '100%', padding: '10px 12px', borderRadius: 10, marginBottom: 12,
             border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`,

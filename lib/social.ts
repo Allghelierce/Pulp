@@ -25,10 +25,11 @@ export type UsernameResult =
   | { ok: false; error: string }
 
 export function validateUsername(raw: string): UsernameResult {
-  const value = (raw ?? '').trim().toLowerCase()
+  // Keep capitals as typed ("ClammyElm823"); uniqueness checks ignore case.
+  const value = (raw ?? '').trim()
   if (value.length < 3) return { ok: false, error: 'Username must be at least 3 characters' }
   if (value.length > 20) return { ok: false, error: 'Username must be 20 characters or fewer' }
-  if (!/^[a-z0-9_]+$/.test(value)) return { ok: false, error: 'Use only letters, numbers, and underscores' }
+  if (!/^[A-Za-z0-9_]+$/.test(value)) return { ok: false, error: 'Use only letters, numbers, and underscores' }
   return { ok: true, value }
 }
 
