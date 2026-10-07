@@ -1,4 +1,5 @@
 "use client"
+import { shortcutFromEvent, isModifierKey, formatShortcut } from "@/lib/shortcuts"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { generateUsername } from "@/lib/usernames"
 import { getSoundPrefs, setSoundPrefs, playSound, type SoundPrefs } from "@/lib/sound"
@@ -67,6 +68,7 @@ export const ACCENT_COLORS: { hex: string; name: string; cost?: number; pro?: bo
 ]
 
 export const FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
+  { value: "Crimson Pro", label: "Crimson" },
   { value: "Georgia", label: "Georgia" },
   { value: "Palatino", label: "Palatino" },
   { value: "Arial", label: "Arial" },
@@ -74,6 +76,7 @@ export const FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: 
 ]
 
 export const HEADING_FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
+  { value: "Crimson Pro", label: "Crimson" },
   { value: "Georgia", label: "Georgia" },
   { value: "Didot", label: "Didot" },
   { value: "Palatino", label: "Palatino" },
@@ -172,7 +175,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
     pageLayout, shortcuts, blockedSites, blockedApps, orchardTimeMode, devMode, isDevUnlocked, scrollMode
   } = config
   const isDark = theme === "dark"
-  const isPremium = user?.email?.includes("pro") || false
   const [activeTab, setActiveTab] = useState<SettingsTabId>(initialTab || "general")
 
   const isUnlocked = (id: string, cost?: number, pro?: boolean) => {
@@ -195,6 +197,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.user_metadata?.avatar_url ?? null)
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+  const [goalDraft, setGoalDraft] = useState<string | null>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   // ── Profile identity (username / school / grade) with one-week edit cooldown ──
@@ -282,9 +286,11 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
   const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    e.target.value = ""
     if (!file || !user) return
-    if (!file.type.startsWith("image/")) return
-    if (file.size > 2 * 1024 * 1024) return
+    setAvatarError(null)
+    if (!file.type.startsWith("image/")) { setAvatarError("That file isn't an image."); return }
+    if (file.size > 2 * 1024 * 1024) { setAvatarError("Images must be under 2 MB."); return }
 
     setAvatarUploading(true)
     const ext = file.name.split(".").pop() || "png"
@@ -294,7 +300,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
       .from("avatars")
       .upload(path, file, { upsert: true })
 
-    if (uploadError) { setAvatarUploading(false); return }
+    if (uploadError) { setAvatarUploading(false); setAvatarError("Upload failed. Try again."); return }
 
     const { data: { publicUrl } } = supabase.storage
       .from("avatars")
@@ -408,6 +414,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
               <SettingSection title="Account" isDark={isDark}>
                 <div className="flex items-center gap-4 px-5 py-4">
                   <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                  {avatarError && <p className="text-[11px] text-red-500 mt-1">{avatarError}</p>}
                   <button
                     onClick={() => user && avatarInputRef.current?.click()}
                     disabled={avatarUploading || !user}
@@ -648,6 +655,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   <ShortcutKey label="Toggle Draw Mode" id="drawMode" currentKey={shortcuts.drawMode || "ctrl+d"} defaultKey="ctrl+d" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                   <ShortcutKey label="Previous Page" id="prevPage" currentKey={shortcuts.prevPage || "alt+arrowleft"} defaultKey="alt+arrowleft" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                   <ShortcutKey label="Next Page" id="nextPage" currentKey={shortcuts.nextPage || "alt+arrowright"} defaultKey="alt+arrowright" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Cycle Heading Style" id="cycleHeader" currentKey={shortcuts.cycleHeader || "alt+1"} defaultKey="alt+1" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                 </div>
               </SettingSection>
 
@@ -663,11 +671,15 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       type="number"
                       min={5}
                       max={480}
-                      value={dailyGoalMinutes ?? 30}
-                      onChange={e => {
-                        const v = parseInt(e.target.value)
-                        if (v >= 5 && v <= 480) onChangeDailyGoalMinutes?.(v)
+                      value={goalDraft ?? String(dailyGoalMinutes ?? 30)}
+                      onChange={e => setGoalDraft(e.target.value)}
+                      onBlur={() => {
+                        // Type freely; clamp to 5-480 when leaving the field
+                        const v = parseInt(goalDraft ?? "")
+                        if (!Number.isNaN(v)) onChangeDailyGoalMinutes?.(Math.min(480, Math.max(5, v)))
+                        setGoalDraft(null)
                       }}
+                      onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
                       className={`text-[11px] w-16 text-center border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-zinc-500" : "bg-white border-zinc-200 text-zinc-800 focus:border-zinc-400"} rounded-none px-2.5 py-1.5 outline-none transition-colors`}
                     />
                   }
@@ -766,14 +778,15 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
               <SettingSection title="Interface" isDark={isDark}>
                 <SettingRow
-                  title="Show sidebar on launch"
+                  title="Always open sidebar on launch"
                   isDark={isDark}
+                  description="Off: the sidebar opens the way you left it"
                   control={<SettingToggle checked={sidebarOnStart} onChange={v => onUpdateConfig({ sidebarOnStart: v })} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Status bar"
                   isDark={isDark}
-                  description="Show word count and stats in the bottom-right"
+                  description="Show the word count for this page at the bottom of the screen"
                   control={<SettingToggle checked={wordCountVisible} onChange={v => onUpdateConfig({ wordCountVisible: v })} isDark={isDark} />}
                 />
               </SettingSection>
@@ -949,7 +962,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 <SettingRow
                   title="Auto-save"
                   isDark={isDark}
-                  description="Sync changes to the cloud every 2 seconds"
+                  description="Sync changes to the cloud a moment after you stop typing"
                   control={<SettingToggle checked={autoSave} onChange={v => onUpdateConfig({ autoSave: v })} isDark={isDark} />}
                 />
                 <SettingRow
@@ -972,27 +985,11 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 />
               </SettingSection>
 
-              <SettingSection title="Layout" isDark={isDark}>
-                <SettingRow
-                  title="Page layout"
-                  isDark={isDark}
-                  description="Paginated shows one page at a time. Scroll mode stacks all pages vertically like a document."
-                  control={
-                    <SegmentedControl
-                      options={[["paginated", "Paginated"], ["scroll", "Scroll"]]}
-                      value={pageLayout || "paginated"}
-                      onChange={v => onUpdateConfig({ pageLayout: v as "paginated" | "scroll" })}
-                      isDark={isDark}
-                    />
-                  }
-                />
-              </SettingSection>
-
               <SettingSection title="Focus" isDark={isDark}>
                 <SettingRow
                   title="Focus mode"
                   isDark={isDark}
-                  description="Dim interface elements when typing to minimize distractions"
+                  description="Fade everything except the text box you're typing in"
                   control={<SettingToggle checked={focusMode} onChange={v => onUpdateConfig({ focusMode: v })} isDark={isDark} />}
                 />
               </SettingSection>
@@ -1069,27 +1066,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                          </div>
                        </div>
                      ))}
-                   </div>
-                 </SettingSection>
-               )}
-
-               {isDevUnlocked && (
-                 <SettingSection title="Developer" isDark={isDark}>
-                   <SettingRow
-                     title={
-                       <div className="flex items-center gap-2">
-                         Dev Mode
-                         <span className="px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-500 text-[8px] font-normal uppercase tracking-tighter border border-orange-500/30">
-                           Verified Authority
-                         </span>
-                       </div>
-                     }
-                     isDark={isDark}
-                     description="Grant infinite Sap and Gems for testing"
-                     control={<SettingToggle checked={devMode} onChange={v => onUpdateConfig({ devMode: v })} isDark={isDark} />}
-                   />
-                   <div className="px-5 pb-3">
-                     <p className={`text-[10px] ${isDark ? "text-zinc-500" : "text-zinc-400"} italic`}>Note: Infinite balances won't affect stored achievement progress.</p>
                    </div>
                  </SettingSection>
                )}
@@ -1308,15 +1284,19 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 <div className="px-5 py-4">
                   <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                     {[
-                      ["Cmd + Opt + T", "Toggle focus timer"],
-                      ["Cmd + A", "Select all text boxes"],
-                      ["Cmd + Z", "Undo"],
-                      ["Cmd + Shift + Z", "Redo"],
-                      ["Arrow keys", "Nudge selected boxes"],
-                      ["Opt + Arrow", "Snap box to edge"],
-                      ["Delete / Backspace", "Delete selected box"],
-                      ["/", "Open slash commands"],
-                      ["Escape", "Close modals & panels"],
+                      [formatShortcut(shortcuts.timer || "ctrl+alt+t"), "Toggle focus timer"],
+                      [formatShortcut(shortcuts.newNote || "ctrl+n"), "New notebook"],
+                      [formatShortcut(shortcuts.search || "ctrl+k"), "Search"],
+                      [formatShortcut(shortcuts.aiCommand || "\\"), "Open AI"],
+                      [formatShortcut(shortcuts.prevPage || "alt+arrowleft") + " " + formatShortcut(shortcuts.nextPage || "alt+arrowright"), "Previous / next page"],
+                      [formatShortcut("ctrl+a"), "Select all boxes"],
+                      [formatShortcut("ctrl+z"), "Undo"],
+                      [formatShortcut("ctrl+shift+z"), "Redo"],
+                      ["Arrow keys", "Nudge selected boxes or lines"],
+                      [formatShortcut("alt") + " + Arrow", "Snap box to edge"],
+                      ["Delete", "Delete selection"],
+                      [formatShortcut(shortcuts.slash || "/"), "Slash commands"],
+                      ["Esc", "Close menus and panels"],
                     ].map(([key, desc], i) => (
                       <div key={i} className="flex items-center justify-between py-1.5">
                         <span className={`text-[11px] ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{desc}</span>
@@ -1392,7 +1372,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     value={deleteUsername}
                     onChange={(e) => setDeleteUsername(e.target.value)}
                     className={`w-full text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800/50 border-zinc-700 focus:border-zinc-500/50" : "bg-white border-zinc-200 focus:border-zinc-400/50"}`}
-                    placeholder="Enter username"
+                    placeholder="Your username or email"
                     autoComplete="off"
                   />
                 </div>
@@ -1434,7 +1414,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     const result = await verifyPasswordAndDelete(
                       user.id,
                       deletePassword,
-                      deleteConfirmType as "account" | "notes"
+                      deleteConfirmType as "account" | "notes",
+                      deleteUsername
                     )
 
                     if (!result.success) {
@@ -1449,6 +1430,12 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       localStorage.removeItem("pulp-folders");
                       localStorage.removeItem("pulp-active-tab");
                       localStorage.removeItem("pulp-pending-deletes");
+                      localStorage.removeItem("pulp-trash");
+                    } else {
+                      // Account is gone: don't leave its notes or session in this browser
+                      await supabase.auth.signOut().catch(() => {});
+                      localStorage.clear();
+                      sessionStorage.clear();
                     }
 
                     setDeleteConfirmType(null);
@@ -1599,19 +1586,6 @@ function StorageBar({ isDark }: { isDark: boolean }) {
   )
 }
 
-function formatShortcutDisplay(key: string) {
-  return key.split("+").map(p => {
-    if (p === "ctrl") return "⌘"
-    if (p === "alt") return "⌥"
-    if (p === "shift") return "⇧"
-    if (p === "arrowleft") return "←"
-    if (p === "arrowright") return "→"
-    if (p === "arrowup") return "↑"
-    if (p === "arrowdown") return "↓"
-    if (p === "\\") return "\\"
-    return p.toUpperCase()
-  }).join(" ")
-}
 
 function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
   label: string; id: string; currentKey: string; defaultKey: string; onUpdate: (id: string, key: string) => void; isDark: boolean
@@ -1626,21 +1600,13 @@ function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
       e.stopPropagation()
       if (e.key === "Escape") { setIsRecording(false); return }
 
-      const parts: string[] = []
-      if (e.ctrlKey || e.metaKey) parts.push("ctrl")
-      if (e.altKey) parts.push("alt")
-      if (e.shiftKey) parts.push("shift")
-
-      if (!e.key) return
-      const isModifierOnly = ["Control", "Meta", "Alt", "Shift"].includes(e.key)
-
-      if (!isModifierOnly) {
-        parts.push(e.key.toLowerCase())
-        const hasModifier = e.ctrlKey || e.metaKey || e.altKey || e.shiftKey
-        if (!hasModifier && e.key.length === 1 && !['/', '\\'].includes(e.key)) return
-        onUpdate(id, parts.join("+"))
-        setIsRecording(false)
-      }
+      if (!e.key || isModifierKey(e)) return
+      const combo = shortcutFromEvent(e)
+      const hasModifier = e.ctrlKey || e.metaKey || e.altKey || e.shiftKey
+      // A bare letter would fire while typing; only / and \ are allowed alone
+      if (!hasModifier && combo.length === 1 && !['/', '\\'].includes(combo)) return
+      onUpdate(id, combo)
+      setIsRecording(false)
     }
     window.addEventListener("keydown", handler, true)
     return () => window.removeEventListener("keydown", handler, true)
@@ -1663,7 +1629,7 @@ function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
           onClick={() => setIsRecording(true)}
           className={`min-w-[40px] px-2 py-1 rounded text-[10px] font-mono font-normal border transition-all active:scale-95 ${isRecording ? (isDark ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500" : "bg-white border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-400")}`}
         >
-          {isRecording ? "Press keys..." : formatShortcutDisplay(currentKey)}
+          {isRecording ? "Press keys..." : formatShortcut(currentKey)}
         </button>
       </div>
     </div>

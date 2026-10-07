@@ -44,6 +44,7 @@ import { PartyPanel } from "@/app/components/community/PartyPanel"
 import { PartyPresence } from "@/app/components/community/PartyPresence"
 import { PageLines } from "@/app/components/PageLines"
 import { cloudLines, fromCloudLines, migrateLegacyLineBoxes } from "@/lib/noteLines"
+import { DEFAULT_SHORTCUTS, withDefaults, shortcutFromEvent, matchesShortcut } from "@/lib/shortcuts"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { PulpLoader } from "@/app/components/PulpLoader"
 import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
@@ -326,10 +327,10 @@ const BoxItem = memo(function BoxItem({
   startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
   onKeyDown, onInput, onRewrite,
   formattingOpen, setFormattingOpen, aiOpen, setAiOpen,
-  onDragStart, onDragEnd, spellCheck: spellCheckProp
+  onDragStart, onDragEnd, spellCheck: spellCheckProp, autoCorrect
 }: {
   box: TextBoxType; boxIndex?: number; isSelected: boolean; selectedCount: number; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
-  paperStyle: PaperStyle; spellCheck?: boolean
+  paperStyle: PaperStyle; spellCheck?: boolean; autoCorrect?: boolean
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
   deleteBox: (id: string) => void
@@ -618,6 +619,7 @@ const BoxItem = memo(function BoxItem({
             paperStyle={paperStyle}
             handwrittenEffect={handwrittenEffect}
             spellCheck={spellCheckProp}
+            autoCorrect={autoCorrect}
           />
         )}
       </div>
@@ -911,10 +913,11 @@ interface BoxTextareaProps {
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
   onInput: (e: React.FormEvent<HTMLElement>) => void
   spellCheck?: boolean
+  autoCorrect?: boolean
 }
 
 const BoxTextarea = memo(function BoxTextarea({
-  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, sizeLocked, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput, spellCheck: spellCheckProp
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, sizeLocked, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput, spellCheck: spellCheckProp, autoCorrect
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
@@ -941,8 +944,11 @@ const BoxTextarea = memo(function BoxTextarea({
 
   const styleKey = boxHeadingStyle || "default"
   const isMarginStyle = styleKey === "margin"
-  const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
-  const resolvedFont = isMarginStyle ? "cursive" : (boxFontFamily || 'Crimson Pro, serif')
+  // Unstyled boxes follow Settings → Appearance (set as CSS variables on <html>):
+  // body / heading font, text size, and line spacing. Per-box choices win.
+  const isHeading = styleKey === "h1" || styleKey === "h2" || styleKey === "h3"
+  const resolvedSize = boxFontSize ?? `calc(${BOX_HEADING_SIZES[styleKey]}px * var(--pulp-font-scale, 1))`
+  const resolvedFont = isMarginStyle ? "cursive" : (boxFontFamily || (isHeading ? "var(--pulp-heading-font, Georgia, serif)" : "var(--pulp-body-font, Georgia, serif)"))
   const inkColor = boxTextColor
     ? boxTextColor
     : isMarginStyle
@@ -955,6 +961,7 @@ const BoxTextarea = memo(function BoxTextarea({
       contentEditable
       suppressContentEditableWarning
       spellCheck={spellCheckProp}
+      autoCorrect={autoCorrect === false ? "off" : "on"}
       data-box-style={styleKey}
       onKeyDown={e => {
         // Erase animation — applies to both selection and single-char backspace.
@@ -1151,7 +1158,7 @@ const BoxTextarea = memo(function BoxTextarea({
         height: isSticky || sizeLocked ? "100%" : undefined,
         minHeight: isSticky || sizeLocked ? undefined : 32,
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: 400,
-        lineHeight: 1.45, color: inkColor, cursor: "text", caretColor: isDarkPaper(paperStyle) ? "#e4e4e7" : "#18181b",
+        lineHeight: "var(--pulp-line-height, 1.8)", color: inkColor, cursor: "text", caretColor: isDarkPaper(paperStyle) ? "#e4e4e7" : "#18181b",
         letterSpacing: "0.1px",
         fontStyle: isMarginStyle ? "italic" : "normal",
         transform: isMarginStyle ? "rotate(-0.5deg) skewX(-0.8deg)" : undefined,
@@ -1586,7 +1593,7 @@ export default function NoteApp() {
     wordCountVisible: true,
     focusMode: false,
     baseFontSize: "medium",
-    shortcuts: { ai: "ctrl+j", slash: "/", newNote: "ctrl+n", search: "ctrl+k", toggleSidebar: "ctrl+\\", aiCommand: "\\", timer: "ctrl+alt+t", prevPage: "alt+arrowleft", nextPage: "alt+arrowright", drawMode: "ctrl+d", cycleHeader: "alt+1" },
+    shortcuts: DEFAULT_SHORTCUTS,
     blockedSites: [],
     blockedApps: [],
     orchardTimeMode: "theme",
@@ -1598,12 +1605,20 @@ export default function NoteApp() {
   if (_savedSettingsRef.current === undefined) {
     _savedSettingsRef.current = typeof window !== "undefined" ? (() => { try { const s = localStorage.getItem("pulp-settings"); return s ? JSON.parse(s) : null } catch { return null } })() : null
   }
-  const [settings, setSettings] = useState<any>(() => _savedSettingsRef.current ? { ...SETTINGS_DEFAULTS, ..._savedSettingsRef.current } : SETTINGS_DEFAULTS)
+  const [settings, setSettings] = useState<any>(() => {
+    const saved = _savedSettingsRef.current
+    const merged = saved ? { ...SETTINGS_DEFAULTS, ...saved } : { ...SETTINGS_DEFAULTS }
+    merged.shortcuts = withDefaults(merged.shortcuts)
+    return merged
+  })
 
+  // null from a cloud row means "never set": keep the current value instead of wiping it.
   const updateSettings = useCallback((updates: any) => setSettings((prev: any) => {
     const merged = { ...prev }
     for (const key in updates) {
-      if (updates[key] !== undefined) merged[key] = updates[key]
+      const v = updates[key]
+      if (v === undefined || v === null) continue
+      merged[key] = key === "shortcuts" ? withDefaults({ ...prev.shortcuts, ...v }) : v
     }
     return merged
   }), [])
@@ -2250,16 +2265,8 @@ export default function NoteApp() {
 
     const isMeta = e.metaKey || e.ctrlKey
     const isAlt = e.altKey
-    const isShift = e.shiftKey
-    const modParts: string[] = []
-    if (isMeta) modParts.push("ctrl")
-    if (isAlt) modParts.push("alt")
-    if (isShift) modParts.push("shift")
-    if (e.key && !["Meta", "Control", "Alt", "Shift", "Escape"].includes(e.key)) {
-      modParts.push(e.key.toLowerCase())
-    }
-    const eventKeyStr = modParts.join("+")
-    const isCycleHeader = eventKeyStr === shortcuts.cycleHeader || (e.altKey && e.code === "Digit1")
+    const eventKeyStr = shortcutFromEvent(e.nativeEvent)
+    const isCycleHeader = eventKeyStr === shortcuts.cycleHeader
 
     if (isCycleHeader) {
       e.preventDefault()
@@ -2301,7 +2308,7 @@ export default function NoteApp() {
       return
     }
 
-    if (e.key === shortcuts.slash || e.key === "@") {
+    if (matchesShortcut(e.nativeEvent, shortcuts.slash) || e.key === "@") {
       const sel = window.getSelection()
       if (!sel || sel.rangeCount === 0) return
       const isBox = (e.currentTarget as HTMLElement) !== editorRef.current
@@ -2640,40 +2647,37 @@ export default function NoteApp() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  useEffect(() => {
-    const checkViewport = () => {
-      const w = window.innerWidth
-      const isNarrow = w < 1000
-      updateSettings({ wordCountVisible: !isNarrow })
-    }
-    checkViewport()
-    window.addEventListener('resize', checkViewport)
-    return () => window.removeEventListener('resize', checkViewport)
-  }, [])
 
   // Global keyboard shortcuts
+  // The global key handler is registered once; read changing values through this ref
+  // so rebinding a shortcut (or opening the AI hub / draw toolbar) applies immediately.
+  // Settings → Appearance typography, read by every text box via CSS variables.
   useEffect(() => {
-    const buildKeyStr = (e: KeyboardEvent) => {
-      const parts: string[] = []
-      if (e.ctrlKey || e.metaKey) parts.push("ctrl")
-      if (e.altKey) parts.push("alt")
-      if (e.shiftKey) parts.push("shift")
-      if (e.key && !["Control", "Meta", "Alt", "Shift"].includes(e.key)) parts.push(e.key.toLowerCase())
-      return parts.join("+")
-    }
+    const root = document.documentElement.style
+    root.setProperty("--pulp-body-font", `"${editorFont}", "Crimson Pro", serif`)
+    root.setProperty("--pulp-heading-font", `"${headingFont}", "Crimson Pro", serif`)
+    root.setProperty("--pulp-font-scale", baseFontSize === "small" ? "0.88" : baseFontSize === "large" ? "1.15" : "1")
+    root.setProperty("--pulp-line-height", lineSpacing === "compact" ? "1.5" : lineSpacing === "relaxed" ? "2.1" : "1.8")
+  }, [editorFont, headingFont, baseFontSize, lineSpacing])
+
+  const addNoteRef = useRef<(folderId?: number | null) => void>(() => {})
+  const globalKeyLive = useRef({ shortcuts, aiHubOpen, showDrawToolbar })
+  useEffect(() => { globalKeyLive.current = { shortcuts, aiHubOpen, showDrawToolbar } }, [shortcuts, aiHubOpen, showDrawToolbar])
+  useEffect(() => {
     const handleGlobalKey = (e: KeyboardEvent) => {
       if (e.altKey && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
         e.preventDefault()
       }
-      const keyStr = buildKeyStr(e)
+      const { shortcuts, aiHubOpen, showDrawToolbar } = globalKeyLive.current
+      const is = (sc: string | undefined) => matchesShortcut(e, sc)
 
-      if (keyStr === shortcuts.newNote) {
+      if (is(shortcuts.newNote)) {
         e.preventDefault()
-        addNote(null)
+        addNoteRef.current(null)
         return
       }
 
-      if (keyStr === shortcuts.search) {
+      if (is(shortcuts.search)) {
         e.preventDefault()
         setSlashMenu(null)
         const searchInput = document.querySelector('[data-search-input]') as HTMLInputElement
@@ -2692,32 +2696,32 @@ export default function NoteApp() {
         }
       }
 
-      if (keyStr === shortcuts.aiCommand) {
+      if (is(shortcuts.aiCommand)) {
         e.preventDefault()
         setAiHubOpen(v => !v)
       }
 
-      if (keyStr === shortcuts.timer) {
+      if (is(shortcuts.timer)) {
         e.preventDefault()
         // Can't hide the panel mid-session
         if (timerRunningRef.current) return
         setTimerOpen(o => !o)
       }
 
-      if (keyStr === shortcuts.toggleSidebar) {
+      if (is(shortcuts.toggleSidebar)) {
         e.preventDefault()
         setSidebarWidth((w: number) => w > 40 ? 0 : 240)
       }
 
-      if (keyStr === shortcuts.drawMode) {
+      if (is(shortcuts.drawMode)) {
         const active = document.activeElement as HTMLElement | null
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable)) return
         e.preventDefault()
         setShowDrawToolbar((v: boolean) => !v)
       }
 
-      const isAltLeft = e.altKey && e.code === 'ArrowLeft'
-      const isAltRight = e.altKey && e.code === 'ArrowRight'
+      const isAltLeft = is(shortcuts.prevPage)
+      const isAltRight = is(shortcuts.nextPage)
       if (isAltLeft || isAltRight) {
         e.preventDefault()
         editor.flushSync()
@@ -2855,7 +2859,8 @@ export default function NoteApp() {
         updateSettings({
           accent: settingsRow.accent, theme: settingsRow.theme, autoSave: settingsRow.auto_save,
           spellCheck: settingsRow.spell_check, autoCorrect: settingsRow.auto_correct, autoCapitalize: settingsRow.auto_capitalize,
-          editorFont: settingsRow.editor_font, headingFont: settingsRow.heading_font, lineSpacing: settingsRow.line_spacing,
+          editorFont: settingsRow.editor_font, headingFont: settingsRow.heading_font,
+          lineSpacing: settingsRow.line_spacing,
           paperStyle: settingsRow.paper_style, showBinding: settingsRow.show_binding, reduceMotion: settingsRow.reduce_motion,
           reduceVisuals: settingsRow.reduce_visuals, sidebarOnStart: settingsRow.sidebar_on_start, bgEffect: settingsRow.bg_effect,
           smearEffect: settingsRow.smear_effect, handwrittenEffect: settingsRow.handwritten_effect, language: settingsRow.language,
@@ -2863,6 +2868,7 @@ export default function NoteApp() {
           baseFontSize: settingsRow.base_font_size, shortcuts: settingsRow.shortcuts, blockedSites: settingsRow.blocked_sites,
           blockedApps: settingsRow.blocked_apps, skipDeleteConfirmation: settingsRow.skip_delete_confirmation
         })
+        if (typeof settingsRow.skip_delete_confirmation === "boolean") setSkipDeleteConfirmation(settingsRow.skip_delete_confirmation)
         if (settingsRow.sidebar_width) setSidebarWidth(settingsRow.sidebar_width)
       }
       if (foldersData.length) setFolders(foldersData)
@@ -2886,7 +2892,7 @@ export default function NoteApp() {
   useEffect(() => { flushRefs.current.bookmarks = bookmarks }, [bookmarks])
   useEffect(() => {
     flushRefs.current.settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode }
-  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, scrollMode])
+  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode])
   useEffect(() => {
     flushRefs.current.grove = { juice: sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, quotaTier, quotaLockedUntil, hibernation, hibernationScheduled }
   }, [sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, quotaTier, quotaLockedUntil, hibernation, hibernationScheduled])
@@ -2979,7 +2985,7 @@ export default function NoteApp() {
       }
     }, 500)
     return () => clearTimeout(settingsSaveTimer.current)
-  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, scrollMode, user])
+  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode, user])
 
   const folderSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
@@ -3133,12 +3139,14 @@ export default function NoteApp() {
           const lastId = savedActiveTab && parsed.find(n => n.id === savedActiveTab) ? savedActiveTab : parsed[0].id
           setActiveTabId(lastId)
           const savedSidebarWidth = localStorage.getItem("pulp-sidebar-width")
-          if (savedSidebarWidth !== null) {
+          const alwaysOpen = !!_savedSettingsRef.current?.sidebarOnStart
+          if (alwaysOpen) {
+            const w = Number(savedSidebarWidth)
+            setSidebarWidth(w > 40 ? w : 240)
+          } else if (savedSidebarWidth !== null) {
             setSidebarWidth(Number(savedSidebarWidth))
           } else {
-            const savedSettings = localStorage.getItem("pulp-settings")
-            const sidebarPref = savedSettings ? JSON.parse(savedSettings).sidebarOnStart : true
-            if (sidebarPref !== false) setSidebarWidth(240)
+            setSidebarWidth(240)
           }
         }
       }
@@ -3197,8 +3205,7 @@ export default function NoteApp() {
   const defaultBoxes = () => ({ 0: [{ id: uid(), x: 40, y: 40, w: 900, h: 32, content: '' }] })
 
   // Note/folder actions
-  const addNote = (folderId: number | null = null) =>
-    openPrompt("New Notebook", "", "Name your notebook", "Create", name => {
+  const addNote = (folderId: number | null = null) => openPrompt("New Notebook", "", "Name your notebook", "Create", name => {
       const finalName = name.trim() || "New Notebook"
       const id = uid()
       const boxes = defaultBoxes()
@@ -3208,6 +3215,8 @@ export default function NoteApp() {
       checkAchievement('first_note')
       if (user) supabase.from("notes").insert({ id, subject: finalName, pages: [""], boxes, folder_id: folderId, user_id: user.id })
     }, "📓")
+  // The global key handler is registered once; always call the current addNote (it reads `user`).
+  useEffect(() => { addNoteRef.current = addNote })
 
   // Import: one page per parsed section. Mirrors addNote() so imports sync the same way.
   // Each section lives in that page's text box (like typed notes): the legacy
@@ -3576,7 +3585,9 @@ export default function NoteApp() {
 
 
   const settingsConfig = useMemo(() => ({ ...settings, accentColor: accent }), [settings, accent])
-  const handleSettingsUpdate = useCallback((updates: any) => updateSettings({ ...updates, accent: updates.accentColor || accent }), [updateSettings, accent])
+  const handleSettingsUpdate = useCallback((updates: any) => updateSettings({
+    ...updates, accent: updates.accentColor || accent,
+  }), [updateSettings, accent])
   const handleCloseSettings = useCallback(() => { setShowSettings(false); setSettingsInitialTab(undefined) }, [])
   const handleOpenShopItem = useCallback((itemId: string) => {
     setShowSettings(false)
@@ -3614,7 +3625,7 @@ export default function NoteApp() {
     <LazyMotion features={domAnimation}>
       <>
 
-        <div className="flex h-screen overflow-x-auto overflow-y-hidden font-sans relative select-none" style={{ minWidth: isNarrow ? undefined : 900, backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
+        <div className="flex h-screen overflow-x-auto overflow-y-hidden font-sans relative select-none" style={{ minWidth: isNarrow ? undefined : 900, backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect && !reduceVisuals ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
           <PlantImagePreloader />
           <PlantedToast theme={theme} accent={accentSolid} onReview={(topic, notebookId) => {
             startTransition(() => { closeAllPanels(); setReviewTopic(topic); setReviewNoteId(notebookId); setReviewOpen(true) })
@@ -3672,6 +3683,9 @@ export default function NoteApp() {
             </div>
           </Suspense>}
           <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
+          {focusMode && (
+            <style>{`#editor-paper:focus-within [id^="box-"]:not(:focus-within) { opacity: .3; transition: opacity .25s ease; } #editor-paper [id^="box-"] { transition: opacity .25s ease; }`}</style>
+          )}
 
 
 
@@ -4186,7 +4200,7 @@ export default function NoteApp() {
                           ) : (
                             <>
                               <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
-                              {smearEffect && <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />}
+                              {smearEffect && !reduceVisuals && <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />}
 
                               {/* Render custom user-drawn lines */}
                               {(() => {
@@ -4227,7 +4241,7 @@ export default function NoteApp() {
 
                               <div
                                 ref={editorRef}
-                                className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
+                                className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 `}
                                 style={{
                                   fontFamily: `"${editorFont}", Crimson Pro, serif`,
                                   fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18,
@@ -4243,13 +4257,10 @@ export default function NoteApp() {
 
                               <style>{`
                              #editor-paper [contenteditable] {
-                               color: ${getInkColor(paperStyle, theme === "dark")} !important;
                                caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
                                opacity: 1 !important;
-                               font-family: "${editorFont}", Crimson Pro, serif !important;
                                font-weight: 500 !important;
                                letter-spacing: 0.1px !important;
-                               line-height: 1.8 !important;
                                text-rendering: optimizeLegibility !important;
                              }
                              @keyframes box-ripple {
@@ -4359,7 +4370,8 @@ export default function NoteApp() {
                                   onDragStart={noop}
                                   onDragEnd={noop}
                                   spellCheck={spellCheck}
-                                  handwrittenEffect={handwrittenEffect}
+                                  handwrittenEffect={handwrittenEffect && !reduceVisuals}
+                                  autoCorrect={autoCorrect}
                                 />
                               ))}
                             </>
@@ -4678,6 +4690,17 @@ export default function NoteApp() {
           </AnimatePresence>
 
           <PartyPresence onOpenParty={openParty} />
+
+          {/* Status bar (Settings → Interface) */}
+          {wordCountVisible && !isNarrow && activeNote && !showSettings && (
+            <div style={{
+              position: "fixed", bottom: 12, left: (sidebarWidth > 40 ? sidebarWidth : 0) + 16, zIndex: 40, pointerEvents: "none",
+              fontFamily: "Crimson Pro, serif", fontSize: 12.5, letterSpacing: "0.02em",
+              color: theme === "dark" ? "rgba(228,228,231,0.45)" : "rgba(39,39,42,0.45)",
+            }}>
+              {wordCount.toLocaleString()} {wordCount === 1 ? "word" : "words"} · page {currentPageIdx + 1} of {activeNote.pages.length}
+            </div>
+          )}
 
           {/* Phones: no sidebar strip beside full-screen panels, so give them a way back. */}
           {isNarrow && (orchardOpen || statsOpen || shopOpen || communityOpen) && (
