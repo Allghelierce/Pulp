@@ -1,5 +1,6 @@
 "use client"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
+import { StreakFlame } from "./StreakFlame"
 import { motion } from "framer-motion"
 import { getLevel } from "@/app/constants"
 import { getPalette, getType } from "@/app/theme/palette"
@@ -668,15 +669,7 @@ export const StatsView = memo(function StatsView({
                           <span style={{ ...type.sectionHeader }}>Consistency</span>
                           {currentStreak > 0 && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                              <motion.svg
-                                width="14" height="14" viewBox="0 0 24 24" fill={fireColor} stroke="none"
-                                animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
-                                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
-                                style={{ filter: fireGlow > 0 ? `drop-shadow(0 0 ${fireGlow}px ${fireColor})` : undefined }}
-                              >
-                                <path d="M12 2c0 4-4 6-4 10a4 4 0 008 0c0-4-4-6-4-10z" />
-                                <path d="M12 12c0 2-1.5 3-1.5 4.5a1.5 1.5 0 003 0c0-1.5-1.5-2.5-1.5-4.5z" fill="#fbbf24" />
-                              </motion.svg>
+                              <StreakFlame color={fireColor} glow={fireGlow} size={18} />
                               <span style={{ fontSize: 12, fontWeight: 400, color: fireColor, fontFamily: 'Crimson Pro, serif' }}>{currentStreak}</span>
                             </div>
                           )}
