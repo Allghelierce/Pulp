@@ -3655,6 +3655,7 @@ export default function NoteApp() {
                     return
                   }
                   editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
+                  if (isNarrow) setSidebarWidth(0)
                 }}
                 onRenameNote={renameNote}
                 onDeleteNote={deleteNote}
@@ -3668,7 +3669,7 @@ export default function NoteApp() {
                 onSetRenamingFolder={setRenamingFolder}
                 onSetDraggedNoteId={setDraggedNoteId}
                 onDropNote={handleDropNote}
-                onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) } }}
+                onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) }; if (isNarrow) setSidebarWidth(0) }}
                 onOpenTimer={() => { if (timerOpen && timerRunning) return; setTimerOpen(t => !t) }}
                 timerOpen={timerOpen}
                 timerRunning={timerRunning}
@@ -3683,10 +3684,11 @@ export default function NoteApp() {
                   setBookmarks(prev => prev.map(b => b.id === id ? { ...b, label: newName } : b))
                 }}
                 onUnlockDev={handleUnlockDev}
-                onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
-                onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
-                onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) } }}
-                onOpenRecall={() => { if (topicsOpen) { setTopicsOpen(false) } else { startTransition(() => { closeAllPanels(); setTopicsOpen(true) }) } }}
+                onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) }; if (isNarrow) setSidebarWidth(0) }}
+                onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) }; if (isNarrow) setSidebarWidth(0) }}
+                onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }; if (isNarrow) setSidebarWidth(0) }}
+                onOpenGrove={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }; if (isNarrow) setSidebarWidth(0) }}
+                onOpenRecall={() => { if (topicsOpen) { setTopicsOpen(false) } else { startTransition(() => { closeAllPanels(); setTopicsOpen(true) }) }; if (isNarrow) setSidebarWidth(0) }}
                 recallDue={allRecallDue}
                 onGoHome={() => { closeAllPanels(); setCurrentView("editor") }}
                 sap={sap}
@@ -4716,6 +4718,39 @@ export default function NoteApp() {
           </AnimatePresence>
 
           <PartyPresence onOpenParty={openParty} />
+
+          {/* Phones: no sidebar strip beside full-screen panels, so give them a way back. */}
+          {isNarrow && (orchardOpen || statsOpen || shopOpen || communityOpen) && (
+            <button
+              onClick={() => closeAllPanels()}
+              aria-label="Back"
+              style={{
+                position: 'fixed', top: 12, left: 12, zIndex: 9990, height: 34, padding: '0 12px 0 8px', borderRadius: 999,
+                display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'Crimson Pro, serif', fontSize: 14,
+                color: '#e4e4e7', background: 'rgba(12,12,14,0.72)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+              back
+            </button>
+          )}
+
+          {/* Phones: the hanging orange is hidden, so its "cards to recall" bubble becomes a small pill. */}
+          {isNarrow && allRecallDue > 0 && !timerRunning && !orchardOpen && !reviewOpen && !topicsOpen && !statsOpen && !shopOpen && !leaderboardOpen && !communityOpen && !showSettings && (
+            <button
+              onClick={() => { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }}
+              title={recallTopTopic ? `${allRecallDue} to recall · ${recallTopTopic}` : `${allRecallDue} to recall`}
+              style={{
+                position: 'fixed', top: 12, right: 12, zIndex: 9990, height: 32, padding: '0 12px', borderRadius: 999,
+                display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Crimson Pro, serif', fontSize: 14,
+                color: '#fde68a', background: 'rgba(24,24,27,0.92)', border: '1px solid rgba(217,119,6,0.55)',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
+              }}
+            >
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#d97706', boxShadow: '0 0 8px #d97706' }} />
+              {allRecallDue} to recall
+            </button>
+          )}
 
           {!showSettings && !isNarrow && notes.filter(n => !n.archived).length > 0 && !gridView && (
             <HangingOrange recallDue={orchardOpen ? 0 : allRecallDue} recallTopic={recallTopTopic} retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen || reviewOpen || topicsOpen} aiMode={aiHubOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
