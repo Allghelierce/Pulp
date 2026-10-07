@@ -1,5 +1,5 @@
 "use client"
-import { useState, memo, useEffect } from "react"
+import { useState, memo, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES } from "@/app/constants"
 import { useNarrow } from "@/app/hooks/useNarrow"
@@ -243,12 +243,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [seedPage, setSeedPage] = useState(0)
   const [showGuide, setShowGuide] = useState(false)
   const [minimized, setMinimized] = useState(false)
-  // Split screen: a running session shrinks to the pill so it doesn't sit on the notes.
   const isNarrow = useNarrow()
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (running && isNarrow) setMinimized(true)
-  }, [running, isNarrow])
   const [justWatered, setJustWatered] = useState(false)
   // Focus mode: hovering the timer reveals Cancel / Give Up.
   const [timerHover, setTimerHover] = useState(false)
@@ -259,10 +254,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
       const el = document.getElementById("pulp-page-surface")
       setPageLeft(el ? el.getBoundingClientRect().left : null)
     }
+    // On resize, measure again after layout settles (the sidebar collapse + its 100ms transition).
+    let settle: ReturnType<typeof setTimeout> | undefined
+    const onResize = () => { measure(); clearTimeout(settle); settle = setTimeout(measure, 160) }
     measure()
-    window.addEventListener("resize", measure)
+    window.addEventListener("resize", onResize)
     const id = setInterval(measure, 400) // catch sidebar drags / zoom / layout shifts
-    return () => { window.removeEventListener("resize", measure); clearInterval(id) }
+    return () => { window.removeEventListener("resize", onResize); clearInterval(id); clearTimeout(settle) }
   }, [])
 
   // Center the panel in the gap between the sidebar (or window edge) and the page.
@@ -276,6 +274,26 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
     if (centered < minLeft) return minLeft
     return centered
   }
+
+  // Split screen, or a gap beside the page too thin for even the slimmest (100px) panel to sit
+  // without overlapping the paper: a running session shrinks to the pill so it doesn't sit on the notes.
+  const cramped = isNarrow || (pageLeft != null && pageLeft - sidebarRight < 100)
+  // Remember that *we* shrank it, so roomier layouts bring the full panel back. Only react when
+  // running/cramped flip — not on `minimized` — so Expand still works while cramped.
+  const autoMinimizedRef = useRef(false)
+  useEffect(() => {
+    if (running && cramped) {
+      if (!minimized) {
+        autoMinimizedRef.current = true
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMinimized(true)
+      }
+    } else if (!cramped && autoMinimizedRef.current) {
+      autoMinimizedRef.current = false
+      setMinimized(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, cramped])
 
   useEffect(() => {
     if (!running || done || treeDead) setGiveUpStage(0)

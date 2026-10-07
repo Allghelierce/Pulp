@@ -2,10 +2,15 @@
 
 import { createClient } from "@supabase/supabase-js"
 
+// Tables holding a user's own rows. Not all cascade from auth.users, so clear them first.
+const NOTE_TABLES = ["notes", "folders", "trash"]
+const ACCOUNT_TABLES = [...NOTE_TABLES, "settings", "achievements", "daily_stats", "player_profiles"]
+
 export async function verifyPasswordAndDelete(
   userId: string,
   password: string,
-  deleteType: "account" | "notes"
+  deleteType: "account" | "notes",
+  identity: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -41,10 +46,19 @@ export async function verifyPasswordAndDelete(
       return { success: false, error: "Invalid password" }
     }
 
+    // The typed username/email must actually be this account's.
+    const typed = (identity || "").trim().toLowerCase().replace(/^@/, "")
+    const { data: profile } = await supabase.from("player_profiles").select("username").eq("user_id", userId).maybeSingle()
+    const matches = typed && (typed === user.email.toLowerCase() || (profile?.username && typed === String(profile.username).toLowerCase()))
+    if (!matches) {
+      return { success: false, error: "That username or email doesn't match this account" }
+    }
+
     if (deleteType === "account") {
-      await supabase.from("notes").delete().eq("user_id", userId)
+      for (const table of ACCOUNT_TABLES) await supabase.from(table).delete().eq("user_id", userId)
       const { error: deleteError } = await supabase.auth.admin.deleteUser(userId)
       if (deleteError) {
+        console.error("Account delete failed:", deleteError.message)
         return { success: false, error: "Failed to delete account" }
       }
     } else {
@@ -52,6 +66,8 @@ export async function verifyPasswordAndDelete(
       if (deleteError) {
         return { success: false, error: "Failed to delete notes" }
       }
+      await supabase.from("folders").delete().eq("user_id", userId)
+      await supabase.from("trash").delete().eq("user_id", userId)
     }
 
     return { success: true }

@@ -1,4 +1,6 @@
+import { InsertMenu } from "./InsertMenu"
 import { memo, useEffect, useMemo, useRef, useState } from "react"
+import { useNarrow } from "@/app/hooks/useNarrow"
 import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 import { ShoppingBag } from "lucide-react"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
@@ -131,6 +133,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     tick()
     return () => { if (animFrameRef.current) clearTimeout(animFrameRef.current) }
   }, [sap])
+  const isNarrow = useNarrow()
   const compact = toolbarWidth < 820
   // The sap pill is the way into the grove — keep it until the toolbar is truly tiny.
   const hideCurrencies = toolbarWidth < 400
@@ -170,15 +173,10 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   const leftToolsRef = useRef<HTMLDivElement>(null)
   const alignRef = useRef<HTMLDivElement>(null)
   const drawRef = useRef<HTMLDivElement>(null)
-  const insertRef = useRef<HTMLDivElement>(null)
   const [alignOpen, setAlignOpen] = useState(false)
   const [drawOpen, setDrawOpen] = useState(false)
-  const [insertOpen, setInsertOpen] = useState(false)
-  const [tablePickerOpen, setTablePickerOpen] = useState(false)
-  const [tableHover, setTableHover] = useState<[number, number]>([0, 0])
   const [showSapInfo, setShowSapInfo] = useState(false)
   const sapInfoRef = useRef<HTMLDivElement>(null)
-  const tablePickerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!alignOpen) return
@@ -202,20 +200,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     return () => document.removeEventListener("mousedown", handler)
   }, [drawOpen])
 
-  useEffect(() => {
-    if (!insertOpen) return
-    const handler = (e: MouseEvent) => { if (!insertRef.current?.contains(e.target as Node)) setInsertOpen(false) }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [insertOpen])
-
-  useEffect(() => {
-    if (!tablePickerOpen) return
-    const handler = (e: MouseEvent) => { if (!tablePickerRef.current?.contains(e.target as Node)) { setTablePickerOpen(false); setTableHover([0, 0]) } }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [tablePickerOpen])
-
 
   useEffect(() => {
     if (!leftToolsRef.current) return
@@ -226,7 +210,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       ref={toolbarRef}
       id="document-toolbar"
       className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-3 pr-4 gap-2.5 z-[200] shrink-0 justify-between relative"
-      style={{ transform: "translateZ(0)", minWidth: 'max-content' }}
+      // Narrow windows: let the toolbar shrink so its own compact tiers (icons-only, fewer
+      // buttons, no sap pill) kick in — max-content kept it 521px wide on a phone.
+      style={{ transform: "translateZ(0)", minWidth: isNarrow ? 0 : 'max-content' }}
     >
 
       <div className="flex items-center gap-3 relative z-10 overflow-visible shrink-0" ref={leftToolsRef}>
@@ -244,117 +230,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         <div className="w-1 shrink-0" />
 
         {/* Insert Dropdown */}
-        <div ref={insertRef} className="relative flex shrink-0">
-          <button
-            onClick={() => setInsertOpen(!insertOpen)}
-            title="Insert elements"
-            className={`text-[12px] font-normal border border-zinc-200 rounded-[5px] ${compact ? 'p-1.5' : 'px-3 py-1'} bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97] flex items-center gap-1.5 ${insertOpen ? '' : 'text-zinc-700 hover:bg-zinc-100'}`}
-            style={{ ...(insertOpen ? neonStyle : {}), ...btnFont }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-            {!compact && <><span>insert</span>
-            <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg></>}
-          </button>
-
-          {insertOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[180px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
-              <div className={`px-2.5 py-1 text-[9px] font-normal tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>elements</div>
-              <button
-                onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'sticky' ? 'select' : 'sticky'); setInsertOpen(false) }}
-                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                style={btnFont}
-              >
-                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15.5 3h-10A2.5 2.5 0 0 0 3 5.5v13A2.5 2.5 0 0 0 5.5 21h13a2.5 2.5 0 0 0 2.5-2.5v-10L15.5 3z" />
-                  <path d="M15 3v5.5a2.5 2.5 0 0 0 2.5 2.5h5.5" />
-                </svg>
-                sticky note
-                <div className="ml-auto flex items-center gap-1">
-                  {[['#fef08a'], ['#fce7f3'], ['#fed7aa'], ['#bfdbfe']].map(([color]) => (
-                    <span
-                      key={color}
-                      onMouseDown={e => { e.stopPropagation(); e.preventDefault(); setStickyColor(color); setActiveTool('sticky'); setInsertOpen(false) }}
-                      className={`w-3 h-3 rounded-full border border-black/10 cursor-pointer hover:scale-125 transition-transform ${stickyColor === color && activeTool === 'sticky' ? 'ring-1.5 ring-zinc-400 ring-offset-1' : ''}`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </button>
-              <button
-                onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'hr' ? 'select' : 'hr'); setInsertOpen(false) }}
-                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                style={btnFont}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0"><line x1="3" y1="12" x2="21" y2="12" /></svg>
-                horizontal line
-              </button>
-              <button
-                onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'vr' ? 'select' : 'vr'); setInsertOpen(false) }}
-                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                style={btnFont}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0"><line x1="12" y1="3" x2="12" y2="21" /></svg>
-                vertical line
-              </button>
-              <button
-                onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'image' ? 'select' : 'image'); setInsertOpen(false) }}
-                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                style={btnFont}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
-                image
-              </button>
-              <div className={`h-px mx-1.5 my-0.5 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-100"}`} />
-              <div ref={tablePickerRef} className="relative">
-                <button
-                  onMouseDown={e => { e.preventDefault(); setTablePickerOpen(!tablePickerOpen) }}
-                  className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                  style={btnFont}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>
-                  table
-                </button>
-                {tablePickerOpen && (
-                  <div
-                    style={{
-                      position: "absolute", top: "100%", left: 0, marginTop: 4, zIndex: 999,
-                      borderRadius: 12, padding: 12,
-                      background: theme === "dark" ? "rgba(20,20,22,0.92)" : "rgba(255,255,255,0.92)",
-                      backdropFilter: "blur(20px) saturate(120%)",
-                      border: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)",
-                      boxShadow: theme === "dark" ? "0 12px 40px -10px rgba(0,0,0,0.7)" : "0 12px 40px -10px rgba(0,0,0,0.12)",
-                    }}
-                    onMouseLeave={() => setTableHover([0, 0])}
-                  >
-                    <div style={{ fontSize: 10, color: theme === "dark" ? "#a1a1aa" : "#71717a", marginBottom: 8, textAlign: "center", fontWeight: 400 }}>
-                      {tableHover[0] > 0 ? `${tableHover[0]} × ${tableHover[1]}` : "select size"}
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 20px)", gap: 3 }}>
-                      {Array.from({ length: 25 }, (_, i) => {
-                        const r = Math.floor(i / 5) + 1
-                        const c = (i % 5) + 1
-                        const active = r <= tableHover[0] && c <= tableHover[1]
-                        return (
-                          <div
-                            key={i}
-                            onMouseEnter={() => setTableHover([r, c])}
-                            onClick={() => { insertTable(r, c); setTablePickerOpen(false); setTableHover([0, 0]); setInsertOpen(false) }}
-                            style={{
-                              width: 20, height: 20, borderRadius: 3, cursor: "pointer",
-                              background: active ? "rgba(217,119,6,0.5)" : "rgba(217,119,6,0.12)",
-                              border: active ? "1.5px solid rgba(217,119,6,0.8)" : "1px solid rgba(217,119,6,0.25)",
-                              transition: "all 0.05s",
-                            }}
-                          />
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+        <InsertMenu theme={theme} compact={compact} activeTool={activeTool} setActiveTool={setActiveTool}
+          stickyColor={stickyColor} setStickyColor={setStickyColor} insertTable={insertTable} />
 
         {/* Grid button removed — click page number to open grid */}
 

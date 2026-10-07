@@ -1,21 +1,23 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useImageUpload } from "@/app/hooks/use-image-upload"
 import { ImagePlus, Upload, Trash2, X, Link as LinkIcon, Globe } from "lucide-react"
 import Image from "next/image"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 
 interface ImageUploadModalProps {
   onConfirm: (htmlOrUrl: string, isHtml: boolean) => void
   onClose: () => void
+  theme?: "light" | "dark"
 }
 
 function cn(...classes: (string | undefined | false | null)[]) {
   return classes.filter(Boolean).join(" ")
 }
 
-export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) {
+export function ImageUploadModal({ onConfirm, onClose, theme = "dark" }: ImageUploadModalProps) {
+  const dark = theme === "dark"
   const {
     previewUrl,
     fileName,
@@ -30,6 +32,28 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
   const [isDragging, setIsDragging] = useState(false)
 
   const pulpOrange = "#d97706"
+
+  // Esc closes; pasting an image or video file uploads it, pasting a URL embeds it
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); onClose() } }
+    const onPaste = (e: ClipboardEvent) => {
+      const file = Array.from(e.clipboardData?.files || []).find(f => f.type.startsWith("image/") || f.type.startsWith("video/"))
+      if (file) {
+        e.preventDefault()
+        setTab("upload")
+        handleFileChange({ target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>)
+        return
+      }
+      const text = e.clipboardData?.getData("text")?.trim()
+      if (text && /^https?:\/\//.test(text) && !(e.target instanceof HTMLInputElement)) {
+        e.preventDefault()
+        setTab("link"); setLinkUrl(text)
+      }
+    }
+    document.addEventListener("keydown", onKey, true)
+    document.addEventListener("paste", onPaste)
+    return () => { document.removeEventListener("keydown", onKey, true); document.removeEventListener("paste", onPaste) }
+  }, [onClose, handleFileChange])
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation() }
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true) }
@@ -79,7 +103,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
         exit={{ opacity: 0 }}
         transition={{ duration: 0.1 }}
         onClick={onClose}
-        className="absolute inset-0 bg-black/75"
+        className={cn("absolute inset-0", dark ? "bg-black/75" : "bg-black/35")}
       />
 
       <motion.div
@@ -87,28 +111,28 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.97 }}
         transition={{ duration: 0.1 }}
-        className="relative bg-zinc-800 border border-zinc-700/50 rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.6)] w-full max-w-sm overflow-hidden"
+        className={cn("relative rounded-2xl w-full max-w-sm overflow-hidden border", dark ? "bg-zinc-800 border-zinc-700/50 shadow-[0_24px_64px_rgba(0,0,0,0.6)]" : "bg-white border-zinc-200 shadow-[0_24px_64px_rgba(0,0,0,0.18)]")}
       >
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-right from-transparent via-orange-500/20 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-500/40 to-transparent" />
 
         <div className="px-8 pt-8 pb-4 flex items-center justify-between">
           <div className="flex gap-6">
             <button
               onClick={() => setTab("upload")}
-              className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "upload" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
+              className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "upload" ? (dark ? "text-white" : "text-zinc-900") : (dark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-600"))}
             >
               {tab === "upload" && <motion.div layoutId="mediaTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
               Upload
             </button>
             <button
               onClick={() => setTab("link")}
-              className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "link" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
+              className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "link" ? (dark ? "text-white" : "text-zinc-900") : (dark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-600"))}
             >
               {tab === "link" && <motion.div layoutId="mediaTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
               Embed
             </button>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-700/50 transition-colors">
+          <button onClick={onClose} className={cn("p-2 rounded-full transition-colors", dark ? "hover:bg-zinc-700/50" : "hover:bg-zinc-100")}>
             <X className="h-4 w-4 text-zinc-500" />
           </button>
         </div>
@@ -117,7 +141,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
           {tab === "upload" ? (
             <div className="flex flex-col gap-6">
               <div className="space-y-1">
-                <h3 className="text-xl text-white tracking-widest" style={{ fontFamily: 'Crimson Pro, serif' }}>Insert Media</h3>
+                <h3 className={cn("text-xl tracking-widest", dark ? "text-white" : "text-zinc-900")} style={{ fontFamily: 'Crimson Pro, serif' }}>Insert Media</h3>
                 <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">Photos, GIFs, or short videos.</p>
               </div>
 
@@ -132,20 +156,20 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
                     "flex h-48 cursor-pointer flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed transition-all",
                     isDragging
                       ? "border-orange-500 bg-orange-500/5 shadow-[0_0_40px_rgba(245,160,48,0.1)]"
-                      : "border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-600"
+                      : dark ? "border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-600" : "border-zinc-300 bg-zinc-50 hover:bg-zinc-100 hover:border-zinc-400"
                   )}
                 >
-                  <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center shadow-lg border border-zinc-700">
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shadow-lg border", dark ? "bg-zinc-800 border-zinc-700" : "bg-white border-zinc-200")}>
                     <Upload className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="text-center">
-                    <p className="text-xs font-normal uppercase tracking-[0.1em] text-zinc-300">Choose File</p>
-                    <p className="text-[9px] text-zinc-500 mt-1 uppercase tracking-widest">or drop here</p>
+                    <p className={cn("text-xs font-normal uppercase tracking-[0.1em]", dark ? "text-zinc-300" : "text-zinc-700")}>Choose File</p>
+                    <p className="text-[9px] text-zinc-500 mt-1 uppercase tracking-widest">drop, or paste with ⌘V</p>
                   </div>
                 </div>
               ) : (
                 <div className="relative group">
-                  <div className="relative h-48 overflow-hidden rounded-lg border border-zinc-700 group shadow-2xl">
+                  <div className={cn("relative h-48 overflow-hidden rounded-lg border group shadow-2xl", dark ? "border-zinc-700" : "border-zinc-200")}>
                     {fileName?.match(/\.(mp4|webm|ogg|mov)$/i) || previewUrl.startsWith("data:video") ? (
                       <video src={previewUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay muted loop />
                     ) : (
@@ -177,7 +201,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
           ) : (
             <div className="flex flex-col gap-6">
               <div className="space-y-1">
-                <h3 className="text-xl text-white tracking-widest" style={{ fontFamily: 'Crimson Pro, serif' }}>External Link</h3>
+                <h3 className={cn("text-xl tracking-widest", dark ? "text-white" : "text-zinc-900")} style={{ fontFamily: 'Crimson Pro, serif' }}>External Link</h3>
                 <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">YouTube, Vimeo, or direct image URL.</p>
               </div>
 
@@ -189,7 +213,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="Paste URL here..."
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-12 pr-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all placeholder:text-zinc-600"
+                  className={cn("w-full border rounded-lg pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all", dark ? "bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600" : "bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400")}
                   onKeyDown={e => e.key === "Enter" && triggerLinkEmbed()}
                 />
               </div>
