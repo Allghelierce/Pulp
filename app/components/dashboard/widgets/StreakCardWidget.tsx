@@ -1,36 +1,15 @@
 "use client"
-import { memo, useId, useMemo } from "react"
+import { memo, useMemo } from "react"
+import { StreakFlame } from "@/app/components/StreakFlame"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 import { CountUp, Burst, usePersonalBest, fmtInt } from "../lively"
 
 const font = 'Crimson Pro, serif'
 
-// A candle-ish flame. It grows with the streak; while today's goal is still
-// open it flickers gently (the streak is at risk), once met it burns steady.
+// The streak flame: real, moving fire that grows with the streak. While today's
+// goal is still open it flickers hard (the streak is at risk); once met it burns calmer.
 function Flame({ color, size, flicker, lit }: { color: string; size: number; flicker: boolean; lit: boolean }) {
-  const gid = useId().replace(/:/g, '')
-  return (
-    <div style={{ position: 'relative', width: size, height: size, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      {lit && (
-        <div className="lively-anim" style={{ position: 'absolute', left: '50%', bottom: '8%', width: size * 1.1, height: size * 1.1, marginLeft: -size * 0.55,
-          borderRadius: '50%', background: `radial-gradient(circle, ${color}55, transparent 65%)`,
-          animation: flicker ? 'none' : 'livelyBreathe 3.2s ease-in-out infinite', opacity: flicker ? 0.45 : undefined }} />
-      )}
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className="lively-anim"
-        style={{ position: 'relative', transformOrigin: '50% 92%', opacity: lit ? 1 : 0.3,
-          animation: lit && flicker ? 'livelyFlicker 1.6s ease-in-out infinite' : 'none',
-          filter: lit ? `drop-shadow(0 0 ${Math.round(size / 7)}px ${color}88)` : 'grayscale(1)' }}>
-        <defs>
-          <linearGradient id={gid} x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor={color} />
-            <stop offset="100%" stopColor="#fbbf24" />
-          </linearGradient>
-        </defs>
-        <path d="M12 2C12 2 7 8 7 13a5 5 0 0 0 10 0c0-5-5-11-5-11z" fill={`url(#${gid})`} />
-        <path d="M12 10c0 0-2 2.5-2 4.5a2 2 0 0 0 4 0c0-2-2-4.5-2-4.5z" fill="#fef3c7" opacity={0.85} />
-      </svg>
-    </div>
-  )
+  return <StreakFlame color={color} size={size} lit={lit} calm={!flicker} />
 }
 
 // Current and best day-streaks (any focus or writing counts as a day).
@@ -81,7 +60,7 @@ export const StreakBadge = memo(function StreakBadge({ isDark, dailyStats, daily
     : 'lit for today'
   return (
     <div title={`Streak: ${current} day${current === 1 ? '' : 's'} · best ${best}`} style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-      <Flame color={current > 0 ? color : '#a1a1aa'} size={Math.round(24 + Math.min(current, 30) * 0.4)} flicker={current > 0} lit={current > 0} />
+      <Flame color={current > 0 ? color : '#a1a1aa'} size={Math.round(24 + Math.min(current, 30) * 0.4)} flicker={current > 0 && !goalMet} lit={current > 0} />
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
         <span style={{ fontFamily: font, fontSize: 20, color: current > 0 ? (current < 3 ? (isDark ? '#dcd8d0' : '#2a2620') : color) : muted }}>
           <CountUp value={current} format={fmtInt} /> <span style={{ fontSize: 11, color: muted }}>{current === 1 ? 'day' : 'days'}</span>
