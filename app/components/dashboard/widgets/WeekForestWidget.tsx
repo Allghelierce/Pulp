@@ -17,7 +17,7 @@ const WeekForestWidget = memo(function WeekForestWidget({ isDark, dailyStats, gr
   const H = size[1] * ROW_HEIGHT + (size[1] - 1) * GRID_GAP
   const scale = Math.min(1.8, H / ROW_HEIGHT)
   const label = isDark ? '#e7e5e4' : '#2f2a22'
-  const soft = isDark ? 'rgba(231,229,228,0.55)' : 'rgba(47,42,34,0.72)'
+  const soft = isDark ? 'rgba(231,229,228,0.55)' : 'rgba(47,42,34,0.85)'
   const shadowText = isDark ? '0 1px 2px rgba(0,0,0,0.6)' : '0 0 3px rgba(255,255,255,0.7), 0 1px 0 rgba(255,255,255,0.6)'
 
   const days = useMemo(() => {
@@ -64,7 +64,7 @@ const WeekForestWidget = memo(function WeekForestWidget({ isDark, dailyStats, gr
         const left = `${((i + 0.5) / 7) * 100}%`
         const title = `${d.today ? 'Today' : d.name} · ${d.minutes} min focus${d.chars ? ` · ${d.chars.toLocaleString()} chars` : ''}`
         const dayLabel = (
-          <div style={{ marginTop: 3, fontSize: 9, letterSpacing: '0.04em', whiteSpace: 'nowrap', textShadow: shadowText,
+          <div style={{ marginTop: 3, fontSize: 10, letterSpacing: '0.04em', whiteSpace: 'nowrap', textShadow: shadowText,
             color: d.today ? '#d97706' : label, fontWeight: d.today ? 600 : 400 }}>
             {d.today ? 'today' : d.name}
             {d.minutes > 0 && <span style={{ color: soft, fontWeight: 400 }}> · {fmtMinutes(d.minutes)}</span>}
