@@ -2,6 +2,7 @@
 import { memo, useMemo, useState } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 import type { DailyEntry } from "@/app/lib/dailyStats"
+import { accentAlpha } from "@/lib/accent"
 
 const font = 'Crimson Pro, serif'
 const RING_GOALS = { focus: 60, writing: 2000, sessions: 3 }
@@ -58,10 +59,10 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
   const emptyCell = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
   const heatmapColors = useMemo(() => [
     emptyCell,
-    isDark ? 'rgba(234,88,12,0.35)' : 'rgba(234,88,12,0.25)',
-    isDark ? 'rgba(234,88,12,0.55)' : 'rgba(234,88,12,0.45)',
-    isDark ? 'rgba(234,88,12,0.78)' : 'rgba(234,88,12,0.65)',
-    isDark ? 'rgba(234,88,12,1)' : 'rgba(234,88,12,0.9)',
+    isDark ? accentAlpha(0.35) : accentAlpha(0.25),
+    isDark ? accentAlpha(0.55) : accentAlpha(0.45),
+    isDark ? accentAlpha(0.78) : accentAlpha(0.65),
+    isDark ? accentAlpha(1) : accentAlpha(0.9),
   ], [isDark, emptyCell])
 
   const monthGrid = useMemo(() => getMonthGrid(dailyStats, heatmapOffset), [dailyStats, heatmapOffset])
@@ -201,7 +202,7 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
           const r = isEmpty ? 1.6 : [0, 2.5, 3, 3.8, 4.5][c.level]
           return (
             <circle key={c.date} cx={px(col)} cy={py(row)} r={r}
-              fill={isEmpty ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)') : heatmapColors[c.level]} />
+              style={{ fill: isEmpty ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)') : heatmapColors[c.level] }} />
           )
         }))}
       </svg>

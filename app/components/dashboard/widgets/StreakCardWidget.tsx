@@ -2,6 +2,7 @@
 import { memo, useMemo } from "react"
 import { motion } from "framer-motion"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { ACCENT } from "@/lib/accent"
 
 const font = 'Crimson Pro, serif'
 
@@ -89,7 +90,7 @@ const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats, go
         </motion.div>
       )}
       {multiplier > 1 ? (
-        <span style={{ fontSize: 9, color: '#d97706', marginTop: 2, fontFamily: font }}>{multiplier}x active</span>
+        <span style={{ fontSize: 9, color: ACCENT, marginTop: 2, fontFamily: font }}>{multiplier}x active</span>
       ) : goalStreak > 0 ? (
         <span style={{ fontSize: 8, color: textMuted, marginTop: 2 }}>{goalStreak}/7 to 2x</span>
       ) : (

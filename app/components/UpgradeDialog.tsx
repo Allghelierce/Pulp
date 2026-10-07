@@ -1,8 +1,9 @@
 "use client"
 import { memo, useEffect, useState } from "react"
 import { PLUS_PRICE, startCheckout, type PlusPlan } from "@/lib/billing"
+import { ACCENT, ACCENT_CONTRAST } from "@/lib/accent"
 
-const accent = "#d97706"
+const accent = ACCENT
 const font = "Crimson Pro, serif"
 
 // Why the prompt opened (from a 402 limit code) -> one friendly line.
@@ -62,7 +63,7 @@ export const UpgradeDialog = memo(function UpgradeDialog({ theme, reason, onClos
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={() => buy("plus_yearly")} disabled={!!busy}
-            style={{ flex: "1 1 160px", padding: "11px 12px", borderRadius: 10, border: "none", cursor: busy ? "default" : "pointer", background: accent, color: "#fff", fontFamily: font, fontSize: 15, opacity: busy && busy !== "plus_yearly" ? 0.5 : 1 }}>
+            style={{ flex: "1 1 160px", padding: "11px 12px", borderRadius: 10, border: "none", cursor: busy ? "default" : "pointer", background: accent, color: ACCENT_CONTRAST, fontFamily: font, fontSize: 15, opacity: busy && busy !== "plus_yearly" ? 0.5 : 1 }}>
             {busy === "plus_yearly" ? "Opening checkout…" : <>${PLUS_PRICE.yearly} / year <span style={{ opacity: 0.8, fontSize: 12.5 }}>· ${(PLUS_PRICE.yearly / 12).toFixed(0)}/mo</span></>}
           </button>
           <button onClick={() => buy("plus_monthly")} disabled={!!busy}

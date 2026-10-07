@@ -2,6 +2,7 @@
 import { useState, useMemo, memo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TimerTreeGrowth } from "./TimerTreeGrowth"
+import { ACCENT } from "@/lib/accent"
 
 interface TimerPanelProps {
   isOpen: boolean
@@ -183,7 +184,7 @@ export const TimerPanel = memo(function TimerPanel({
               <h2 className="text-2xl font-normal tracking-tighter" style={{ fontFamily: 'Crimson Pro, serif', color: isDark ? "#fff" : "#1a1a1a" }}>
                 Distraction Blocker
               </h2>
-              <div className="h-[1px] w-12 bg-orange-500/40 mx-auto mt-4" />
+              <div className="h-[1px] w-12 bg-[rgb(var(--accent-rgb)/0.4)] mx-auto mt-4" />
             </header>
 
             <div className="flex flex-col items-center w-full mb-12">
@@ -207,7 +208,7 @@ export const TimerPanel = memo(function TimerPanel({
                       <button
                         key={p} onClick={() => handlePresetClick(p)}
                         disabled={running}
-                        className={`${btnBase} ${preset === p && !isStopwatch ? "bg-[#d97706] text-white shadow-lg" : btnInactive} ${running ? "opacity-50" : ""}`}
+                        className={`${btnBase} ${preset === p && !isStopwatch ? "bg-[var(--accent)] text-[var(--accent-contrast)] shadow-lg" : btnInactive} ${running ? "opacity-50" : ""}`}
                       >
                         {PRESET_LABELS[p]}
                       </button>
@@ -227,7 +228,7 @@ export const TimerPanel = memo(function TimerPanel({
                          type="range" min="1" max="120" step="1" 
                          value={total / 60}
                          onChange={(e) => handleSliderChange(e.target.value)}
-                         className="flex-1 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#d97706]"
+                         className="flex-1 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[var(--accent)]"
                        />
                        <span className="text-[10px] text-zinc-500 font-normal whitespace-nowrap">{total / 60}m</span>
                     </div>
@@ -268,15 +269,15 @@ export const TimerPanel = memo(function TimerPanel({
 
                   <button
                     onClick={() => onSetRunning(!running)} disabled={done}
-                    className="w-full relative overflow-hidden group py-3.5 rounded-xl transition-all bg-[#d97706]"
+                    className="w-full relative overflow-hidden group py-3.5 rounded-xl transition-all bg-[var(--accent)]"
                   >
                     <motion.div 
                       className="absolute inset-0 opacity-80"
-                      style={{ background: 'linear-gradient(90deg, #d97706, #d97706, #d97706)', backgroundSize: '200% 100%' }}
+                      style={{ background: `linear-gradient(90deg, ${ACCENT}, ${ACCENT}, ${ACCENT})`, backgroundSize: '200% 100%' }}
                       animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                     />
-                    <span className="relative z-10 text-white font-normal text-[11px] tracking-[0.3em] uppercase drop-shadow-sm">
+                    <span className="relative z-10 text-[var(--accent-contrast)] font-normal text-[11px] tracking-[0.3em] uppercase drop-shadow-sm">
                        {done ? "TAKE REWARD" : running ? "PAUSE SESSION" : "PLANT SEEDS"}
                     </span>
                   </button>

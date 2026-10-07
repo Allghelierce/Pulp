@@ -7,8 +7,9 @@ import { usePartyPresence } from "./PartyPresence"
 import { useGroveStore } from "@/app/store/useGroveStore"
 import { TREE_TYPES } from "@/app/constants"
 import { getWeekStart } from "@/lib/leagues"
+import { ACCENT, ACCENT_CONTRAST, accentAlpha } from "@/lib/accent"
 
-const accent = '#d97706'
+const accent = ACCENT
 const MEDALS = ['🥇', '🥈', '🥉']
 
 function Dot({ on }: { on: boolean }) {
@@ -170,7 +171,7 @@ function PartyGoal({ partyId, total, members, isDark, text, sub }: { partyId: nu
       </div>
       <div style={{ marginTop: 8, height: 8, borderRadius: 4, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${pct}%`, borderRadius: 4, transition: 'width .8s cubic-bezier(.2,.8,.2,1)',
-          background: done ? 'linear-gradient(90deg, #059669, #34d399)' : 'linear-gradient(90deg, #4d7c0f, #65a30d 55%, #d97706)' }} />
+          background: done ? 'linear-gradient(90deg, #059669, #34d399)' : `linear-gradient(90deg, #4d7c0f, #65a30d 55%, ${ACCENT})` }} />
       </div>
       {done && (
         <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -267,7 +268,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
   const field = { padding: '9px 12px', borderRadius: 10, outline: 'none', fontFamily: 'Crimson Pro, serif', fontSize: 14,
     border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`, background: isDark ? '#0e0c09' : '#fff', color: text } as const
   const btn = (enabled = true) => ({ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: enabled ? 'pointer' : 'default',
-    background: accent, color: '#fff', fontFamily: 'Crimson Pro, serif', fontSize: 14, opacity: enabled ? 1 : 0.5 } as const)
+    background: accent, color: ACCENT_CONTRAST, fontFamily: 'Crimson Pro, serif', fontSize: 14, opacity: enabled ? 1 : 0.5 } as const)
   const ghostBtn = { padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 13,
     border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`, background: 'transparent', color: text } as const
 
@@ -276,7 +277,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
       {(['party', 'friends'] as const).map(t => (
         <button key={t} onClick={() => { setTab(t); setMsg(null) }}
           style={{ padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 14, textTransform: 'capitalize',
-            background: tab === t ? accent : 'transparent', color: tab === t ? '#fff' : sub }}>{t}</button>
+            background: tab === t ? accent : 'transparent', color: tab === t ? ACCENT_CONTRAST : sub }}>{t}</button>
       ))}
     </div>
   )
@@ -393,8 +394,8 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
       <button onClick={onClick}
         style={{ flex: 1, padding: '16px 14px', borderRadius: 14, cursor: 'pointer', textAlign: 'left', fontFamily: 'Crimson Pro, serif',
           border: primary ? 'none' : `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`,
-          background: primary ? `linear-gradient(135deg, ${accent}, #b45309)` : 'transparent',
-          color: primary ? '#fff' : text, boxShadow: primary ? '0 8px 20px -10px rgba(217,119,6,0.7)' : 'none' }}>
+          background: primary ? `linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 82%, #000))` : 'transparent',
+          color: primary ? ACCENT_CONTRAST : text, boxShadow: primary ? `0 8px 20px -10px ${accentAlpha(0.7)}` : 'none' }}>
         <div style={{ fontSize: 16, fontWeight: 600 }}>{label}</div>
         <div style={{ fontSize: 12.5, opacity: 0.8, marginTop: 2 }}>{hint}</div>
       </button>
@@ -403,8 +404,8 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
       <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
         {Tabs}
         <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 14, textAlign: 'center',
-          background: isDark ? 'rgba(217,119,6,0.10)' : 'rgba(217,119,6,0.08)',
-          border: `1px solid ${isDark ? 'rgba(217,119,6,0.22)' : 'rgba(217,119,6,0.18)'}` }}>
+          background: accentAlpha(isDark ? 0.10 : 0.08),
+          border: `1px solid ${accentAlpha(isDark ? 0.22 : 0.18)}` }}>
           <div style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
             <style>{SCENE_CSS}</style>
             <GroveBackdrop isDark={isDark} height={110} />
@@ -487,7 +488,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
       {p.members.length < PARTY_CAP && (
         <button onClick={copyLink} title={inviteLink}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', border: 'none',
-            background: linkCopied ? 'rgba(52,211,153,0.15)' : 'rgba(217,119,6,0.12)', color: linkCopied ? '#34d399' : accent, fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
+            background: linkCopied ? 'rgba(52,211,153,0.15)' : accentAlpha(0.12), color: linkCopied ? '#34d399' : accent, fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
           {linkCopied ? '✓ link copied' : '🔗 copy invite link'}
         </button>
       )}
@@ -502,7 +503,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
           <h3 style={{ color: text, fontSize: 14, margin: '0 0 2px' }}>Wants to join</h3>
           {p.requests.map(r => (
             <div key={r.userId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12,
-              background: isDark ? 'rgba(217,119,6,0.08)' : 'rgba(217,119,6,0.06)', color: text }}>
+              background: accentAlpha(isDark ? 0.08 : 0.06), color: text }}>
               <span style={{ fontSize: 15 }}>@{r.username}</span>
               <span style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
                 <button disabled={busy || p.members.length >= PARTY_CAP} onClick={() => run(() => answerRequest(p.id, r.userId, true))}
@@ -520,8 +521,8 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
           const pct = maxMinutes > 0 ? Math.round((m.weeklyMinutes / maxMinutes) * 100) : 0
           return (
             <div key={m.id} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px 13px', borderRadius: 12,
-              background: m.isYou ? 'rgba(217,119,6,0.12)' : rowBg,
-              border: m.isYou ? `1px solid rgba(217,119,6,0.35)` : '1px solid transparent', color: text }}>
+              background: m.isYou ? accentAlpha(0.12) : rowBg,
+              border: m.isYou ? `1px solid ${accentAlpha(0.35)}` : '1px solid transparent', color: text }}>
               <span style={{ width: 22, textAlign: 'center', fontSize: top ? 16 : 13, color: sub }}>{top ? MEDALS[m.rank - 1] : m.rank}</span>
               {focusLeft[m.id] != null
                 ? <span title="focusing" className="grove-anim" style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: '#34d399',
@@ -532,7 +533,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
               <span style={{ marginLeft: 'auto', color: accent, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{m.weeklyMinutes} min</span>
               <span style={{ position: 'absolute', left: 14, right: 14, bottom: 5, height: 2, borderRadius: 1, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
                 <span style={{ display: 'block', height: '100%', width: `${pct}%`, borderRadius: 1, transition: 'width .6s ease',
-                  background: 'linear-gradient(90deg, #4d7c0f, #65a30d 60%, #d97706)' }} />
+                  background: `linear-gradient(90deg, #4d7c0f, #65a30d 60%, ${ACCENT})` }} />
               </span>
             </div>
           )

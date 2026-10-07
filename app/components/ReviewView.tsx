@@ -13,6 +13,7 @@ import {
 } from "@/lib/recallSchedule"
 import type { GradeResult, Verdict } from "@/lib/recallPrompt"
 import { normalizeTopic } from "@/lib/topics"
+import { readableOn } from "@/lib/accent"
 
 // Growth weight per AI verdict — growth comes from actual retrieval, not the clicked grade.
 const VERDICT_WEIGHT: Record<Verdict, number> = { correct: 1, partial: 0.5, wrong: 0 }
@@ -78,6 +79,7 @@ const GRADES: { g: Grade; label: string; key: string }[] = [
 
 export const ReviewView = memo(function ReviewView({ note, theme, accent, onClose, onComplete, onCorrect, topic, onShowTopic }: ReviewViewProps) {
   const isDark = theme === "dark"
+  const onAccent = readableOn(accent) // text on accent-filled buttons
   const font = "'Crimson Pro', serif"
 
   const noteText = useMemo(() => gatherNotebookText(note), [note])
@@ -341,7 +343,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
           <div style={{ textAlign: "center", maxWidth: 360 }}>
             <div style={{ fontSize: 17, color: fg, marginBottom: 6 }}>No cards for {topic!.trim()} yet</div>
             <div style={{ fontSize: 13.5, color: muted, lineHeight: 1.55, marginBottom: 20 }}>Cards for this topic are made when a focus session on it ends. Reviewing this notebook&apos;s untagged cards can still grow it.</div>
-            <button onClick={onClose} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "11px 26px", fontSize: 15, cursor: "pointer", fontFamily: font, fontWeight: 500 }}>Close</button>
+            <button onClick={onClose} style={{ background: accent, color: onAccent, border: "none", borderRadius: 10, padding: "11px 26px", fontSize: 15, cursor: "pointer", fontFamily: font, fontWeight: 500 }}>Close</button>
           </div>
         )}
 
@@ -349,7 +351,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
           <div style={{ textAlign: "center", maxWidth: 360 }}>
             <div style={{ fontSize: 17, color: fg, marginBottom: 6 }}>No review deck yet</div>
             <div style={{ fontSize: 13.5, color: muted, lineHeight: 1.55, marginBottom: 20 }}>Pulp will read this notebook and build active-recall cards, then schedule them so easy ones return less often.</div>
-            <button onClick={() => generate(deck)} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "11px 26px", fontSize: 15, cursor: "pointer", fontFamily: font, fontWeight: 500 }}>Build deck</button>
+            <button onClick={() => generate(deck)} style={{ background: accent, color: onAccent, border: "none", borderRadius: 10, padding: "11px 26px", fontSize: 15, cursor: "pointer", fontFamily: font, fontWeight: 500 }}>Build deck</button>
           </div>
         )}
 
@@ -357,7 +359,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
           <div style={{ textAlign: "center", maxWidth: 340 }}>
             <div style={{ fontSize: 15, color: fg, marginBottom: 6 }}>Can&apos;t review yet</div>
             <div style={{ fontSize: 13, color: muted, lineHeight: 1.5, marginBottom: 18 }}>{error}</div>
-            <button onClick={() => generate(deck)} style={{ background: accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 13, cursor: "pointer", fontFamily: font }}>Try again</button>
+            <button onClick={() => generate(deck)} style={{ background: accent, color: onAccent, border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 13, cursor: "pointer", fontFamily: font }}>Try again</button>
           </div>
         )}
 
@@ -374,7 +376,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
                 <button onClick={() => {
                   const ahead = deck.cards.filter(c => inScope(c) && c.reps > 0).sort((a, b) => a.due - b.due).slice(0, 25)
                   if (ahead.length) { studied.current = new Set(); reviewingAhead.current = true; setLog([]); resetAttempt(); setQueue(ahead); setPhase("card") }
-                }} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Review ahead</button>
+                }} style={{ background: accent, color: onAccent, border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Review ahead</button>
               )}
               <button onClick={() => generate(deck)} style={{ background: "transparent", color: subtle, border: `1px solid ${border}`, borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Add more cards</button>
             </div>
@@ -445,7 +447,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
                     <div style={{ fontSize: 12.5, color: muted, marginBottom: 12 }}>
                       {gradeLimited ? (<>
                         Today&apos;s free AI grading is used up — rate yourself below.{" "}
-                        <button onClick={() => requestUpgrade({ code: "grade_upsell" })} style={{ background: "none", border: "none", padding: 0, color: "#d97706", cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Plus grades every answer</button>
+                        <button onClick={() => requestUpgrade({ code: "grade_upsell" })} style={{ background: "none", border: "none", padding: 0, color: accent, cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Plus grades every answer</button>
                       </>) : <>Couldn&apos;t auto-grade this one — rate yourself below.</>}
                     </div>
                   )}
@@ -467,7 +469,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
                   <button onClick={() => submitAnswer(true)} disabled={grading} style={{ background: "transparent", color: muted, border: `1px solid ${border}`, borderRadius: 10, padding: "11px 20px", fontSize: 14.5, cursor: grading ? "default" : "pointer", fontFamily: font }}>
                     I don&apos;t know
                   </button>
-                  <button onClick={() => submitAnswer()} disabled={grading} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontSize: 15, cursor: grading ? "default" : "pointer", fontFamily: font, fontWeight: 500, opacity: grading ? 0.75 : 1 }}>
+                  <button onClick={() => submitAnswer()} disabled={grading} style={{ background: accent, color: onAccent, border: "none", borderRadius: 10, padding: "11px 28px", fontSize: 15, cursor: grading ? "default" : "pointer", fontFamily: font, fontWeight: 500, opacity: grading ? 0.75 : 1 }}>
                     {grading ? "Checking…" : <>Check answer <span style={{ opacity: 0.6, fontSize: 12 }}>⏎</span></>}
                   </button>
                 </>
@@ -478,7 +480,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
                     <button key={g} onClick={() => grade(g)} style={{
                       flex: 1, maxWidth: 130,
                       background: suggested ? gradeColor(g) : "transparent",
-                      color: suggested ? "#fff" : gradeColor(g),
+                      color: suggested ? readableOn(gradeColor(g)) : gradeColor(g),
                       border: `1.5px solid ${suggested ? gradeColor(g) : `${gradeColor(g)}55`}`, borderRadius: 10, padding: "9px 0",
                       fontSize: 14.5, cursor: "pointer", fontFamily: font, fontWeight: 500,
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
@@ -522,9 +524,9 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
             </div>
             <div style={{ marginTop: 22, display: "flex", gap: 10, justifyContent: "center" }}>
               {stats.dueNow > 0 && deck && (
-                <button onClick={() => startSession(deck)} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 22px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Keep going</button>
+                <button onClick={() => startSession(deck)} style={{ background: accent, color: onAccent, border: "none", borderRadius: 10, padding: "10px 22px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Keep going</button>
               )}
-              <button onClick={onClose} style={{ background: stats.dueNow > 0 ? "transparent" : accent, color: stats.dueNow > 0 ? subtle : "#fff", border: stats.dueNow > 0 ? `1px solid ${border}` : "none", borderRadius: 10, padding: "10px 22px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Done</button>
+              <button onClick={onClose} style={{ background: stats.dueNow > 0 ? "transparent" : accent, color: stats.dueNow > 0 ? subtle : onAccent, border: stats.dueNow > 0 ? `1px solid ${border}` : "none", borderRadius: 10, padding: "10px 22px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Done</button>
             </div>
           </div>
         )}

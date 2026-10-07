@@ -1,5 +1,6 @@
 "use client"
 import { memo, useState, useEffect, useCallback } from "react"
+import { ACCENT } from "@/lib/accent"
 interface FocusViewProps {
   isOpen: boolean
   onClose: () => void
@@ -142,8 +143,8 @@ export const FocusView = memo(function FocusView({
                 href="https://chromewebstore.google.com/detail/pulp-focus/YOUR_EXTENSION_ID"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-normal text-white transition-all hover:brightness-110"
-                style={{ background: "#e67e22", fontFamily: font }}
+                className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-normal text-[var(--accent-contrast)] transition-all hover:brightness-110"
+                style={{ background: ACCENT, fontFamily: font }}
               >
                 Get Extension
               </a>
@@ -172,8 +173,8 @@ export const FocusView = memo(function FocusView({
             />
             <button
               onClick={addSite}
-              className="px-5 py-2.5 rounded-lg text-[12px] font-normal text-white transition-all hover:brightness-110"
-              style={{ background: "#e67e22", fontFamily: font }}
+              className="px-5 py-2.5 rounded-lg text-[12px] font-normal text-[var(--accent-contrast)] transition-all hover:brightness-110"
+              style={{ background: ACCENT, fontFamily: font }}
             >
               Block
             </button>

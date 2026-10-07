@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useRef, useState, memo } from "react"
 import { useAutoResizeTextarea } from "@/components/hooks/use-auto-resize-textarea"
+import { ACCENT, accentAlpha } from "@/lib/accent"
 
 const PROMPTS = [
   "Summarize this in 1-2 sentences",
@@ -57,7 +58,7 @@ function PromptCarousel({ onSelect, isDark }: { onSelect: (p: string) => void; i
               className="ai-prompt-btn"
               style={{ color: textColor }}
               onClick={() => onSelect(p)}
-              onMouseEnter={e => { e.currentTarget.style.color = "#b85e22" }}
+              onMouseEnter={e => { e.currentTarget.style.color = ACCENT }}
               onMouseLeave={e => { e.currentTarget.style.color = textColor }}
             >
               {p}
@@ -174,7 +175,7 @@ export const AiInlineMenu = memo(function AiInlineMenu({
             display: "-webkit-box",
             WebkitLineClamp: 3,
             WebkitBoxOrient: "vertical" as const,
-            borderLeft: "2px solid #b85e22",
+            borderLeft: `2px solid ${ACCENT}`,
             paddingLeft: 8,
           }}>
             {selectedText}
@@ -185,7 +186,7 @@ export const AiInlineMenu = memo(function AiInlineMenu({
       {/* Input row */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px" }}>
         {/* Sparkle icon */}
-        <div style={{ paddingTop: 7, flexShrink: 0, color: "#b85e22" }}>
+        <div style={{ paddingTop: 7, flexShrink: 0, color: ACCENT }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
           </svg>
@@ -213,7 +214,7 @@ export const AiInlineMenu = memo(function AiInlineMenu({
             lineHeight: 1.5,
             paddingTop: 6,
             paddingBottom: 6,
-            caretColor: "#b85e22",
+            caretColor: ACCENT,
             fontFamily: "inherit",
           }}
           // inline placeholder color via CSS
@@ -236,9 +237,9 @@ export const AiInlineMenu = memo(function AiInlineMenu({
             alignItems: "center",
             justifyContent: "center",
             background: value.trim() && !loading
-              ? (isDark ? "rgba(184,94,34,0.2)" : "rgba(184,94,34,0.1)")
+              ? accentAlpha(isDark ? 0.2 : 0.1)
               : "transparent",
-            color: value.trim() && !loading ? "#b85e22" : mutedColor,
+            color: value.trim() && !loading ? ACCENT : mutedColor,
             transition: "all 0.12s ease",
           }}
         >
@@ -246,7 +247,7 @@ export const AiInlineMenu = memo(function AiInlineMenu({
             <div style={{
               width: 12,
               height: 12,
-              border: `2px solid ${"#b85e22"}`,
+              border: `2px solid ${ACCENT}`,
               borderTopColor: "transparent",
               borderRadius: "50%",
               animation: "spin 0.7s linear infinite",

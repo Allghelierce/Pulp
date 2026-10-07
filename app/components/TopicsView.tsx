@@ -6,6 +6,7 @@ import { PlantIcon } from "@/app/components/PlantIcon"
 import { buildTopicIndex, bestNotebookFor, type TopicRow } from "@/lib/topicIndex"
 import { normalizeTopic, freshnessFilter } from "@/lib/topics"
 import { getPalette, getType, chipButton, FONT_SERIF } from "@/app/theme/palette"
+import { readableOn } from "@/lib/accent"
 
 const relTime = (ms: number, now: number) => {
   if (!ms) return "not studied yet"
@@ -81,6 +82,7 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
   const firstDue = rows.find(r => r.due > 0)
 
   const isDark = theme === "dark"
+  const onAccent = readableOn(accent) // text on accent-filled buttons
   const p = getPalette(isDark)
   const type = getType(p)
   const cardBg = isDark ? "#1c1915" : "#ffffff"
@@ -188,7 +190,7 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
                 style={{
                   marginTop: 10, width: "100%", display: "flex", alignItems: "center", gap: 14, textAlign: "left", cursor: "pointer",
                   padding: "14px 18px", borderRadius: 16, fontFamily: FONT_SERIF,
-                  background: isDark ? "linear-gradient(100deg, rgba(217,119,6,0.18), rgba(217,119,6,0.05))" : "linear-gradient(100deg, rgba(217,119,6,0.14), rgba(217,119,6,0.03))",
+                  background: isDark ? `linear-gradient(100deg, ${accent}2e, ${accent}0d)` : `linear-gradient(100deg, ${accent}24, ${accent}08)`,
                   border: `1px solid ${accent}55`, boxShadow: `0 0 24px ${accent}14`,
                 }}
               >
@@ -196,7 +198,7 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
                   <div style={{ ...type.eyebrow, fontSize: 9, color: accent }}>Up next</div>
                   <div style={{ fontSize: 19, color: fg, marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{firstDue.name}</div>
                 </div>
-                <span style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8, background: accent, color: "#fff", borderRadius: 999, padding: "8px 16px", fontSize: 14, boxShadow: `0 4px 14px ${accent}55` }}>
+                <span style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8, background: accent, color: onAccent, borderRadius: 999, padding: "8px 16px", fontSize: 14, boxShadow: `0 4px 14px ${accent}55` }}>
                   Start · {firstDue.due}
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </span>
@@ -283,7 +285,7 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
                           <motion.button
                             whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
                             onClick={() => onRecall(r.name, bestNotebookFor(r))}
-                            style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 7, background: accent, color: "#fff", border: "none", borderRadius: 999, padding: "6px 7px 6px 14px", fontSize: 14, fontFamily: FONT_SERIF, cursor: "pointer", whiteSpace: "nowrap", boxShadow: `0 3px 12px ${accent}40` }}
+                            style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 7, background: accent, color: onAccent, border: "none", borderRadius: 999, padding: "6px 7px 6px 14px", fontSize: 14, fontFamily: FONT_SERIF, cursor: "pointer", whiteSpace: "nowrap", boxShadow: `0 3px 12px ${accent}40` }}
                           >
                             Recall
                             <span style={{ background: "rgba(255,255,255,0.22)", borderRadius: 999, padding: "0 7px", fontSize: 12, fontVariantNumeric: "tabular-nums" }}>{r.due}</span>

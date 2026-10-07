@@ -9,6 +9,8 @@
 //  - Everything else uses the CSS variables set on <html>: ACCENT / accentAlpha() /
 //    ACCENT_CONTRAST below (or Tailwind arbitrary values like bg-[var(--accent)]).
 
+import type { CSSProperties } from "react"
+
 export const BRAND_ORANGE = "#d97706"
 
 /** CSS value for the accent color. Use in inline styles / SVG style props (not canvas). */
@@ -19,6 +21,17 @@ export const ACCENT_CONTRAST = "var(--accent-contrast)"
 export const ACCENT_STRONG = "var(--accent-strong)"
 /** Accent at an opacity, e.g. accentAlpha(0.12) for tinted backgrounds/borders. */
 export const accentAlpha = (a: number) => `rgb(var(--accent-rgb) / ${a})`
+/**
+ * Spread into the style of a surface that is dark in BOTH themes (sidebar, orchard glass
+ * bar, mascot bubbles): re-points the accent variables at the dark-theme accent so
+ * ACCENT / accentAlpha() / Tailwind var(--accent) inside it stay visible in light theme.
+ */
+export const ACCENT_DARK_SURFACE = {
+  "--accent": "var(--accent-dark)",
+  "--accent-rgb": "var(--accent-dark-rgb)",
+  "--accent-contrast": "var(--accent-dark-contrast)",
+  "--accent-strong": "var(--accent-dark-strong)",
+} as CSSProperties
 
 type RGB = [number, number, number]
 
@@ -41,7 +54,10 @@ function contrast(a: RGB, b: RGB): number {
 const mix = (a: RGB, b: RGB, t: number): RGB => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
 
 const BG: Record<"light" | "dark", RGB> = { dark: [9, 9, 11], light: [245, 243, 239] }
-const MIN_CONTRAST = 2.5 // keeps Pulp orange exact on both themes; rescues near-invisible picks
+// Minimum contrast vs the page. Pulp orange (6.2 dark / 2.87 light) stays exact on both;
+// dark picks (Obsidian) get lifted enough on dark to read as a highlight, not a disabled grey,
+// and light picks (Cyan, Green) get darkened on light until they read like orange does.
+const MIN_CONTRAST: Record<"light" | "dark", number> = { dark: 4, light: 2.8 }
 
 /**
  * The accent adjusted to stay visible on the current theme: very dark picks (Obsidian)
@@ -51,30 +67,38 @@ const MIN_CONTRAST = 2.5 // keeps Pulp orange exact on both themes; rescues near
 export function accentForTheme(hex: string, theme: "light" | "dark"): string {
   const rgb = parseHex(hex) ?? parseHex(BRAND_ORANGE)!
   const bg = BG[theme]
-  if (contrast(rgb, bg) >= MIN_CONTRAST) return toHex(rgb)
+  const min = MIN_CONTRAST[theme]
+  if (contrast(rgb, bg) >= min) return toHex(rgb)
   const toward: RGB = theme === "dark" ? [255, 255, 255] : [0, 0, 0]
   for (let t = 0.05; t <= 1; t += 0.05) {
     const c = mix(rgb, toward, t)
-    if (contrast(c, bg) >= MIN_CONTRAST) return toHex(c)
+    if (contrast(c, bg) >= min) return toHex(c)
   }
   return toHex(toward)
 }
 
-/** Text on the accent: white (Pulp's style) unless the color is too light for it. */
+/** Text on the accent: white (Pulp's style; orange is 3.2:1) unless the color is too light for it. */
 export function readableOn(hex: string): string {
   const rgb = parseHex(hex) ?? parseHex(BRAND_ORANGE)!
-  return contrast(rgb, [255, 255, 255]) >= 2.6 ? "#ffffff" : "#111111"
+  return contrast(rgb, [255, 255, 255]) >= 3 ? "#ffffff" : "#111111"
 }
 
-/** CSS custom properties for <html>: --accent, --accent-rgb, --accent-contrast, --accent-strong. */
-export function accentCssVars(hex: string, theme: "light" | "dark"): Record<string, string> {
+function themeVars(hex: string, theme: "light" | "dark", prefix: string): Record<string, string> {
   const ui = accentForTheme(hex, theme)
   const rgb = parseHex(ui)!
   const strong = toHex(mix(rgb, theme === "dark" ? [255, 255, 255] : [0, 0, 0], 0.15))
   return {
-    "--accent": ui,
-    "--accent-rgb": rgb.map(Math.round).join(" "),
-    "--accent-contrast": readableOn(ui),
-    "--accent-strong": strong,
+    [prefix]: ui,
+    [`${prefix}-rgb`]: rgb.map(Math.round).join(" "),
+    [`${prefix}-contrast`]: readableOn(ui),
+    [`${prefix}-strong`]: strong,
   }
+}
+
+/**
+ * CSS custom properties for <html>: --accent, --accent-rgb, --accent-contrast, --accent-strong,
+ * plus --accent-dark(-rgb/-contrast/-strong) for always-dark surfaces (see ACCENT_DARK_SURFACE).
+ */
+export function accentCssVars(hex: string, theme: "light" | "dark"): Record<string, string> {
+  return { ...themeVars(hex, theme, "--accent"), ...themeVars(hex, "dark", "--accent-dark") }
 }

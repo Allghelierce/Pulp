@@ -5,7 +5,7 @@ import { LazyMotion, domAnimation, m, motion, AnimatePresence } from "framer-mot
 import { flushSync } from "react-dom"
 import { supabase } from "@/lib/supabase"
 import { apiFetch } from "@/lib/apiFetch"
-import { accentForTheme, accentCssVars } from "@/lib/accent"
+import { accentForTheme, accentCssVars, ACCENT, accentAlpha, ACCENT_DARK_SURFACE } from "@/lib/accent"
 import { sanitizeHTML, extractTextFromHTML } from "@/lib/sanitize"
 import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User, HLine } from "@/app/types"
@@ -280,7 +280,7 @@ const ScrollModePage = memo(function ScrollModePage({
         backgroundImage: paperImg,
         backgroundSize: paperSize,
         cursor: isActive ? undefined : "pointer",
-        outline: isActive ? `2px solid #d97706` : "2px solid transparent",
+        outline: isActive ? `2px solid ${ACCENT}` : "2px solid transparent",
         outlineOffset: 2,
         transition: "outline-color 0.15s",
       }}
@@ -505,7 +505,7 @@ const BoxItem = memo(function BoxItem({
               background: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", border: "none",
               cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: box.sizeLocked ? "#d97706" : (isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)"), flexShrink: 0,
+              color: box.sizeLocked ? accentSolid : (isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)"), flexShrink: 0,
               filter: "url(#handwritten-jitter-subtle)"
             }}
           >
@@ -3704,7 +3704,7 @@ export default function NoteApp() {
           <PlantImagePreloader />
           {/* Growth vines fill the margins while a focus session runs */}
           <VinesOverlay ref={vinesRef} visible={timerRunning && !reduceVisuals && !isNarrow} theme={theme} reduceMotion={reduceMotion} leftInset={sidebarWidth > 40 ? sidebarWidth : 0} />
-          <PlantedToast theme={theme} accent={accentSolid} onReview={(topic, notebookId) => {
+          <PlantedToast theme={theme} accent={accentUi} onReview={(topic, notebookId) => {
             startTransition(() => { closeAllPanels(); setReviewTopic(topic); setReviewNoteId(notebookId); setReviewOpen(true) })
           }} />
           {goalStreak >= 3 && goalStreakLastDate !== new Date().toISOString().split('T')[0] && !streakNudgeDismissed && !timerOpen && (
@@ -3720,7 +3720,7 @@ export default function NoteApp() {
               <button onClick={() => setStreakNudgeDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.4, fontSize: 13, lineHeight: 1, padding: 0 }}>×</button>
             </div>
           )}
-          {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
+          {dialog && <AppDialog config={dialog} accent={accentForTheme(accentSolid, "dark")} onClose={() => setDialog(null)} />}
           {showSettings && <Suspense fallback={<PulpLoader variant="panel" />}>
             <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}>
               <SettingsView
@@ -3782,7 +3782,7 @@ export default function NoteApp() {
                 notes={sortedNotes}
                 folders={folders}
                 activeTabId={activeTabId}
-                accent={accent}
+                accent={accentUi}
                 draggedNoteId={draggedNoteId}
                 renamingFolder={renamingFolder}
                 mini={orchardOpen || statsOpen || shopOpen || reviewOpen}
@@ -3943,7 +3943,7 @@ export default function NoteApp() {
                   setActiveTool={setActiveTool}
                   stickyColor={stickyColor}
                   setStickyColor={setStickyColor}
-                  accent={accent}
+                  accent={accentUi}
                   theme={theme}
                   zoom={zoom}
                   setZoom={setZoom}
@@ -4096,7 +4096,7 @@ export default function NoteApp() {
                     <h1 className="text-3xl font-normal tracking-tight mb-5" style={{ fontFamily: 'Crimson Pro, serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
 
                     {/* Primary Button */}
-                    <AnimatedCreateButton onClick={addFirstNotebook} accent={accent} theme={theme} />
+                    <AnimatedCreateButton onClick={addFirstNotebook} accent={accentUi} theme={theme} />
 
                     {/* Quick Tips */}
                     <div className="mt-5 pt-4" style={{ borderTop: theme === "dark" ? "1px solid #333" : "1px solid #ddd" }}>
@@ -4123,7 +4123,7 @@ export default function NoteApp() {
                           alignItems: "center"
                         }}
                       >
-                        <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "light" ? "#fbbf24" : "#888", zIndex: 10, position: "relative" }}>
+                        <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "light" ? ACCENT : "#888", zIndex: 10, position: "relative" }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                             <circle cx="12" cy="12" r="5" />
                             <line x1="12" y1="1" x2="12" y2="3" strokeWidth="2" stroke="currentColor" />
@@ -4151,7 +4151,7 @@ export default function NoteApp() {
                             boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)"
                           }}
                         />
-                        <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "dark" ? "#fbbf24" : "#888", zIndex: 10, position: "relative" }}>
+                        <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "dark" ? ACCENT : "#888", zIndex: 10, position: "relative" }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                           </svg>
@@ -4197,9 +4197,9 @@ export default function NoteApp() {
                     {/* Active page divider in scroll mode */}
                     {scrollMode && currentPageIdx > 0 && (
                       <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
-                        <div style={{ flex: 1, height: 1, background: accent }} />
-                        <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: accent, fontWeight: 600, userSelect: "none" }}>Page {currentPageIdx + 1}</span>
-                        <div style={{ flex: 1, height: 1, background: accent }} />
+                        <div style={{ flex: 1, height: 1, background: accentUi }} />
+                        <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: accentUi, fontWeight: 600, userSelect: "none" }}>Page {currentPageIdx + 1}</span>
+                        <div style={{ flex: 1, height: 1, background: accentUi }} />
                       </div>
                     )}
                     <div style={{ position: "relative", overflow: "visible" }} ref={el => { if (el && scrollMode) scrollPageRefs.current.set(currentPageIdx, el); }} data-page-idx={currentPageIdx}>
@@ -4272,7 +4272,7 @@ export default function NoteApp() {
                                       })
                                     }
                                   }}
-                                  className="mt-2 px-8 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-normal rounded-full shadow-lg transition-all active:scale-95 uppercase tracking-widest"
+                                  className="mt-2 px-8 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-strong)] text-[var(--accent-contrast)] text-xs font-normal rounded-full shadow-lg transition-all active:scale-95 uppercase tracking-widest"
                                 >
                                   Unlock Now
                                 </button>
@@ -4293,10 +4293,10 @@ export default function NoteApp() {
                                     <div key={idx} className="absolute top-0 bottom-0 z-20 pointer-events-none transition-all" style={{
                                       left: lx,
                                       width: isSelected ? "3px" : "1.5px",
-                                      backgroundColor: isSelected ? accent : (theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"),
-                                      borderLeft: isSelected ? `2px solid ${accent}` : `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                                      backgroundColor: isSelected ? accentUi : (theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"),
+                                      borderLeft: isSelected ? `2px solid ${accentUi}` : `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
                                       opacity: isSelected ? 1 : 0.6,
-                                      boxShadow: isSelected ? `0 0 12px ${accent}33` : undefined
+                                      boxShadow: isSelected ? `0 0 12px ${accentUi}33` : undefined
                                     }} />
                                   )
                                 })
@@ -4309,7 +4309,7 @@ export default function NoteApp() {
                                 onSelect={boxes.selectHLines}
                                 onCommit={boxes.commitHLines}
                                 zoom={Number(zoom) || 1}
-                                accent={accent}
+                                accent={accentUi}
                                 inkColor={getInkColor(paperStyle, theme === "dark")}
                               />
 
@@ -4338,7 +4338,7 @@ export default function NoteApp() {
 
                               <style>{`
                              #editor-paper [contenteditable] {
-                               caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
+                               caret-color: ${accentUi} !important;
                                opacity: 1 !important;
                                font-weight: 500 !important;
                                letter-spacing: 0.1px !important;
@@ -4384,10 +4384,10 @@ export default function NoteApp() {
                                user-select: none;
                                transition: color 0.15s;
                              }
-                             .pulp-table-wrap:hover::before { color: ${accent}88; }
-                             .pulp-table-wrap:hover { outline: 2px solid ${accent}33; outline-offset: 4px; border-radius: 4px; }
-                             .pulp-table-wrap.pulp-table-selected { outline: 2px solid ${accent}; outline-offset: 4px; border-radius: 4px; }
-                             .pulp-table-wrap.pulp-table-selected::before { color: ${accent}; }
+                             .pulp-table-wrap:hover::before { color: ${accentUi}88; }
+                             .pulp-table-wrap:hover { outline: 2px solid ${accentUi}33; outline-offset: 4px; border-radius: 4px; }
+                             .pulp-table-wrap.pulp-table-selected { outline: 2px solid ${accentUi}; outline-offset: 4px; border-radius: 4px; }
+                             .pulp-table-wrap.pulp-table-selected::before { color: ${accentUi}; }
                            `}</style>
 
                               {/* Selection rectangle — always in DOM, shown/hidden via direct DOM style */}
@@ -4397,9 +4397,9 @@ export default function NoteApp() {
                                   display: "none",
                                   position: "absolute",
                                   left: 0, top: 0, width: 0, height: 0,
-                                  backgroundColor: "rgba(217, 119, 6, 0.12)",
-                                  border: "1.5px solid rgba(217, 119, 6, 0.45)",
-                                  boxShadow: "0 0 25px -5px rgba(217, 119, 6, 0.3)",
+                                  backgroundColor: accentAlpha(0.12),
+                                  border: `1.5px solid ${accentAlpha(0.45)}`,
+                                  boxShadow: `0 0 25px -5px ${accentAlpha(0.3)}`,
                                   borderRadius: 0,
                                   pointerEvents: "none",
                                   zIndex: 10000,
@@ -4432,7 +4432,7 @@ export default function NoteApp() {
                                   isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
                                   selectedCount={boxes.selectedBoxIdsRef.current.size}
                                   loadingBoxId={boxes.loadingBoxId}
-                                  accentSolid={accentSolid}
+                                  accentSolid={accentUi}
                                   theme={theme}
                                   paperStyle={paperStyle}
                                   startDrag={boxes.startDrag}
@@ -4572,7 +4572,7 @@ export default function NoteApp() {
               onClose={() => { setOrchardOpen(false); setOrchardFocusTopic(undefined) }}
               focusTopic={orchardFocusTopic}
               theme={theme}
-              accent={accent}
+              accent={accentUi}
               sap={sap}
               xp={xp}
               grove={grove}
@@ -4650,7 +4650,7 @@ export default function NoteApp() {
               >
                 <TopicsView
                   theme={theme}
-                  accent={accentSolid}
+                  accent={accentUi}
                   grove={grove}
                   notes={notes.filter(n => !n.archived && !n.deletedAt)}
                   onClose={() => setTopicsOpen(false)}
@@ -4677,7 +4677,7 @@ export default function NoteApp() {
                     note={reviewNote}
                     topic={reviewTopic}
                     theme={theme}
-                    accent={accentSolid}
+                    accent={accentUi}
                     onClose={() => { setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined) }}
                     onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}
                     onCorrect={(weight, topic) => {
@@ -4755,7 +4755,7 @@ export default function NoteApp() {
                   isOpen
                   onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
                   theme={theme}
-                  accent={accent}
+                  accent={accentUi}
                   sap={isAdmin ? 999999 : sap}
                   inventory={inventory}
                   setSap={setSap}
@@ -4808,13 +4808,14 @@ export default function NoteApp() {
               onClick={() => { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }}
               title={recallTopTopic ? `${allRecallDue} to recall · ${recallTopTopic}` : `${allRecallDue} to recall`}
               style={{
+                ...ACCENT_DARK_SURFACE, // dark pill in both themes
                 position: 'fixed', top: 12, right: 12, zIndex: 9990, height: 32, padding: '0 12px', borderRadius: 999,
                 display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Crimson Pro, serif', fontSize: 14,
-                color: '#fde68a', background: 'rgba(24,24,27,0.92)', border: '1px solid rgba(217,119,6,0.55)',
+                color: `color-mix(in srgb, ${ACCENT} 40%, #fff)`, background: 'rgba(24,24,27,0.92)', border: `1px solid ${accentAlpha(0.55)}`,
                 boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
               }}
             >
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#d97706', boxShadow: '0 0 8px #d97706' }} />
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: ACCENT, boxShadow: `0 0 8px ${ACCENT}` }} />
               {allRecallDue} to recall
             </button>
           )}
@@ -4826,7 +4827,7 @@ export default function NoteApp() {
           <OrangeAIHub
             open={aiHubOpen}
             theme={theme}
-            accent={accent}
+            accent={accentUi}
             noteText={aiNotebookContext}
             noteName={activeNote?.subject}
             userId={user?.id ?? (process.env.NEXT_PUBLIC_DEV_SKIP_AUTH === '1' ? 'dev' : undefined)}
@@ -4838,7 +4839,7 @@ export default function NoteApp() {
           {slashMenu && (
             <SlashMenu
               {...slashMenu}
-              accent={accent}
+              accent={accentUi}
               theme={theme}
               box={slashMenu.target?.closest('[id^="box-"]') ? activeNote.boxes[currentPageIdx]?.find(b => b.id === slashMenu.target?.closest('[id^="box-"]')?.id.replace("box-", "")) : undefined}
               onUpdateBox={boxes.updateBox}
@@ -4995,7 +4996,7 @@ export default function NoteApp() {
             <NotebookChat
               note={activeNote}
               theme={theme}
-              accent={accent}
+              accent={accentUi}
               userId={user?.id}
               onClose={() => setShowNotebookChat(false)}
               getPageText={getPageText}
@@ -5067,16 +5068,16 @@ export default function NoteApp() {
               width: 56,
               height: 56,
               background: timerOpen
-                ? 'linear-gradient(135deg, rgba(217,119,6,0.15), rgba(217,119,6,0.08))'
-                : 'linear-gradient(135deg, rgba(217,119,6,0.06), rgba(217,119,6,0.02))',
+                ? `linear-gradient(135deg, ${accentAlpha(0.15)}, ${accentAlpha(0.08)})`
+                : `linear-gradient(135deg, ${accentAlpha(0.06)}, ${accentAlpha(0.02)})`,
               boxShadow: timerOpen
-                ? '0 0 20px rgba(217,119,6,0.15), inset 0 1px 0 rgba(217,119,6,0.15)'
-                : '0 0 12px rgba(217,119,6,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
-              border: timerOpen ? '1px solid rgba(217,119,6,0.2)' : '1px solid rgba(255,255,255,0.05)',
+                ? `0 0 20px ${accentAlpha(0.15)}, inset 0 1px 0 ${accentAlpha(0.15)}`
+                : `0 0 12px ${accentAlpha(0.06)}, inset 0 1px 0 rgba(255,255,255,0.04)`,
+              border: timerOpen ? `1px solid ${accentAlpha(0.2)}` : '1px solid rgba(255,255,255,0.05)',
               backdropFilter: "blur(12px)",
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={`mb-0.5 transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/60"}`}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="mb-0.5 transition-colors" style={{ color: timerOpen ? ACCENT : accentAlpha(0.6) }}>
               <ellipse cx="12" cy="21" rx="7" ry="1.5" fill="currentColor" opacity="0.25" />
               <path d="M12 20 C12 16 11.5 14 12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               <path d="M12 14 C9 12 7 10.5 7 8.5 C7 8.5 9.5 9 12 12" fill="currentColor" opacity="0.7" />
@@ -5087,7 +5088,7 @@ export default function NoteApp() {
               <path d="M18 4 L18.5 3 L19 4 L18.5 5Z" fill="currentColor" opacity="0.3" />
               <path d="M5 6 L5.3 5.2 L5.6 6 L5.3 6.8Z" fill="currentColor" opacity="0.2" />
             </svg>
-            <span className={`text-[8px] font-normal tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50"}`} style={{ fontFamily: 'Crimson Pro, serif' }}>focus</span>
+            <span className="text-[8px] font-normal tracking-wide transition-colors" style={{ fontFamily: 'Crimson Pro, serif', color: timerOpen ? ACCENT : accentAlpha(0.5) }}>focus</span>
           </button>
         )}
         {notes.filter(n => !n.archived).length > 0 && !isNarrow && (
@@ -5096,19 +5097,21 @@ export default function NoteApp() {
             title="Community"
             className="fixed bottom-[76px] left-3 z-[60] flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer hover:scale-[1.04] active:scale-[0.97]"
             style={{ width: 56, height: 56,
-              background: communityOpen ? 'linear-gradient(135deg, rgba(217,119,6,0.15), rgba(217,119,6,0.08))' : 'linear-gradient(135deg, rgba(217,119,6,0.06), rgba(217,119,6,0.02))',
-              border: communityOpen ? '1px solid rgba(217,119,6,0.2)' : '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-0.5" style={{ opacity: communityOpen ? 1 : 0.6 }}>
+              background: communityOpen ? `linear-gradient(135deg, ${accentAlpha(0.15)}, ${accentAlpha(0.08)})` : `linear-gradient(135deg, ${accentAlpha(0.06)}, ${accentAlpha(0.02)})`,
+              border: communityOpen ? `1px solid ${accentAlpha(0.2)}` : '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-0.5" style={{ stroke: ACCENT, opacity: communityOpen ? 1 : 0.6 }}>
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
-            <span className="text-[8px] font-normal tracking-wide" style={{ fontFamily: 'Crimson Pro, serif', color: '#d97706', opacity: communityOpen ? 1 : 0.5 }}>friends</span>
+            <span className="text-[8px] font-normal tracking-wide" style={{ fontFamily: 'Crimson Pro, serif', color: ACCENT, opacity: communityOpen ? 1 : 0.5 }}>friends</span>
           </button>
         )}
         {!user && (
           <button
             onClick={() => window.location.href = "/login"}
             title="Sign in to sync"
-            className="fixed bottom-4 right-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#d97706]/10 hover:bg-[#d97706]/20 border border-[#d97706]/20 text-[#d97706] shadow-lg hover:shadow-xl z-[100]"
+            // Over the grove/market/party scenery (dark in both themes) use the dark-surface accent.
+            style={orchardOpen || shopOpen || leaderboardOpen || communityOpen ? ACCENT_DARK_SURFACE : undefined}
+            className="fixed bottom-4 right-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[rgb(var(--accent-rgb)/0.1)] hover:bg-[rgb(var(--accent-rgb)/0.2)] border border-[rgb(var(--accent-rgb)/0.2)] text-[var(--accent)] shadow-lg hover:shadow-xl z-[100]"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
             {!isNarrow && signInLabelFits && <span className="text-[11px] font-normal tracking-[0.05em] uppercase">Sign In to Sync</span>}

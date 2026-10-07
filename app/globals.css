@@ -18,6 +18,11 @@ html {
   --accent-rgb: 217 119 6;
   --accent-contrast: #ffffff;
   --accent-strong: #b45309;
+  /* Same accent tuned for surfaces that stay dark in both themes (lib/accent.ts ACCENT_DARK_SURFACE). */
+  --accent-dark: #d97706;
+  --accent-dark-rgb: 217 119 6;
+  --accent-dark-contrast: #ffffff;
+  --accent-dark-strong: #df8b2b;
 }
 
 :root[data-theme="light"] {

@@ -6,13 +6,13 @@ import { apiFetch } from "@/lib/apiFetch"
 import { addTopicCards } from "@/lib/recallSchedule"
 import { playSound } from "@/lib/sound"
 import type { Card } from "@/lib/recallPrompt"
+import { ACCENT, ACCENT_CONTRAST, accentAlpha } from "@/lib/accent"
 
 // Import notes (Docs/Word/Notion/Obsidian) -> a notebook, then AI recall cards
 // for the first few sections. Notes are always saved first; carding is capped
 // server-side (/api/import) and per-import here.
 
 const font = 'Crimson Pro, serif'
-const accent = '#d97706'
 export const MAX_SECTIONS_PER_IMPORT = 8
 
 type Allowance = { remaining: number | null; limit: number; pro: boolean }
@@ -181,7 +181,7 @@ export const ImportModal = memo(function ImportModal({ theme, signedIn, onClose,
 
   const btn = (primary: boolean, disabled = false): React.CSSProperties => ({
     flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 13, fontFamily: font,
-    color: primary ? '#fff' : c.muted, background: primary ? accent : c.faint,
+    color: primary ? ACCENT_CONTRAST : c.muted, background: primary ? ACCENT : c.faint,
     border: primary ? 'none' : `1px solid ${c.border}`, cursor: disabled ? 'default' : 'pointer',
     opacity: disabled ? 0.5 : 1,
   })
@@ -262,9 +262,9 @@ export const ImportModal = memo(function ImportModal({ theme, signedIn, onClose,
                     onDragLeave={() => setDragOver(false)}
                     onDrop={e => { e.preventDefault(); setDragOver(false); if (!parsing) handleFile(e.dataTransfer.files?.[0]) }}
                     style={{
-                      border: `1.5px dashed ${dragOver ? accent : c.fieldBorder}`, borderRadius: 10, padding: '30px 16px',
+                      border: `1.5px dashed ${dragOver ? ACCENT : c.fieldBorder}`, borderRadius: 10, padding: '30px 16px',
                       textAlign: 'center', cursor: parsing ? 'default' : 'pointer',
-                      background: dragOver ? `${accent}10` : c.faint, transition: 'all 0.12s',
+                      background: dragOver ? accentAlpha(0.06) : c.faint, transition: 'all 0.12s',
                     }}
                   >
                     <div style={{ fontSize: 15 }}>{parsing ? "Reading…" : "Drop a file here, or click to choose"}</div>
@@ -297,7 +297,7 @@ export const ImportModal = memo(function ImportModal({ theme, signedIn, onClose,
               <div style={{ fontSize: 13, color: c.muted, marginTop: 10 }}>
                 {n} section{n === 1 ? "" : "s"} · {doc.words.toLocaleString()} words{doc.truncated ? " · trimmed to fit" : ""}
               </div>
-              <div style={{ fontSize: 14, marginTop: 10, padding: '10px 12px', borderRadius: 8, background: `${accent}12`, border: `1px solid ${accent}30`, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 14, marginTop: 10, padding: '10px 12px', borderRadius: 8, background: accentAlpha(0.07), border: `1px solid ${accentAlpha(0.19)}`, lineHeight: 1.5 }}>
                 {allowanceLine()}
               </div>
               <div className="flex gap-2" style={{ marginTop: 16 }}>
@@ -323,11 +323,11 @@ export const ImportModal = memo(function ImportModal({ theme, signedIn, onClose,
                       {doc.sections[i]?.heading || `Section ${i + 1}`}
                     </span>
                     <span className="flex items-center gap-1.5" style={{ flex: 1, minWidth: 0, justifyContent: 'flex-end', textAlign: 'right',
-                      color: r.status === "ok" ? accent : r.status === "error" ? '#ef4444' : c.muted,
+                      color: r.status === "ok" ? ACCENT : r.status === "error" ? '#ef4444' : c.muted,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {r.status === "running" && (
                         <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-                          style={{ display: 'inline-block', width: 11, height: 11, borderRadius: '50%', border: `1.5px solid ${accent}`, borderTopColor: 'transparent', flexShrink: 0 }} />
+                          style={{ display: 'inline-block', width: 11, height: 11, borderRadius: '50%', border: `1.5px solid ${ACCENT}`, borderTopColor: 'transparent', flexShrink: 0 }} />
                       )}
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{rowText(r)}</span>
                     </span>

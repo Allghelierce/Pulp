@@ -2,7 +2,8 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { getLevel } from "@/app/constants"
-import { getPalette, getType, ACCENT } from "@/app/theme/palette"
+import { getPalette, getType } from "@/app/theme/palette"
+import { ACCENT, ACCENT_CONTRAST, accentAlpha } from "@/lib/accent"
 import type { Tree } from "@/app/types"
 import { loadDailyStats, type DailyEntry } from "@/app/lib/dailyStats"
 
@@ -18,6 +19,12 @@ function loadGoals(): typeof DEFAULT_GOALS {
 }
 
 const RING_GOALS = loadGoals()
+
+// Progress-ring tones derived from the user's accent. With Pulp orange they resolve to the
+// original #c9a06c (quota) / #d97706 (streak) / #78350f (early bird).
+const RING_QUOTA = `color-mix(in srgb, ${ACCENT} 50%, #b9c9d2)`
+const RING_STREAK = ACCENT
+const RING_EARLY = `color-mix(in srgb, ${ACCENT} 40%, #370915)`
 
 function getTodayEntry(): DailyEntry | null {
   if (typeof window === 'undefined') return null
@@ -56,9 +63,9 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
   const gap = 2
 
   const rings = [
-    { value: quotaProgress, color: '#c9a06c', label: 'quota', radius: (size - strokeW) / 2 },
-    { value: streakProgress, color: '#d97706', label: 'streak', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#78350f', label: 'early bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: quotaProgress, color: RING_QUOTA, label: 'quota', radius: (size - strokeW) / 2 },
+    { value: streakProgress, color: RING_STREAK, label: 'streak', radius: (size - strokeW) / 2 - strokeW - gap },
+    { value: isEarlyBird ? earlyBirdProgress : 0, color: RING_EARLY, label: 'early bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
   const multColor = multiplier >= 4.5 ? 'gradient' : multiplier >= 4 ? '#c9a06c' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : '#94a3b8'
@@ -91,7 +98,7 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
                 />
                 <circle
                   cx={cx} cy={cy} r={ring.radius} fill="none"
-                  stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
+                  style={{ stroke: ring.color }} strokeWidth={strokeW} strokeLinecap="round"
                   strokeDasharray={`${fillLen} ${circ - fillLen}`}
                   transform={`rotate(${-90 + (gapLen / circ) * 180} ${cx} ${cy})`}
                 />
@@ -147,16 +154,16 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
             <span style={{ color: isDark ? '#d4d4d8' : '#3f3f46', fontWeight: 500 }}>1.0x</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
-            <span style={{ color: isEarlyBird ? '#78350f' : (isDark ? '#52524e' : '#c4c4c0') }}>early bird</span>
-            <span style={{ color: isEarlyBird ? '#78350f' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{isEarlyBird ? '+1.0x' : '—'}</span>
+            <span style={{ color: isEarlyBird ? RING_EARLY : (isDark ? '#52524e' : '#c4c4c0') }}>early bird</span>
+            <span style={{ color: isEarlyBird ? RING_EARLY : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{isEarlyBird ? '+1.0x' : '—'}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
-            <span style={{ color: quotaBonus > 0 ? '#c9a06c' : (isDark ? '#52524e' : '#c4c4c0') }}>{quotaTier} quota</span>
-            <span style={{ color: quotaBonus > 0 ? '#c9a06c' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{quotaBonus > 0 ? `+${quotaBonus}.0x` : '—'}</span>
+            <span style={{ color: quotaBonus > 0 ? RING_QUOTA : (isDark ? '#52524e' : '#c4c4c0') }}>{quotaTier} quota</span>
+            <span style={{ color: quotaBonus > 0 ? RING_QUOTA : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{quotaBonus > 0 ? `+${quotaBonus}.0x` : '—'}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
-            <span style={{ color: streakBonus > 0 ? '#d97706' : (isDark ? '#52524e' : '#c4c4c0') }}>streak ({goalStreak}d)</span>
-            <span style={{ color: streakBonus > 0 ? '#d97706' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{streakBonus > 0 ? `+${streakBonus.toFixed(1)}x` : '—'}</span>
+            <span style={{ color: streakBonus > 0 ? RING_STREAK : (isDark ? '#52524e' : '#c4c4c0') }}>streak ({goalStreak}d)</span>
+            <span style={{ color: streakBonus > 0 ? RING_STREAK : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{streakBonus > 0 ? `+${streakBonus.toFixed(1)}x` : '—'}</span>
           </div>
           <div style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, marginTop: 2, paddingTop: 3, display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
             <span style={{ color: isDark ? '#d4d4d8' : '#3f3f46', fontWeight: 600 }}>total</span>
@@ -188,9 +195,9 @@ function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, q
   const track = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
 
   const rings = [
-    { value: quotaProgress, color: '#c9a06c', label: 'Quota', radius: (size - strokeW) / 2 },
-    { value: streakProgress, color: '#d97706', label: 'Streak', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#78350f', label: 'Early Bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: quotaProgress, color: RING_QUOTA, label: 'Quota', radius: (size - strokeW) / 2 },
+    { value: streakProgress, color: RING_STREAK, label: 'Streak', radius: (size - strokeW) / 2 - strokeW - gap },
+    { value: isEarlyBird ? earlyBirdProgress : 0, color: RING_EARLY, label: 'Early Bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
   const multColor = multiplier >= 4.5 ? 'gradient' : multiplier >= 4 ? '#c9a06c' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : '#94a3b8'
@@ -213,7 +220,7 @@ function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, q
               />
               <circle
                 cx={cx} cy={cy} r={ring.radius} fill="none"
-                stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
+                style={{ stroke: ring.color }} strokeWidth={strokeW} strokeLinecap="round"
                 strokeDasharray={`${fillLen} ${circ - fillLen}`}
                 transform={`rotate(${-90 + (gapLen / circ) * 180} ${cx} ${cy})`}
               />
@@ -361,10 +368,10 @@ export const StatsView = memo(function StatsView({
 
   const heatmapColors = useMemo(() => [
     emptyCell,
-    isDark ? 'rgba(234,88,12,0.35)' : 'rgba(234,88,12,0.25)',
-    isDark ? 'rgba(234,88,12,0.55)' : 'rgba(234,88,12,0.45)',
-    isDark ? 'rgba(234,88,12,0.78)' : 'rgba(234,88,12,0.65)',
-    isDark ? 'rgba(234,88,12,1)' : 'rgba(234,88,12,0.9)',
+    isDark ? accentAlpha(0.35) : accentAlpha(0.25),
+    isDark ? accentAlpha(0.55) : accentAlpha(0.45),
+    isDark ? accentAlpha(0.78) : accentAlpha(0.65),
+    isDark ? accentAlpha(1) : accentAlpha(0.9),
   ], [isDark, emptyCell])
 
   useEffect(() => {
@@ -558,7 +565,7 @@ export const StatsView = memo(function StatsView({
                 }}
                 style={{
                   alignSelf: 'flex-end', padding: '5px 14px', borderRadius: 6,
-                  background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer',
+                  background: ACCENT, color: ACCENT_CONTRAST, border: 'none', cursor: 'pointer',
                   fontSize: 10, fontWeight: 400, fontFamily: font,
                 }}
               >
@@ -721,7 +728,7 @@ export const StatsView = memo(function StatsView({
                           return (
                             <g key={c.date}>
                               <circle cx={px(col)} cy={py(row)} r={r}
-                                fill={isEmpty ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)') : heatmapColors[c.level]} />
+                                style={{ fill: isEmpty ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)') : heatmapColors[c.level] }} />
                               {isEmpty && (
                                 <text x={px(col)} y={py(row)} textAnchor="middle" dominantBaseline="central"
                                   fill={isDark ? '#6a6660' : '#8a8680'} fontSize="3" fontWeight="600">{c.dayNum}</text>

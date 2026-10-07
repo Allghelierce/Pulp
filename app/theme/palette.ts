@@ -3,6 +3,8 @@
 // Views (Stats, Boutique, Leaderboard, Settings) should read from getPalette()
 // instead of hardcoding hexes, so colors stay coherent across the app.
 
+import { ACCENT as USER_ACCENT, ACCENT_CONTRAST } from '@/lib/accent'
+
 export const ACCENT = '#d97706'
 
 export interface Palette {
@@ -53,7 +55,7 @@ export const PANEL_SHADOW = '0 32px 80px -12px rgba(0,0,0,0.5)'
 export const FONT_SERIF = 'Crimson Pro, serif'
 
 // Chip button — the subtle bordered button style from the Market (Catalog/Satchel).
-// active=true fills with the amber accent (use for the selected item in a toggle group).
+// active=true fills with the user's accent (use for the selected item in a toggle group).
 export function chipButton(p: Palette, active = false) {
   return {
     display: 'flex',
@@ -66,9 +68,9 @@ export function chipButton(p: Palette, active = false) {
     fontWeight: 400 as const,
     letterSpacing: '0.04em',
     cursor: 'pointer',
-    backgroundColor: active ? p.accent : p.chipBg,
-    border: `1px solid ${active ? p.accent : p.cardBorder}`,
-    color: active ? '#fff' : p.textPrimary,
+    backgroundColor: active ? USER_ACCENT : p.chipBg,
+    border: `1px solid ${active ? USER_ACCENT : p.cardBorder}`,
+    color: active ? ACCENT_CONTRAST : p.textPrimary,
   }
 }
 

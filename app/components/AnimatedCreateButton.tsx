@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { BookOpen } from "lucide-react"
+import { ACCENT } from "@/lib/accent"
 
 interface AnimatedCreateButtonProps {
   onClick: () => void
@@ -9,10 +10,8 @@ interface AnimatedCreateButtonProps {
   theme: "light" | "dark"
 }
 
-const ORANGE = "#d97706"
-
 export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateButtonProps) {
-  const color = ORANGE
+  const color = ACCENT
   return (
     <motion.button
       onClick={onClick}
@@ -57,7 +56,7 @@ export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateB
 
       {/* Layer 1 - Main button (on top) */}
       <motion.div
-        className="absolute inset-0 rounded-lg flex items-center justify-center gap-2 text-white font-normal overflow-hidden"
+        className="absolute inset-0 rounded-lg flex items-center justify-center gap-2 text-[var(--accent-contrast)] font-normal overflow-hidden"
         style={{
           backgroundColor: color,
           zIndex: 2,
@@ -84,7 +83,7 @@ export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateB
 
         {/* Hover text */}
         <motion.div
-          className="absolute inset-0 flex items-center justify-center font-normal text-white z-10"
+          className="absolute inset-0 flex items-center justify-center font-normal text-[var(--accent-contrast)] z-10"
           style={{ height: "48px" }}
           variants={{
             initial: { y: 48, opacity: 0 },
