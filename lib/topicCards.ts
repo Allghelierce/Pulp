@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { MODEL, parseTopicResult, type Card } from "@/lib/recallPrompt"
+import { MODEL, GRADE_MODEL, parseTopicResult, type Card } from "@/lib/recallPrompt"
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
@@ -7,7 +7,8 @@ export type TopicCardsResult = { topic: string; cards: Card[] } | { error: NextR
 
 // One Groq call -> { topic, cards }. Shared by /api/recall/topic and /api/import.
 // Returns { error } with a ready-to-send response on config/AI failure.
-export async function generateTopicCards(system: string, user: string, label = "Recall topic"): Promise<TopicCardsResult> {
+// `topicOnly` uses the small model with a short budget (free accounts past today's card allowance).
+export async function generateTopicCards(system: string, user: string, label = "Recall topic", { topicOnly = false }: { topicOnly?: boolean } = {}): Promise<TopicCardsResult> {
   const key = process.env.GROQ_API_KEY
   if (!key) return { error: NextResponse.json({ error: "AI service not configured" }, { status: 503 }) }
 
@@ -15,8 +16,8 @@ export async function generateTopicCards(system: string, user: string, label = "
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 4000,
+      model: topicOnly ? GRADE_MODEL : MODEL,
+      max_tokens: topicOnly ? 600 : 4000,
       temperature: 0.3,
       reasoning_effort: "low",
       response_format: { type: "json_object" },

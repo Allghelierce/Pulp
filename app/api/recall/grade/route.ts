@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { getAuthUser } from "@/lib/auth"
-import { consumeAiQuota } from "@/lib/aiQuota"
+import { consumeAiQuota, spendDailyAllowance, FREE_GRADES_PER_DAY } from "@/lib/aiQuota"
 import { GRADE_MODEL, GRADE_SYSTEM_PROMPT, buildGradeMessage, parseVerdict } from "@/lib/recallPrompt"
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
@@ -33,6 +33,14 @@ export async function POST(request: Request) {
 
     // Blank answers never need a model call.
     if (!answer) return NextResponse.json({ verdict: "wrong", feedback: "No answer given — give it a try next time." })
+
+    // Free accounts: a few AI-graded answers a day, then grade yourself (the UI falls back).
+    if (!(await spendDailyAllowance(user.id, "grades"))) {
+      return NextResponse.json({
+        error: `Free accounts get ${FREE_GRADES_PER_DAY} AI-graded answers a day — grade this one yourself, or upgrade to Plus.`,
+        code: "grade_limit",
+      }, { status: 402 })
+    }
 
     const res = await fetch(GROQ_API_URL, {
       method: "POST",

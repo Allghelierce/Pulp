@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-server"
 // Max AI requests per user per UTC day, across every AI route. Each request is
 // already capped by max_tokens, so this bounds worst-case spend per account.
 const DAILY_LIMIT = Number(process.env.AI_DAILY_LIMIT) || 300
-// Forever free allowance for writing AI before Pro is required (like Notion's trial credits).
+// Forever free allowance for writing AI before Plus is required (like Notion's trial credits).
 export const FREE_AI_LIMIT = Number(process.env.AI_FREE_LIMIT) || 50
 const DEV_USER_ID = "00000000-0000-0000-0000-000000000000"
 
@@ -36,7 +36,7 @@ export async function consumeAiQuota(userId: string, { metered = true }: { meter
     if (error) return failOpen("consume_free_ai", error)
     if (data == null) {
       return NextResponse.json(
-        { error: `You've used all ${FREE_AI_LIMIT} free AI requests. Upgrade to Pro to keep using AI.`, code: "ai_upgrade" },
+        { error: `You've used all ${FREE_AI_LIMIT} free AI requests. Upgrade to Plus to keep using AI.`, code: "ai_upgrade" },
         { status: 402 }
       )
     }
@@ -86,7 +86,7 @@ export async function consumeImportTopic(userId: string): Promise<(ImportAllowan
   if (error) return importUnavailable("consume_import_topic", error)
   if (data == null) {
     return NextResponse.json(
-      { error: "You've used your free imports. Upgrade to Pro to import more.", code: "import_limit" },
+      { error: "You've used your free imports. Upgrade to Plus to import more.", code: "import_limit" },
       { status: 402 }
     )
   }
@@ -98,4 +98,40 @@ export async function refundImportTopic(userId: string): Promise<void> {
   if (userId === DEV_USER_ID || !process.env.SUPABASE_SERVICE_ROLE_KEY) return
   const { error } = await supabaseAdmin.rpc("refund_import_topic", { p_user: userId })
   if (error) console.error("Import quota (refund_import_topic) failed:", error.code, error.message)
+}
+
+// ── Plus: daily free taste of AI recall ─────────────────────────────
+// Free accounts get AI cards from a few focus sessions a day and a few AI-graded
+// answers a day, so their trees always have something to grow from; Plus is
+// limited only by the daily fair-use cap above.
+export const FREE_CARD_SESSIONS_PER_DAY = Number(process.env.FREE_CARD_SESSIONS_PER_DAY) || 2
+export const FREE_GRADES_PER_DAY = Number(process.env.FREE_GRADES_PER_DAY) || 15
+export type AllowanceKind = "cards" | "grades"
+const DAILY_FREE: Record<AllowanceKind, number> = { cards: FREE_CARD_SESSIONS_PER_DAY, grades: FREE_GRADES_PER_DAY }
+
+// Spend one of today's free uses. true = allowed. Plus/dev always allowed.
+// Fails OPEN if the migration is missing: recall is the core study loop.
+export async function spendDailyAllowance(userId: string, kind: AllowanceKind): Promise<boolean> {
+  if (userId === DEV_USER_ID || !process.env.SUPABASE_SERVICE_ROLE_KEY) return true
+  if (await hasPro(userId)) return true
+  const { data, error } = await supabaseAdmin.rpc("consume_daily_allowance", { p_user: userId, p_kind: kind, p_limit: DAILY_FREE[kind] })
+  if (error) { failOpen("consume_daily_allowance", error); return true }
+  return data != null
+}
+
+// Today's remaining free uses (null = unlimited / unknown).
+export async function dailyAllowanceLeft(userId: string, kind: AllowanceKind): Promise<number | null> {
+  if (userId === DEV_USER_ID || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null
+  const today = new Date().toISOString().slice(0, 10)
+  const { data, error } = await supabaseAdmin.from("ai_allowance").select("used")
+    .eq("user_id", userId).eq("kind", kind).eq("day", today).maybeSingle()
+  if (error) return null
+  return Math.max(0, DAILY_FREE[kind] - Number((data as { used?: number } | null)?.used ?? 0))
+}
+
+export async function freeWritingAiLeft(userId: string): Promise<number | null> {
+  if (userId === DEV_USER_ID || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null
+  const { data, error } = await supabaseAdmin.from("player_profiles").select("ai_free_used").eq("user_id", userId).maybeSingle()
+  if (error) return null
+  return Math.max(0, FREE_AI_LIMIT - Number((data as { ai_free_used?: number } | null)?.ai_free_used ?? 0))
 }

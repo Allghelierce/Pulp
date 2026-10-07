@@ -1327,7 +1327,7 @@ export default function PulpLanding() {
               simple pricing
             </motion.h2>
             <p style={{ fontFamily: serif, fontSize: '1rem', color: '#6b6864', textAlign: 'center', margin: '0 0 32px 0' }}>
-              everything you need to grow. upgrade when you're ready.
+              the whole orchard is free. plus makes the ai unlimited.
             </p>
 
             {/* Billing toggle */}
@@ -1350,7 +1350,7 @@ export default function PulpLanding() {
                     }}
                   >
                     {period}
-                    {period === 'annual' && <span style={{ fontSize: '0.65rem', color: billingPeriod === 'annual' ? '#a3e635' : '#16a34a', marginLeft: 4, fontWeight: 600 }}>save 30%</span>}
+                    {period === 'annual' && <span style={{ fontSize: '0.65rem', color: billingPeriod === 'annual' ? '#a3e635' : '#16a34a', marginLeft: 4, fontWeight: 600 }}>save 29%</span>}
                   </button>
                 ))}
               </div>
@@ -1375,7 +1375,7 @@ export default function PulpLanding() {
                 </div>
                 <p style={{ fontFamily: serif, fontSize: '0.85rem', color: '#9a958e', margin: '0 0 24px 0' }}>forever</p>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {['unlimited notebooks', 'focus timer + tree growing', '10 seed species', 'basic achievements', 'local storage'].map(item => (
+                  {['unlimited notebooks + sync', 'focus timer, trees + the grove', 'every seed, achievement + party', 'recall practice', 'a daily taste of ai cards'].map(item => (
                     <li key={item} style={{ fontFamily: serif, fontSize: '0.9rem', color: '#6b6864', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                       {item}
@@ -1405,22 +1405,22 @@ export default function PulpLanding() {
 }}>popular</div>
                 <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#fff', margin: '0 0 4px 0' }}>plus</h3>
                 <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '2.4rem', color: '#fff', margin: '8px 0 4px 0' }}>
-                  {billingPeriod === 'monthly' && <>$5<span style={{ fontSize: '1rem', opacity: 0.7 }}>/mo</span></>}
-                  {billingPeriod === 'annual' && <><span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.45)', fontSize: '1.4rem', marginRight: 8 }}>$60</span>$42<span style={{ fontSize: '1rem', opacity: 0.7 }}>/yr</span></>}
+                  {billingPeriod === 'monthly' && <>$7<span style={{ fontSize: '1rem', opacity: 0.7 }}>/mo</span></>}
+                  {billingPeriod === 'annual' && <><span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.45)', fontSize: '1.4rem', marginRight: 8 }}>$84</span>$60<span style={{ fontSize: '1rem', opacity: 0.7 }}>/yr</span></>}
                 </div>
                 <p style={{ fontFamily: serif, fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', margin: '0 0 8px 0' }}>
                   {billingPeriod === 'monthly' && 'billed monthly'}
-                  {billingPeriod === 'annual' && <>~$3.50/mo</>}
+                  {billingPeriod === 'annual' && <>$5/mo, billed yearly</>}
                 </p>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {['everything in free', 'cloud sync across devices', '40+ seed species', 'all achievements + gems', 'encrypted vaults', 'leaderboards'].map(item => (
+                  {['everything in free', 'ai cards from every session', 'ai-graded answers', 'unlimited imports (docs, notion…)', 'unlimited writing ai'].map(item => (
                     <li key={item} style={{ fontFamily: serif, fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                       {item}
                     </li>
                   ))}
                 </ul>
-                <a href={`/app?checkout=${billingPeriod === 'annual' ? 'pro_yearly' : 'pro_monthly'}`} style={{
+                <a href={`/app?checkout=${billingPeriod === 'annual' ? 'plus_yearly' : 'plus_monthly'}`} style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
                   padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
                   background: 'linear-gradient(to bottom, #fff, #f0f0f0)', color: accent,
@@ -1430,72 +1430,6 @@ export default function PulpLanding() {
                 }} className="btn-pop">upgrade now</a>
               </motion.div>
 
-              {/* Lifetime tier — annual tab only */}
-              {billingPeriod === 'annual' && <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.075 }}
-                style={{
-                  width: 320, padding: '36px 32px', borderRadius: 16,
-                  background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)',
-                  position: 'relative', overflow: 'hidden',
-                  display: 'flex', flexDirection: 'column',
-                }}
-              >
-                <div style={{
-                  position: 'absolute', top: 12, right: 12,
-                  fontFamily: mono, fontSize: '0.6rem', letterSpacing: '0.1em',
-                  padding: '3px 10px', borderRadius: 999,
-                  background: 'rgba(251,191,36,0.2)', color: '#fbbf24',
-                }}>limited launch deal</div>
-                <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#fff', margin: '0 0 4px 0' }}>lifetime</h3>
-                <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '2.4rem', color: '#fff', margin: '8px 0 4px 0' }}>
-                  $99<span style={{ fontSize: '1rem', opacity: 0.7 }}> once</span>
-                </div>
-                <p style={{ fontFamily: serif, fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', margin: '0 0 24px 0' }}>
-                  pay once, yours forever
-                </p>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {['everything in plus', 'all future updates included', 'early access to new features', 'limited availability'].map(item => (
-                    <li key={item} style={{ fontFamily: serif, fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                {/* Hill + tangerine tree scene */}
-                <div style={{ position: 'absolute', bottom: 16, left: 0, right: 0, height: 120, pointerEvents: 'none' }}>
-                  <svg width="100%" height="120" viewBox="0 0 320 120" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="lt-hill" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#2d4a1e" />
-                        <stop offset="100%" stopColor="#1a2e12" />
-                      </linearGradient>
-                    </defs>
-                    <ellipse cx="160" cy="105" rx="200" ry="45" fill="url(#lt-hill)" />
-                    <ellipse cx="120" cy="100" rx="80" ry="20" fill="#243d18" opacity="0.5" />
-                  </svg>
-                  <svg width="60" height="80" viewBox="0 0 60 80" style={{ position: 'absolute', bottom: 42, left: '50%', transform: 'translateX(-50%)' }}>
-                    <line x1="30" y1="80" x2="30" y2="35" stroke="#5a3a1a" strokeWidth="3" />
-                    <circle cx="30" cy="28" r="18" fill="#2d6b1e" />
-                    <circle cx="22" cy="22" r="10" fill="#3a8a28" opacity="0.7" />
-                    <circle cx="38" cy="25" r="8" fill="#3a8a28" opacity="0.5" />
-                    <circle cx="22" cy="38" r="4" fill="#d97706" />
-                    <circle cx="36" cy="32" r="3.5" fill="#e8a020" />
-                    <circle cx="28" cy="18" r="3" fill="#d97706" opacity="0.8" />
-                    <circle cx="38" cy="20" r="2.5" fill="#e8a020" opacity="0.7" />
-                  </svg>
-                </div>
-                <a href="/app?checkout=lifetime" style={{
-                  fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
-                  padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
-                  background: 'linear-gradient(to bottom, #e8a020, #d97706)', color: '#fff',
-                  display: 'block', textAlign: 'center', fontWeight: 500,
-                  marginTop: 'auto', position: 'relative', zIndex: 2,
-                  boxShadow: '0 2px 0 rgba(0,0,0,0.2), 0 4px 8px -2px rgba(0,0,0,0.15)',
-                }} className="btn-pop">upgrade ∞</a>
-              </motion.div>}
             </div>
           </div>
         </section>

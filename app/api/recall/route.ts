@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { getAuthUser } from "@/lib/auth"
-import { consumeAiQuota } from "@/lib/aiQuota"
+import { consumeAiQuota, spendDailyAllowance, FREE_CARD_SESSIONS_PER_DAY } from "@/lib/aiQuota"
 import { SYSTEM_PROMPT, MODEL, MIN_TEXT, clampCount, buildUserMessage, parseCards } from "@/lib/recallPrompt"
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
@@ -30,6 +30,13 @@ export async function POST(request: Request) {
 
     if (text.trim().length < MIN_TEXT) {
       return NextResponse.json({ error: "Not enough notes to review yet — write more first." }, { status: 400 })
+    }
+
+    if (!(await spendDailyAllowance(user.id, "cards"))) {
+      return NextResponse.json({
+        error: `Free accounts get AI cards ${FREE_CARD_SESSIONS_PER_DAY}× a day. Upgrade to Plus for cards whenever you want.`,
+        code: "cards_limit",
+      }, { status: 402 })
     }
 
     const res = await fetch(GROQ_API_URL, {
