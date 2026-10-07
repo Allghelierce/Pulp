@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { motion } from "framer-motion"
-import { parseImportFile, parsePastedText, ACCEPTED_IMPORT_TYPES, type ImportDoc } from "@/lib/importNotes"
+import { parseImportFile, parsePastedText, parsePastedHtml, ACCEPTED_IMPORT_TYPES, type ImportDoc } from "@/lib/importNotes"
 import { apiFetch } from "@/lib/apiFetch"
 import { addTopicCards } from "@/lib/recallSchedule"
 import { playSound } from "@/lib/sound"
@@ -40,6 +40,9 @@ export const ImportModal = memo(function ImportModal({ theme, signedIn, onClose,
   const [doc, setDoc] = useState<ImportDoc | null>(null)
   const [title, setTitle] = useState("")
   const [pasteText, setPasteText] = useState("")
+  // The clipboard's rich version (Docs/Word/Notion keep headings, lists, bold, links there).
+  // Used only while the box still holds exactly what was pasted.
+  const [pasteRich, setPasteRich] = useState<{ html: string; value: string } | null>(null)
   const [pasteTitle, setPasteTitle] = useState("")
   const [parsing, setParsing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -103,7 +106,8 @@ export const ImportModal = memo(function ImportModal({ theme, signedIn, onClose,
 
   const handlePaste = () => {
     if (!pasteText.trim()) { setError("Paste some notes first."); return }
-    try { accept(parsePastedText(pasteText, pasteTitle.trim() || undefined)) }
+    const title = pasteTitle.trim() || undefined
+    try { accept(pasteRich && pasteRich.value === pasteText ? parsePastedHtml(pasteRich.html, pasteText, title) : parsePastedText(pasteText, title)) }
     catch (e) { setError(e instanceof Error ? e.message : "Couldn't read that text.") }
   }
 
@@ -273,14 +277,25 @@ export const ImportModal = memo(function ImportModal({ theme, signedIn, onClose,
                   <input ref={fileRef} type="file" accept={ACCEPTED_IMPORT_TYPES} hidden
                     onChange={e => { handleFile(e.target.files?.[0]); e.target.value = "" }} />
                   <p style={{ fontSize: 12, color: c.muted, margin: '10px 0 0', lineHeight: 1.5 }}>
-                    Google Docs: File → Download → Microsoft Word (.docx)
+                    Or copy everything from Google Docs, Word, Notion, Apple Notes or OneNote (⌘A, ⌘C) and use Paste — headings become pages, formatting is kept.
                   </p>
                 </>
               ) : (
                 <>
                   <input value={pasteTitle} onChange={e => setPasteTitle(e.target.value)} placeholder="Title (optional)" style={{ ...field, marginBottom: 8 }} />
                   <textarea value={pasteText} onChange={e => setPasteText(e.target.value)} placeholder="Paste your notes…"
+                    onPaste={e => {
+                      const html = e.clipboardData.getData("text/html")
+                      const ta = e.currentTarget
+                      const replacesAll = !ta.value.trim() || (ta.selectionStart === 0 && ta.selectionEnd === ta.value.length)
+                      if (!html || !replacesAll) { setPasteRich(null); return }
+                      // Let the plain text land in the box, then remember the rich version for it.
+                      setTimeout(() => setPasteRich({ html, value: ta.value }), 0)
+                    }}
                     style={{ ...field, minHeight: 180, resize: 'vertical', lineHeight: 1.5 }} />
+                  {pasteRich && pasteRich.value === pasteText && (
+                    <p style={{ fontSize: 12, color: c.muted, margin: '6px 0 0' }}>✓ Formatting kept — headings, lists, bold and links come through.</p>
+                  )}
                   <div className="flex gap-2" style={{ marginTop: 12 }}>
                     <button onClick={handlePaste} disabled={!pasteText.trim()} style={btn(true, !pasteText.trim())}>Continue</button>
                   </div>
