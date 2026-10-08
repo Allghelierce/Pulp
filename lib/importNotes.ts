@@ -6,7 +6,7 @@
 // Browser-only (DOMParser, Blob, DecompressionStream). No dependencies.
 
 /** `text`: plain text, paragraphs separated by "\n\n" (sent to the AI). `html`: the page body. */
-export interface ImportSection { heading?: string; text: string; html?: string }
+export interface ImportSection { heading?: string; text: string; html?: string; headingHtml?: string }
 export interface ImportDoc { title: string; sections: ImportSection[]; words: number; truncated: boolean }
 
 export const ACCEPTED_IMPORT_TYPES = ".docx,.md,.markdown,.txt,.html,.htm";
@@ -31,6 +31,7 @@ type Block = {
   gap?: boolean;    // a blank line before it on the page
   wrap?: Wrap;
   meta?: { bold: boolean; size: number }; // HTML sources: infer headings when there are no h1–h3
+  plain?: boolean;  // a heading set at body size in the source (looks like bold text): stays a bold line
 };
 type Parsed = { blocks: Block[]; title?: string };
 type ListItem = { level: number; ordered: boolean; html: string; text: string };
@@ -40,8 +41,12 @@ const SPACER = "<div><br></div>";
 // (the ruling gap, set by the editor), so no margins — a heading takes two rows (one blank
 // above it, its text on the second), a spacer one.
 const RULE = "var(--pulp-rule,32px)";
-const headingHtml = (t: string) => `<h2 style="font-size:1.35em;font-weight:700;margin:0;padding-top:${RULE};line-height:${RULE}">${escapeHtml(t)}</h2>`;
-const subheadHtml = (t: string) => `<h3 style="font-size:1.1em;font-weight:700;margin:0;line-height:${RULE}">${escapeHtml(t)}</h3>`;
+// Headings stay modest — a notebook page, not a poster.
+const headingHtml = (t: string) => `<h2 style="font-size:1.15em;font-weight:700;margin:0;padding-top:${RULE};line-height:${RULE}">${escapeHtml(t)}</h2>`;
+// A heading folded into a merged page keeps the same size as the page's own heading
+// (they were the same level in the source), just without the blank row above.
+const subheadHtml = (t: string) => `<h2 style="font-size:1.15em;font-weight:700;margin:0;line-height:${RULE}">${escapeHtml(t)}</h2>`;
+const boldLineHtml = (t: string) => `<div><b>${escapeHtml(t)}</b></div>`;
 const textHtml = (t: string) => `<div>${t.split("\n").map(escapeHtml).join("<br>")}</div>`;
 const QUOTE_OPEN = '<blockquote style="border-left:3px solid rgba(128,128,128,.45);margin:0;padding-left:0.75rem">';
 // Cell borders are drawn with shadows so they add no height (rows stay on the ruling).
@@ -124,8 +129,27 @@ export function parsePastedHtml(html: string, plainText: string, title?: string)
   return doc.sections.length ? doc : parsePastedText(plainText, title);
 }
 
+/**
+ * Rich clipboard HTML pasted straight into a page (not through Import): the same cleanup —
+ * lists, bold/italic, links, tables, the source's blank lines — with headings kept in place
+ * (modest headings, or bold lines when the source set them at body size). Returns null when
+ * the HTML carries no structure; the caller pastes plain text then.
+ */
+export function pasteHtmlToEditor(html: string): string | null {
+  if (!hasStructure(html)) return null;
+  const blocks: Block[] = htmlBlocks(html, true).blocks.map(b =>
+    !b.level ? b
+      : b.plain ? { text: b.text, html: boldLineHtml(b.text.trim()), gap: b.gap }
+      : b.level === 1 ? { text: b.text, html: headingHtml(b.text.trim()) }
+      : subBlock(b.text.trim()));
+  if (!blocks.length) return null;
+  // One plain paragraph: paste it inline, so a copied phrase can land mid-sentence.
+  if (blocks.length === 1 && !blocks[0].wrap && /^<div>[\s\S]*<\/div>$/.test(blocks[0].html)) return blocks[0].html.slice(5, -6);
+  return blocksToHtml(blocks);
+}
+
 export function sectionToHtml(section: ImportSection): string {
-  const head = section.heading ? headingHtml(section.heading) : "";
+  const head = section.headingHtml ?? (section.heading ? headingHtml(section.heading) : "");
   if (section.html != null) return head + section.html;
   // Plain sections (older callers): one blank line between paragraphs.
   return head + paragraphs(section.text).map(textHtml).join(SPACER);
@@ -133,7 +157,9 @@ export function sectionToHtml(section: ImportSection): string {
 
 // ── Sectioning ───────────────────────────────────────────────────────────
 
-type Sec = { heading?: string; blocks: Block[] };
+type Sec = { heading?: string; plain?: boolean; gap?: boolean; blocks: Block[] };
+/** A section's heading when it lands inside another section (after merging short ones). */
+const headingAsBlock = (s: Sec): Block[] => !s.heading ? [] : s.plain ? [{ text: s.heading, html: boldLineHtml(s.heading), gap: s.gap }] : [subBlock(s.heading)];
 const blocksLen = (bs: Block[]) => bs.reduce((n, b, i) => n + b.text.length + (i ? 2 : 0), 0);
 
 function buildDoc(input: Block[], title: string): ImportDoc {
@@ -170,7 +196,7 @@ function buildDoc(input: Block[], title: string): ImportDoc {
     const raw: Sec[] = [];
     let cur: Sec | null = null;
     for (const b of kept) {
-      if (b.level) { if (cur) raw.push(cur); cur = { heading: b.text, blocks: [] }; }
+      if (b.level) { if (cur) raw.push(cur); cur = { heading: b.text, plain: b.plain, gap: b.gap, blocks: [] }; }
       else { if (!cur) cur = { blocks: [] }; cur.blocks.push(b); }
     }
     if (cur) raw.push(cur);
@@ -188,7 +214,7 @@ function buildDoc(input: Block[], title: string): ImportDoc {
     if (merged.length > 1 && blocksLen(merged[merged.length - 1].blocks) < MIN_SECTION_CHARS) {
       const last = merged.pop()!;
       const prev = merged[merged.length - 1];
-      merged[merged.length - 1] = { heading: prev.heading, blocks: [...prev.blocks, ...(last.heading ? [subBlock(last.heading)] : []), ...last.blocks] };
+      merged[merged.length - 1] = { ...prev, blocks: [...prev.blocks, ...headingAsBlock(last), ...last.blocks] };
     }
     secs = merged.flatMap(splitSection);
   }
@@ -198,7 +224,10 @@ function buildDoc(input: Block[], title: string): ImportDoc {
     const text = blocksToText(s.blocks).trim();
     if (!text) continue;
     const sec: ImportSection = { text, html: blocksToHtml(s.blocks) };
-    if (s.heading) sec.heading = s.heading;
+    if (s.heading) {
+      sec.heading = s.heading;
+      if (s.plain) sec.headingHtml = (s.gap ? SPACER : "") + boldLineHtml(s.heading);
+    }
     sections.push(sec);
   }
   const words = sections.reduce((n, s) => n + countWords(s.heading ?? "") + countWords(s.text), 0);
@@ -208,8 +237,8 @@ function buildDoc(input: Block[], title: string): ImportDoc {
 function mergeForward(a: Sec, b: Sec): Sec {
   // A heading-less preamble adopts the next heading; otherwise the next
   // heading survives as a sub-heading inside the page.
-  if (!a.heading) return { heading: b.heading, blocks: [...a.blocks, ...b.blocks] };
-  return { heading: a.heading, blocks: [...a.blocks, ...(b.heading ? [subBlock(b.heading)] : []), ...b.blocks] };
+  if (!a.heading) return { ...b, blocks: [...a.blocks, ...b.blocks] };
+  return { ...a, blocks: [...a.blocks, ...headingAsBlock(b), ...b.blocks] };
 }
 
 function splitSection(s: Sec): Sec[] {
@@ -217,7 +246,7 @@ function splitSection(s: Sec): Sec[] {
   if (len <= MAX_SECTION_CHARS) return [s];
   const n = Math.ceil(len / MAX_SECTION_CHARS);
   const parts = chunkBlocks(s.blocks, Math.ceil(len / n));
-  return parts.map((blocks, i) => ({ heading: s.heading && i > 0 ? `${s.heading} (${i + 1})` : s.heading, blocks }));
+  return parts.map((blocks, i) => ({ ...s, heading: s.heading && i > 0 ? `${s.heading} (${i + 1})` : s.heading, blocks }));
 }
 
 /** Greedy chunking at block boundaries; every chunk ≤ MAX_SECTION_CHARS. */
@@ -913,7 +942,8 @@ function htmlToPlain(html: string): string {
   return new DOMParser().parseFromString(html, "text/html").body?.textContent ?? "";
 }
 
-function htmlBlocks(src: string): Parsed {
+/** `inPlace`: pasting into a page — a title line stays on the page as a heading. */
+function htmlBlocks(src: string, inPlace = false): Parsed {
   const doc = new DOMParser().parseFromString(src, "text/html");
   const out: Block[] = [];
   let firstH1: string | undefined;
@@ -968,8 +998,8 @@ function htmlBlocks(src: string): Parsed {
         if (t) {
           if (tag === "H1" && !firstH1) firstH1 = t;
           flushWordList();
-          out.push({ level: Number(tag[1]), text: t, html: "" });
-          pendingGap = false;
+          const s = serializeInline(el);
+          out.push({ level: Number(tag[1]), text: t, html: "", gap: gapFor(el), meta: { bold: s.bold, size: s.size } });
           prevBottom = 0; prevImplicit = false; prevList = false;
         }
         return;
@@ -1036,7 +1066,10 @@ function htmlBlocks(src: string): Parsed {
     if (/mso-list\s*:/i.test(style) && !/mso-list\s*:\s*ignore/i.test(style)) { addWordListItem(el, style); return; }
     const t = textOf(el);
     if (!t) { const had = out.length > 0 || wordItems.length > 0; flushWordList(); pendingGap = had; return; } // empty paragraph = blank line
-    if (/\b(title|MsoTitle)\b/.test(cls) && !pTitle) { pTitle = t; return; }   // Docs / Word "Title" style
+    if (/\b(title|MsoTitle)\b/.test(cls) && !pTitle) {   // Docs / Word "Title" style
+      if (inPlace) emit({ level: 1, text: t, html: "" }, el); else pTitle = t;
+      return;
+    }
     if (/\b(subtitle|MsoSubtitle)\b/.test(cls)) { emit({ ...subBlock(t), gap: undefined }, el); return; }
     const s = serializeInline(el);
     emit({ text: s.text, html: `<div>${s.html}</div>`, meta: { bold: s.bold, size: s.size } }, el);
@@ -1094,20 +1127,26 @@ function htmlBlocks(src: string): Parsed {
   const first = out[0];
   if (!pTitle && first && !first.level && !first.wrap && first.meta && median && first.meta.size >= median * 1.3 &&
       first.text.length <= MAX_HEADING_CHARS && !first.text.includes("\n") && out.length > 1) {
-    pTitle = first.text.trim();
-    out.shift();
-    if (out[0]) out[0].gap = false;
+    if (inPlace) { first.level = 1; first.text = first.text.trim(); first.html = ""; }
+    else {
+      pTitle = first.text.trim();
+      out.shift();
+      if (out[0]) out[0].gap = false;
+    }
   }
 
-  // No h1–h3 at all (Apple Notes, OneNote, many web pages): short lines set larger
-  // than the body text — or bold lines in a doc with regular text — become headings.
+  // Real headings (h1–h3) set at the body's size — a Docs/Word heading style made to look
+  // like bold text — stay bold lines on the page (they still split topics).
+  for (const b of out) if (b.level && b.meta && b.meta.size > 0 && median > 0 && b.meta.size <= median * 1.15) b.plain = true;
+
+  // No h1–h3 at all (Apple Notes, OneNote, many web pages): short lines set clearly larger
+  // than the body text become headings. Bold alone never does — bold text stays bold.
   if (!out.some(b => b.level)) {
     const paras = out.filter(b => !b.wrap && b.meta);
-    const hasRegular = paras.some(b => !b.meta!.bold);
     const isCandidate = (b: Block) =>
       !b.wrap && !!b.meta && b.text.trim().length <= MAX_HEADING_CHARS && !b.text.includes("\n") &&
       !/[.,;]$/.test(b.text.trim()) && /\p{L}/u.test(b.text) &&
-      ((median > 0 && b.meta.size >= median * 1.2) || (b.meta.bold && hasRegular));
+      median > 0 && b.meta.size >= median * 1.2;
     const flags = out.map(isCandidate);
     const count = flags.filter(Boolean).length;
     if (count > 0 && count * 2 <= paras.length) {
