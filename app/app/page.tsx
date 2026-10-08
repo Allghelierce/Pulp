@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useEffect, memo, useCallback, useMemo, lazy, Suspense, startTransition } from "react"
+import { useState, useRef, useEffect, useLayoutEffect, memo, useCallback, useMemo, lazy, Suspense, startTransition } from "react"
 import { claimFullReviewGrowth } from "@/lib/fullReview"
 import { playSound } from "@/lib/sound"
 import { LazyMotion, domAnimation, m, motion, AnimatePresence } from "framer-motion"
@@ -277,6 +277,7 @@ const ScrollModePage = memo(function ScrollModePage({
       onClick={isActive ? undefined : onClick}
       style={{
         position: "relative",
+        // Same height as the live editor page so swapping pages never shifts the scroll
         minHeight: 1250,
         backgroundColor: paperBg,
         backgroundImage: paperImg,
@@ -1655,6 +1656,9 @@ export default function NoteApp() {
     const saved = _savedSettingsRef.current
     const merged = saved ? { ...SETTINGS_DEFAULTS, ...saved } : { ...SETTINGS_DEFAULTS }
     merged.shortcuts = withDefaults(merged.shortcuts)
+    // Scrolling pages became the default after "arrows" had been saved into
+    // everyone's settings; switch people over once. Choosing Arrows later sticks.
+    if (!merged.scrollDefaultV2) { merged.scrollMode = true; merged.scrollDefaultV2 = true }
     return merged
   })
 
@@ -2995,7 +2999,7 @@ export default function NoteApp() {
   useEffect(() => { flushRefs.current.folders = folders }, [folders])
   useEffect(() => { flushRefs.current.bookmarks = bookmarks }, [bookmarks])
   useEffect(() => {
-    flushRefs.current.settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode }
+    flushRefs.current.settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode, scrollDefaultV2: true }
   }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode])
   useEffect(() => {
     flushRefs.current.grove = { juice: sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, quotaTier, quotaLockedUntil, hibernation, hibernationScheduled }
@@ -3074,7 +3078,7 @@ export default function NoteApp() {
     clearTimeout(settingsSaveTimer.current)
     settingsSaveTimer.current = setTimeout(() => {
       flushRefs.current.dirty.settings = false
-      const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode }
+      const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode, scrollDefaultV2: true }
       localStorage.setItem("pulp-settings", JSON.stringify(settings))
       if (user) {
         db.upsertSettings(user.id, {
@@ -3163,35 +3167,61 @@ export default function NoteApp() {
   }, [notes, user, autoSave, isLoading, activeTabId])
 
   // Sync editor DOM with active note/page
+  // Runs every render: the editor div mounts after notes load (and remounts on
+  // view changes), so a deps-based effect could miss it and leave it empty —
+  // the next page switch would then save that blank over the page.
   const lastSyncKey = useRef<string>("")
+  const lastSyncEl = useRef<HTMLElement | null>(null)
   useEffect(() => {
-    if (!activeTabId || gridView) return
-    const key = `${activeTabId}:${currentPageIdx}:${gridView}:${scrollMode}`
-    if (!gridView && editorRef.current && lastSyncKey.current !== key) {
-      editorRef.current.innerHTML = sanitizeHTML(activeNote?.pages[currentPageIdx] || "")
+    if (!activeTabId || gridView || !activeNote) return
+    const key = `${activeTabId}:${currentPageIdx}:${scrollMode}`
+    const el = editorRef.current
+    if (el && (lastSyncKey.current !== key || lastSyncEl.current !== el)) {
+      el.innerHTML = sanitizeHTML(activeNote.pages[currentPageIdx] || "")
       lastSyncKey.current = key
+      lastSyncEl.current = el
     }
-  }, [activeTabId, currentPageIdx, gridView, scrollMode, activeNote?.pages])
+  })
 
-  // Scroll mode: IntersectionObserver to track visible page
+  // Scroll mode: IntersectionObserver to track visible page.
+  // The scroller mounts after notes load, so it's tracked as state: the
+  // observer used to be set up while it was still null and never retried.
   const scrollObserverSkip = useRef(false)
+  const [scrollRoot, setScrollRoot] = useState<HTMLElement | null>(null)
+  const scrollRootRef = useCallback((el: HTMLElement | null) => { scrollContainerRef.current = el as HTMLDivElement | null; setScrollRoot(el) }, [])
   useEffect(() => {
-    if (!scrollMode || !scrollContainerRef.current || !activeNote) return
-    const container = scrollContainerRef.current
+    if (!scrollMode || !scrollRoot || !activeNote) return
+    const container = scrollRoot
     const observer = new IntersectionObserver(
       entries => {
         if (scrollObserverSkip.current) return
         let maxRatio = 0
         let maxIdx = currentPageIdx
+        let maxEl: Element | null = null
         entries.forEach(entry => {
+          // Page wrappers carry their index; (they used to lack it, so every page read as 0)
           const idx = Number(entry.target.getAttribute("data-page-idx"))
+          if (Number.isNaN(idx)) return
           if (entry.intersectionRatio > maxRatio) {
             maxRatio = entry.intersectionRatio
             maxIdx = idx
+            maxEl = entry.target
           }
         })
-        if (maxRatio > 0.3 && maxIdx !== currentPageIdx) {
+        if (maxRatio > 0.3 && maxIdx !== currentPageIdx && maxEl) {
           editor.flushSync()
+          // Activating a page swaps its preview for the editor (a different
+          // height). Anchor whatever page is under the middle of the screen —
+          // what you're looking at — so the layout effect keeps it still.
+          const rr = container.getBoundingClientRect()
+          const midY = rr.top + rr.height / 2
+          let anchorIdx = maxIdx, anchorTop = (maxEl as Element).getBoundingClientRect().top
+          scrollPageRefs.current.forEach((el, i) => {
+            const b = el.getBoundingClientRect()
+            if (b.top <= midY && b.bottom >= midY) { anchorIdx = i; anchorTop = b.top }
+          })
+          scrollAnchorRef.current = { idx: anchorIdx, top: anchorTop }
+          scrollObserverSkip.current = true
           setCurrentPageIdx(maxIdx)
         }
       },
@@ -3199,7 +3229,19 @@ export default function NoteApp() {
     )
     scrollPageRefs.current.forEach(el => observer.observe(el))
     return () => observer.disconnect()
-  }, [scrollMode, activeNote?.pages?.length, activeTabId])
+    // currentPageIdx: the active page re-renders as a different element, so re-observe
+  }, [scrollMode, scrollRoot, activeNote?.pages?.length, activeTabId, currentPageIdx])
+
+  // After a scroll-driven page switch, put the anchored page back where it was.
+  const scrollAnchorRef = useRef<{ idx: number; top: number } | null>(null)
+  useLayoutEffect(() => {
+    const a = scrollAnchorRef.current
+    if (!a || !scrollRoot) return
+    scrollAnchorRef.current = null
+    const el = scrollPageRefs.current.get(a.idx)
+    if (el) scrollRoot.scrollTop += el.getBoundingClientRect().top - a.top
+    requestAnimationFrame(() => { scrollObserverSkip.current = false })
+  }, [currentPageIdx, scrollRoot])
 
   const handleScrollPageClick = useCallback((pageIdx: number) => {
     if (pageIdx === currentPageIdx) return
@@ -4203,19 +4245,19 @@ export default function NoteApp() {
               ) : gridView ? (
                 <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} bookmarks={bookmarks} />
               ) : (
-                <main ref={scrollContainerRef} className={`flex-1 shrink-0 overflow-y-scroll ${isNarrow ? "px-3" : "px-8"} pt-6 pb-8 flex justify-center items-start relative`} style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden", minWidth: isNarrow ? 0 : 600 }}>
+                <main ref={scrollRootRef} className={`flex-1 shrink-0 overflow-y-scroll ${isNarrow ? "px-3" : "px-8"} pt-6 pb-8 flex justify-center items-start relative`} style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden", minWidth: isNarrow ? 0 : 600 }}>
                   <div id="pulp-page-surface" style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 580, maxWidth: 960, paddingLeft: 0 }} className="w-full shrink-0">
                     {/* Scroll mode: preceding pages */}
                     {scrollMode && activeNote.pages.map((pageHtml, idx) => {
                       if (idx >= currentPageIdx) return null
                       const inkColor = getInkColor(paperStyle, theme === "dark")
                       return (
-                        <div key={`scroll-page-${idx}`} ref={el => { if (el) scrollPageRefs.current.set(idx, el); else scrollPageRefs.current.delete(idx) }} style={{ marginBottom: 32 }}>
-                          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
+                        <div key={`scroll-page-${idx}`} ref={el => { if (el) scrollPageRefs.current.set(idx, el); else scrollPageRefs.current.delete(idx) }} data-page-idx={idx} style={{ marginBottom: 32 }}>
+                          {idx > 0 && <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
                             <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
                             <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: theme === "dark" ? "#71717a" : "#a1a1aa", userSelect: "none" }}>Page {idx + 1}</span>
                             <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
-                          </div>
+                          </div>}
                           <ScrollModePage
                             pageIdx={idx}
                             html={sanitizeHTML(pageHtml || "")}
@@ -4235,15 +4277,15 @@ export default function NoteApp() {
                         </div>
                       )
                     })}
-                    {/* Active page divider in scroll mode */}
-                    {scrollMode && currentPageIdx > 0 && (
-                      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
-                        <div style={{ flex: 1, height: 1, background: accentUi }} />
-                        <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: accentUi, fontWeight: 600, userSelect: "none" }}>Page {currentPageIdx + 1}</span>
-                        <div style={{ flex: 1, height: 1, background: accentUi }} />
-                      </div>
-                    )}
                     <div style={{ position: "relative", overflow: "visible" }} ref={el => { if (el && scrollMode) scrollPageRefs.current.set(currentPageIdx, el); }} data-page-idx={currentPageIdx}>
+                      {/* Active page divider in scroll mode */}
+                      {scrollMode && currentPageIdx > 0 && (
+                        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
+                          <div style={{ flex: 1, height: 1, background: accentUi }} />
+                          <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: accentUi, fontWeight: 600, userSelect: "none" }}>Page {currentPageIdx + 1}</span>
+                          <div style={{ flex: 1, height: 1, background: accentUi }} />
+                        </div>
+                      )}
                       <div style={{ position: "relative", overflow: "visible" }}>
                         {!scrollMode && <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: paperBg, borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)", filter: "brightness(0.97)" }} />}
                         {!scrollMode && <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: paperBg, borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.06)", filter: "brightness(0.94)" }} />}
@@ -4574,7 +4616,7 @@ export default function NoteApp() {
                       if (idx <= currentPageIdx) return null
                       const inkColor = getInkColor(paperStyle, theme === "dark")
                       return (
-                        <div key={`scroll-page-${idx}`} ref={el => { if (el) scrollPageRefs.current.set(idx, el); else scrollPageRefs.current.delete(idx) }} style={{ marginTop: 32 }}>
+                        <div key={`scroll-page-${idx}`} ref={el => { if (el) scrollPageRefs.current.set(idx, el); else scrollPageRefs.current.delete(idx) }} data-page-idx={idx} style={{ marginTop: 32 }}>
                           <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
                             <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
                             <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: theme === "dark" ? "#71717a" : "#a1a1aa", userSelect: "none" }}>Page {idx + 1}</span>

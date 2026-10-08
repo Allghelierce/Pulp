@@ -941,15 +941,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 <SettingRow
                   title="Page navigation"
                   isDark={isDark}
-                  description={scrollMode ? "Continuous scroll — all pages flow together" : "Arrow navigation — flip through pages one at a time"}
-                  control={
-                    <button
-                      onClick={() => onUpdateConfig({ scrollMode: !scrollMode } as any)}
-                      className={`px-3 py-1 rounded-md text-[11px] font-normal border transition-all ${isDark ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/50" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"}`}
-                    >
-                      {scrollMode ? "Scroll" : "Arrows"}
-                    </button>
-                  }
+                  description={scrollMode ? "Scroll through every page of a notebook, like a document" : "Flip through pages one at a time"}
+                  control={<SegmentedControl options={[["scroll", "Scroll"], ["pages", "One at a time"]]} value={scrollMode ? "scroll" : "pages"} onChange={(v: string) => onUpdateConfig({ scrollMode: v === "scroll" } as any)} isDark={isDark} />}
                 />
               </SettingSection>
             </>)}
