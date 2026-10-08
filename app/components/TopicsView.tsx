@@ -1,5 +1,6 @@
 "use client"
 import { memo, useEffect, useMemo, useState } from "react"
+import { loadDeck } from "@/lib/recallSchedule"
 import { motion } from "framer-motion"
 import type { NoteData, Tree } from "@/app/types"
 import { PlantIcon } from "@/app/components/PlantIcon"
@@ -35,7 +36,7 @@ const STARS = Array.from({ length: 38 }, (_, i) => {
 
 // Every topic you've studied, most urgent first. The front door to recall:
 // find a topic, see how it's doing, recall it, or jump to its trees.
-export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes, onClose, onRecall, onShowTopic }: {
+export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes, onClose, onRecall, onShowTopic, onFullReview }: {
   theme: "light" | "dark"
   accent: string
   grove: Tree[]
@@ -43,6 +44,8 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
   onClose: () => void
   onRecall: (topic: string, notebookId?: string) => void
   onShowTopic: (topic: string) => void
+  /** Study every card in a notebook (full review). */
+  onFullReview?: (notebookId: string) => void
 }) {
   const [query, setQuery] = useState("")
   const [tick, setTick] = useState(0)
@@ -56,6 +59,14 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
   const now = Date.now()
   // eslint-disable-next-line react-hooks/exhaustive-deps -- tick is a refresh trigger
   const rows = useMemo(() => buildTopicIndex(grove), [grove, tick])
+  // Notebooks with recall cards, for "review the whole notebook".
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- tick is a refresh trigger
+  const [allBooks, setAllBooks] = useState(false)
+  const books = useMemo(() => notes
+    .filter(n => n.noteType !== "vault") // locked vaults never open from here
+    .map(n => ({ id: n.id, name: n.subject || "Untitled", cards: loadDeck(n.id)?.cards.length ?? 0 }))
+    .filter(b => b.cards > 0)
+    .sort((a, b) => b.cards - a.cards), [notes, tick])
   const newestTree = useMemo(() => {
     const m = new Map<string, Tree>()
     for (const t of grove) {
@@ -112,6 +123,28 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
     </motion.div>
   )
 
+  const notebookBlock = onFullReview && books.length > 0 && (
+    <div style={{ marginTop: 18 }}>
+      <div style={{ ...type.eyebrow, fontSize: 9, color: p.textMuted, marginBottom: 8 }}>Whole notebooks</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {(allBooks ? books : books.slice(0, 5)).map(b => (
+          <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, border: `1px solid ${p.cardBorder}`, background: isDark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.6)" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 15, color: p.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.name}</div>
+              <div style={{ fontSize: 11.5, color: p.textMuted }}>{b.cards} card{b.cards === 1 ? "" : "s"}</div>
+            </div>
+            <button onClick={() => onFullReview(b.id)} aria-label={`Full review: ${b.name}`} style={{ ...chipButton(p), color: accent, borderColor: `${accent}55`, flexShrink: 0 }}>Full review</button>
+          </div>
+        ))}
+        {books.length > 5 && (
+          <button onClick={() => setAllBooks(v => !v)} style={{ alignSelf: "flex-start", background: "none", border: "none", color: p.textMuted, fontSize: 12, cursor: "pointer", padding: "2px 4px", fontFamily: FONT_SERIF }}>
+            {allBooks ? "Show fewer" : `Show all ${books.length}`}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+
   return (
     <div style={{
       position: "absolute", inset: 0, overflowY: "auto", fontFamily: FONT_SERIF,
@@ -156,7 +189,7 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
           Close
         </button>
 
-        {rows.length === 0 ? (
+        {rows.length === 0 ? (<>
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
             style={{ marginTop: 48, textAlign: "center", padding: "40px 24px", background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 20, boxShadow: cardShadow }}
@@ -169,7 +202,8 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
               Finish a focus session with some notes.<br />Pulp names the topic, plants a sapling, and makes cards to recall.
             </div>
           </motion.div>
-        ) : (
+          {notebookBlock}
+        </>) : (
           <>
             {/* Summary */}
             <div style={{ marginTop: 26, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
@@ -202,6 +236,8 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
                 </span>
               </motion.button>
             )}
+
+            {notebookBlock}
 
             {/* Search */}
             <div style={{ marginTop: 18, position: "relative" }}>

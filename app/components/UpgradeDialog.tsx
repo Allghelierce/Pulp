@@ -11,6 +11,7 @@ const REASONS: Record<string, string> = {
   import_limit: "You've used your free imports.",
   cards_limit: "Today's free AI cards are used up.",
   grade_upsell: "Free AI grading resets tomorrow.",
+  rephrase_upsell: "Free mixed wording resets tomorrow.",
 }
 
 const PERKS = [

@@ -42,6 +42,19 @@ export async function generateTopicCards(system: string, user: string, label = "
   return parseTopicResult(raw)
 }
 
+// Sanitize client-sent existing card questions: <= 40 non-empty strings of <= 160 chars, deduped.
+export function cleanKnownQuestions(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  const out: string[] = []
+  for (const q of raw) {
+    if (typeof q !== "string") continue
+    const s = q.replace(/\s+/g, " ").trim().slice(0, 160)
+    if (s && !out.includes(s)) out.push(s)
+    if (out.length >= 40) break
+  }
+  return out
+}
+
 // Sanitize client-sent known topics: <= 30 non-empty strings of <= 40 chars, deduped.
 export function cleanKnownTopics(raw: unknown): string[] {
   if (!Array.isArray(raw)) return []

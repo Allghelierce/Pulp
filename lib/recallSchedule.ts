@@ -23,6 +23,7 @@ export interface ScheduledCard {
   last?: number       // epoch ms of last review
   topic?: string      // topic display name from session-end tagging; compare via normalizeTopic
   treeId?: number     // tree planted by the session that made this card (per-session recall)
+  alts?: string[]     // AI rephrasings of q ("mix up wording"); any one tests the same answer
 }
 
 export interface Deck {
@@ -30,6 +31,7 @@ export interface Deck {
   cards: ScheduledCard[]
   generatedAt: number
   noteHash: string    // fingerprint of source notes, to detect drift
+  covered?: string[]  // fingerprints of note lines that cards were made from (full review coverage; lib/fullReview)
 }
 
 const DAY = 86_400_000

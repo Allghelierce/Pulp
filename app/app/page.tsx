@@ -1,5 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, memo, useCallback, useMemo, lazy, Suspense, startTransition } from "react"
+import { claimFullReviewGrowth } from "@/lib/fullReview"
 import { playSound } from "@/lib/sound"
 import { LazyMotion, domAnimation, m, motion, AnimatePresence } from "framer-motion"
 import { flushSync } from "react-dom"
@@ -10,8 +11,8 @@ import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User, HLine } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
 import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
-import { applyRecall } from "@/app/lib/treeGrowth"
-import { isFullyGrown } from "@/lib/topics"
+import { applyRecall, recallTarget } from "@/app/lib/treeGrowth"
+import { isFullyGrown, normalizeTopic } from "@/lib/topics"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
@@ -1374,9 +1375,11 @@ export default function NoteApp() {
   }, [reviewOpen])
   // Orchard "Review <topic>": topic filter + notebook override (cleared by closeAllPanels).
   const [reviewTopic, setReviewTopic] = useState<string | undefined>(undefined)
+  // "full" = study every card in the notebook (full review); "due" = spaced-repetition session.
+  const [reviewMode, setReviewMode] = useState<"due" | "full">("due")
   const [reviewNoteId, setReviewNoteId] = useState<string | undefined>(undefined)
   fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen || topicsOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setReviewMode("due"); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
   const openParty = useCallback(() => { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) }, [closeAllPanels])
 
   useEffect(() => {
@@ -2795,13 +2798,13 @@ export default function NoteApp() {
   }, [])
 
   // Plus upgrade prompt: any free-plan limit (402) or upsell link opens it.
-  // grade_limit is handled inline in recall; the same reason won't re-open within 2 min.
+  // grade_limit / rephrase_limit are handled inline in recall; the same reason won't re-open within 2 min.
   const [upgradeReason, setUpgradeReason] = useState<string | null>(null)
   const lastUpgradeRef = useRef<Record<string, number>>({})
   useEffect(() => {
     const onUpgrade = (e: Event) => {
       const code = (e as CustomEvent<UpgradeDetail>).detail?.code || "generic"
-      if (code === "grade_limit") return
+      if (code === "grade_limit" || code === "rephrase_limit") return
       const now = Date.now()
       if (now - (lastUpgradeRef.current[code] || 0) < 120_000) return
       lastUpgradeRef.current[code] = now
@@ -4648,6 +4651,7 @@ export default function NoteApp() {
                   onClose={() => setTopicsOpen(false)}
                   onRecall={(topic, notebookId) => { startTransition(() => { closeAllPanels(); setReviewTopic(topic); setReviewNoteId(notebookId); setReviewOpen(true) }) }}
                   onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}
+                  onFullReview={(notebookId) => { startTransition(() => { closeAllPanels(); setReviewNoteId(notebookId); setReviewMode("full"); setReviewOpen(true) }) }}
                 />
               </m.div>
             )}
@@ -4665,20 +4669,32 @@ export default function NoteApp() {
               >
                 <Suspense fallback={<PulpLoader variant="panel" />}>
                   <ReviewView
-                    key={`${reviewNote.id}:${reviewTopic ?? ''}`}
+                    key={`${reviewNote.id}:${reviewTopic ?? ''}:${reviewMode}`}
                     note={reviewNote}
                     topic={reviewTopic}
+                    mode={reviewMode}
                     theme={theme}
                     accent={accentSolid}
-                    onClose={() => { setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined) }}
+                    onClose={() => { setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setReviewMode("due") }}
                     onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}
-                    onCorrect={(weight, topic) => {
+                    onCorrect={(weight, topic, meta) => {
                       // Topics as trees: recall finishes that topic's sapling, or banks
                       // nutrients if none is waiting. Read the store directly (not an
                       // updater) since banking writes localStorage.
                       const current = useGroveStore.getState().grove
+                      if (meta?.full) {
+                        // Full review is paced: a card counts once a day, and a tree grows at
+                        // most about a third of the way per day (no finishing it in one sitting).
+                        // Capped per the tree applyRecall will actually feed (tagged or not).
+                        const tree = recallTarget(current, topic, reviewNote.id)
+                        if (!tree && !topic?.trim()) return 0 // nothing would grow or bank
+                        const cap = tree ? Math.max(1, Math.ceil((tree.recallNeeded ?? 3) / 3)) : 2
+                        weight = claimFullReviewGrowth(meta.cardId, tree ? `tree:${tree.id}` : `bank:${normalizeTopic(topic!)}`, weight, cap)
+                        if (weight <= 0) return 0
+                      }
                       const next = applyRecall(current, topic, weight, reviewNote.id)
                       if (next !== current) setGrove(next)
+                      return weight
                     }}
                     onComplete={({ reviewed, again }) => {
                       // Sap from recall — rate scaled by the quality of the orchard (full trees only).

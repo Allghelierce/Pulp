@@ -11,6 +11,7 @@ import { extractTextFromHTML } from "@/lib/sanitize"
 import { SAPLING_STAGE, FULL_STAGE, timerStage, recallNeededFor, isTopicTree, isFullyGrown, takeBanked } from "@/lib/topics"
 import { MIN_TOPIC_TEXT, type Card } from "@/lib/recallPrompt"
 import { addTopicCards, firstRecallDue, hashNotes, loadDeck } from "@/lib/recallSchedule"
+import { markCovered, seedCoverage } from "@/lib/fullReview"
 
 // ─── Session topic tagging helpers ───
 const SNAPSHOT_KEY = 'pulp-timer-snapshot'
@@ -523,11 +524,14 @@ export const VitalitySystem = memo(function VitalitySystem({
         if (!topic) { emitTagged(treeId, null); return }
         const cards = Array.isArray(data.cards) ? data.cards : []
         let added = 0
+        // Full review coverage: a deck from before tracking stands for the notes at session start.
+        seedCoverage(noteId, (snap!.lines || "").split("\n"))
         if (cards.length) {
           // If the deck was in sync with the notes at session start, it now covers the new text too.
           const deck = loadDeck(noteId)
           const inSync = !deck || deck.noteHash === hashNotes(snap!.review || "")
           added = addTopicCards(noteId, cards, topic, Date.now(), inSync ? hashNotes(endReview) : undefined, treeId ?? undefined, firstRecallDue(Date.now()))
+          markCovered(noteId, written.split("\n")) // full review won't re-card what this session carded
           if (added > 0) {
             try { window.dispatchEvent(new CustomEvent('pulp-cards-queued', { detail: { noteId, topic, count: added } })) } catch { }
           }

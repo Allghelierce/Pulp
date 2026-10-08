@@ -89,7 +89,8 @@ test("economy loop: grove sap -> market seed -> Seeds -> timer -> grove", async 
   await page.locator('[title^="Focus timer"]').first().click()
   await page.locator('div[style*="height: 160px"]').first().click()
   await page.getByText("Choose a plant").waitFor()
-  await page.locator(".grid.grid-cols-4 button").first().click()
+  // Tangerine is always offered first; pick the bought seed.
+  await page.locator(".grid.grid-cols-4 button").filter({ hasNotText: /free/i }).first().click() // Tangerine (free) is always offered first; pick the bought seed
   await page.getByRole("button", { name: "30s", exact: true }).click()
   await page.getByRole("button", { name: "Start Session" }).click()
   await page.locator('[contenteditable="true"]').first().click()
