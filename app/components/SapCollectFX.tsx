@@ -22,6 +22,26 @@ function rng(seed: number) {
 
 type Drop = { sx: number; sy: number; mx: number; my: number; delay: number; dur: number; size: number }
 
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
+const STEPS = 18 // keyframes per bead curve — transform-only, so it runs on the compositor
+
+// A bead's flight as transform keyframes along its quadratic curve: eased in and
+// out along the path, fading/scaling in at the start and shrinking into the center.
+function flight(d: Drop, cx: number, cy: number): Keyframe[] {
+  const frames: Keyframe[] = []
+  for (let i = 0; i <= STEPS; i++) {
+    const u = i / STEPS
+    const t = easeInOutCubic(u)
+    const x = (1 - t) * (1 - t) * d.sx + 2 * (1 - t) * t * d.mx + t * t * cx
+    const y = (1 - t) * (1 - t) * d.sy + 2 * (1 - t) * t * d.my + t * t * cy
+    const scale = u < 0.2 ? 0.55 + (u / 0.2) * 0.5 : u > 0.8 ? 1.05 - ((u - 0.8) / 0.2) * 0.65 : 1.05 - ((u - 0.2) / 0.6) * 0.15
+    const opacity = u < 0.15 ? u / 0.15 : u > 0.88 ? Math.max(0, (1 - u) / 0.12) : 1
+    frames.push({ offset: u, transform: `translate(${(x - d.size / 2).toFixed(1)}px, ${(y - d.size / 2).toFixed(1)}px) scale(${scale.toFixed(3)})`, opacity })
+  }
+  return frames
+}
+
 // "Collect all": sap beads curve in from the trees (CSS motion path, so the
 // browser animates them, not React). "+N sap" and the new balance count up as
 // beads actually land, the center glows with each one, then it floats away.
@@ -61,8 +81,8 @@ export const SapCollectFX = memo(function SapCollectFX({ run, reduceMotion, onLa
           sx: s.x + (random() - 0.5) * 14, sy: s.y - 8 - random() * 16,
           mx: s.x + dx * 0.5 + (-dy / dist) * bow,
           my: s.y + dy * 0.5 + (dx / dist) * bow - 30 - random() * 50,
-          delay: random() * 380 + k * 110,
-          dur: 700 + Math.min(420, dist * 0.4),
+          delay: random() * 420 + k * 120,
+          dur: 820 + Math.min(460, dist * 0.45),
           size: 5 + random() * 3.5,
         })
       }
@@ -82,17 +102,20 @@ export const SapCollectFX = memo(function SapCollectFX({ run, reduceMotion, onLa
     const anims: Animation[] = []
     let raf = 0
 
-    // Smoothly tween the shown numbers toward a target (eases between landings).
-    let shown = 0, target = 0
-    const render = () => {
-      shown += (target - shown) * 0.22
-      if (Math.abs(target - shown) < 0.5) shown = target
-      if (plusRef.current) plusRef.current.textContent = `+${fmt(shown)}`
-      if (totalRef.current) totalRef.current.textContent = fmt(run.startTotal + shown)
-      if (shown !== target) raf = requestAnimationFrame(render)
-      else raf = 0
+    // Count up smoothly over a time window (eased), not in steps per landing.
+    const showValue = (v: number) => {
+      if (plusRef.current) plusRef.current.textContent = `+${fmt(v)}`
+      if (totalRef.current) totalRef.current.textContent = fmt(run.startTotal + v)
     }
-    const setTarget = (v: number) => { target = v; if (!raf) raf = requestAnimationFrame(render) }
+    const countUp = (from: number, ms: number) => {
+      const t0 = performance.now() + from
+      const tick = (now: number) => {
+        const p = Math.min(1, Math.max(0, (now - t0) / ms))
+        showValue(run.sap * easeOutCubic(p))
+        raf = p < 1 ? requestAnimationFrame(tick) : 0
+      }
+      raf = requestAnimationFrame(tick)
+    }
 
     const label = labelRef.current
     if (label) anims.push(label.animate(
@@ -103,36 +126,28 @@ export const SapCollectFX = memo(function SapCollectFX({ run, reduceMotion, onLa
     let finish = 0
     if (!drops.length) {
       // Nothing to fly in (reduced motion, or no trees on screen): just count.
-      timers.push(setTimeout(() => { setTarget(run.sap); commit() }, reduceMotion ? 0 : 350))
-      finish = (reduceMotion ? 0 : 350) + HOLD_MS + 300
+      const wait = reduceMotion ? 0 : 350
+      if (reduceMotion) { showValue(run.sap); commit() } else { countUp(wait, 600); timers.push(setTimeout(commit, wait + 600)) }
+      finish = wait + (reduceMotion ? 0 : 600) + HOLD_MS
     } else {
       const els = Array.from(rootRef.current?.querySelectorAll<HTMLElement>("[data-sap-drop]") || [])
-      const lands = drops.map(d => d.delay + d.dur).sort((a, b) => a - b)
-      const per = run.sap / drops.length
+      const lands = drops.map(d => d.delay + d.dur)
+      const firstLand = Math.min(...lands), lastLand = Math.max(...lands)
       drops.forEach((d, i) => {
         const el = els[i]
         if (!el) return
-        el.style.offsetPath = `path("M${d.sx.toFixed(1)} ${d.sy.toFixed(1)} Q${d.mx.toFixed(1)} ${d.my.toFixed(1)} ${run.center.x.toFixed(1)} ${run.center.y.toFixed(1)}")`
-        anims.push(el.animate(
-          [
-            { offsetDistance: "0%", opacity: 0, transform: "scale(.5)" },
-            { offset: 0.15, opacity: 1, transform: "scale(1.1)" },
-            { offset: 0.85, opacity: 1, transform: "scale(.85)" },
-            { offsetDistance: "100%", opacity: 0, transform: "scale(.4)" },
-          ],
-          { duration: d.dur, delay: d.delay, easing: "cubic-bezier(.45,.05,.75,.45)", fill: "both" },
-        ))
+        anims.push(el.animate(flight(d, run.center.x, run.center.y), { duration: d.dur, delay: d.delay, easing: "linear", fill: "both" }))
       })
-      // Each landing adds its share and pulses the center glow.
-      lands.forEach((t, i) => timers.push(setTimeout(() => {
-        setTarget(i === lands.length - 1 ? run.sap : per * (i + 1))
-        glowRef.current?.animate(
-          [{ transform: "scale(.85)", opacity: 0.55 }, { transform: "scale(1.15)", opacity: 0.9 }, { transform: "scale(1)", opacity: 0.6 }],
-          { duration: 320, easing: "ease-out" },
-        )
-        if (i === lands.length - 1) commit()
-      }, t)))
-      finish = lands[lands.length - 1] + HOLD_MS
+      // The count runs from the first landing to just after the last, eased.
+      countUp(firstLand, lastLand - firstLand + 350)
+      // One continuous swell of the center glow while sap pours in, then a soft settle.
+      const glow = glowRef.current
+      if (glow) anims.push(glow.animate(
+        [{ transform: "scale(.8)", opacity: 0.35 }, { transform: "scale(1.18)", opacity: 0.9, offset: 0.75 }, { transform: "scale(1)", opacity: 0.65 }],
+        { duration: lastLand - firstLand + 700, delay: Math.max(0, firstLand - 150), easing: "cubic-bezier(.4,0,.2,1)", fill: "both" },
+      ))
+      timers.push(setTimeout(commit, lastLand + 350))
+      finish = lastLand + 350 + HOLD_MS
     }
 
     // Float away and finish
@@ -161,7 +176,7 @@ export const SapCollectFX = memo(function SapCollectFX({ run, reduceMotion, onLa
           data-sap-drop
           style={{
             position: "absolute", left: 0, top: 0, width: d.size, height: d.size, borderRadius: "50%",
-            offsetRotate: "0deg", offsetAnchor: "center", opacity: 0, willChange: "offset-distance, transform, opacity",
+            opacity: 0, willChange: "transform, opacity",
             background: "radial-gradient(circle at 35% 35%, #fde68a, #f59e0b 60%, #d97706)",
             boxShadow: "0 0 6px 1px rgba(245,158,11,0.45)",
           } as React.CSSProperties}
