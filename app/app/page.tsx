@@ -625,7 +625,7 @@ const BoxItem = memo(function BoxItem({
             sizeLocked={box.sizeLocked}
             onUpdate={(id, updates) => updateBox(id, updates)}
             onFocus={() => setSelectedBoxIds(new Set([box.id]))}
-            onBlurEmpty={removeIfEmpty && !isSticky ? () => removeIfEmpty(box.id) : undefined}
+            onBlurEmpty={removeIfEmpty && !isSticky && !box.isTitle ? () => removeIfEmpty(box.id) : undefined}
             onKeyDown={onKeyDown}
             onInput={onInput}
             theme={theme}
@@ -1175,6 +1175,10 @@ const BoxTextarea = memo(function BoxTextarea({
           if (!el || !el.isConnected) return
           const container = document.getElementById(`box-${id}`)
           if (container && container.contains(document.activeElement)) return
+          // Focus moved into a menu/prompt that will insert into this box ("/" submenus,
+          // the AI prompt, a dialog): keep it — it isn't abandoned, just waiting.
+          const a = document.activeElement as HTMLElement | null
+          if (a && (a.matches('input, textarea, select') || a.closest('.slash-menu-root, .slash-menu-flyout, .ai-menu-textarea, [role="dialog"], [role="menu"]'))) return
           const hasMedia = !!el.querySelector('img, video, iframe, table, hr, input, svg')
           if (!el.innerText.replace(/\u200b/g, '').trim() && !hasMedia) onBlurEmpty()
         }, 120)

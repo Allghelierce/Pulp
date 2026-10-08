@@ -50,3 +50,14 @@ test("an empty sticky note is kept", async ({ page }) => {
   await page.waitForTimeout(400)
   await expect(page.locator("#box-stickyx")).toHaveCount(1)
 })
+
+test("an empty box survives while its AI prompt or a '/' submenu is open", async ({ page }) => {
+  await bootGuest(page)
+  await clickPaper(page, 300, 420)
+  const id = await page.evaluate(() => (document.activeElement?.closest('[id^="box-"]') as HTMLElement | null)?.id)
+  expect(id).toBeTruthy()
+  await page.keyboard.press("ControlOrMeta+j")
+  await expect(page.locator(".ai-menu-textarea")).toBeFocused()
+  await page.waitForTimeout(400)
+  await expect(page.locator(`#${id}`)).toHaveCount(1)
+})

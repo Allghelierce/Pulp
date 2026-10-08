@@ -718,7 +718,7 @@ export function useBoxDrawing({
   const removeIfEmpty = useCallback((id: string) => {
     updateBoxes(bs => {
       const b = bs.find(x => x.id === id)
-      if (!b || b.boxHighlightColor) return bs
+      if (!b || b.boxHighlightColor || b.isTitle) return bs
       const text = b.content.replace(/<br\s*\/?>|&nbsp;|<\/?(div|p|span|b|i|u|strong|em|font)[^>]*>/gi, "").trim()
       if (text || /<(img|video|iframe|table|hr|input|svg)\b/i.test(b.content)) return bs
       return bs.filter(x => x.id !== id)
