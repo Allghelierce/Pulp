@@ -36,7 +36,7 @@ function measurer(): Measurer {
   box.setAttribute("aria-hidden", "true")
   box.style.cssText = [
     "position:absolute", "left:0", "top:0", `width:${TEXT_W}px`, "visibility:hidden", "pointer-events:none",
-    "font-family:var(--pulp-body-font, Georgia, serif)", "font-size:calc(20px * var(--pulp-font-scale, 1))", "font-weight:400",
+    "font-family:var(--pulp-body-font, Georgia, serif)", "font-size:calc(17px * var(--pulp-font-scale, 1))" /* = BOX_HEADING_SIZES.default in app/app/page.tsx */, "font-weight:400",
     "line-height:var(--pulp-rule, var(--pulp-line-height, 1.8))", "letter-spacing:0.1px", "word-wrap:break-word",
   ].join(";")
   host.appendChild(box)

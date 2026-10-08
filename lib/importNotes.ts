@@ -43,7 +43,9 @@ const SPACER = "<div><br></div>";
 const RULE = "var(--pulp-rule,32px)";
 // Headings stay modest — a notebook page, not a poster.
 const headingHtml = (t: string) => `<h2 style="font-size:1.15em;font-weight:700;margin:0;padding-top:${RULE};line-height:${RULE}">${escapeHtml(t)}</h2>`;
-const subheadHtml = (t: string) => `<h3 style="font-size:1em;font-weight:700;margin:0;line-height:${RULE}">${escapeHtml(t)}</h3>`;
+// A heading folded into a merged page keeps the same size as the page's own heading
+// (they were the same level in the source), just without the blank row above.
+const subheadHtml = (t: string) => `<h2 style="font-size:1.15em;font-weight:700;margin:0;line-height:${RULE}">${escapeHtml(t)}</h2>`;
 const boldLineHtml = (t: string) => `<div><b>${escapeHtml(t)}</b></div>`;
 const textHtml = (t: string) => `<div>${t.split("\n").map(escapeHtml).join("<br>")}</div>`;
 const QUOTE_OPEN = '<blockquote style="border-left:3px solid rgba(128,128,128,.45);margin:0;padding-left:0.75rem">';
