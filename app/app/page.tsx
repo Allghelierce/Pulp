@@ -5222,13 +5222,13 @@ export default function NoteApp() {
         {needsOnboarding && user && (
           <OnboardingModal theme={theme} initialUsername={suggestedUsername} onDone={(r) => { setFriendCode(r.friend_code); if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
         )}
+        <SelectionFontSize theme={theme} />
         {upgradeReason && <UpgradeDialog theme={theme} reason={upgradeReason} onClose={() => setUpgradeReason(null)} />}
         {importOpen && (
           <ImportModal
             theme={theme}
             signedIn={!!user}
             onClose={() => setImportOpen(false)}
-        <SelectionFontSize theme={theme} />
             onCreateNotebook={createImportedNotebook}
             onStartRecall={(noteId: string) => { setImportOpen(false); startTransition(() => { closeAllPanels(); setReviewNoteId(noteId); setReviewOpen(true) }) }}
           />
