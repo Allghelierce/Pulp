@@ -4061,6 +4061,13 @@ export default function NoteApp() {
                   fontFamily: 'Inter, system-ui, sans-serif',
                 }}
               >
+                {/* Status bar (Settings → Interface) lives here when this bar is showing */}
+                {wordCountVisible && !isNarrow && activeNote && (<>
+                  <span className="tabular-nums" style={{ padding: '0 6px 0 4px', fontFamily: 'Crimson Pro, serif', fontSize: 12.5, whiteSpace: 'nowrap', color: theme === 'dark' ? 'rgba(228,228,231,0.6)' : 'rgba(39,39,42,0.6)' }}>
+                    {wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'} · page {currentPageIdx + 1} of {activeNote.pages.length}
+                  </span>
+                  <div style={{ width: 1, height: 16, background: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', margin: '0 2px' }} />
+                </>)}
                 <button
                   onMouseDown={e => { e.preventDefault(); drawing.undo() }}
                   className={`h-6 w-6 flex items-center justify-center rounded transition-colors ${theme === 'dark' ? 'text-zinc-400 hover:bg-zinc-700' : 'text-zinc-500 hover:bg-zinc-100'}`}
@@ -4773,10 +4780,11 @@ export default function NoteApp() {
           <PartyPresence onOpenParty={openParty} />
 
           {/* Status bar (Settings → Interface) */}
-          {wordCountVisible && !isNarrow && activeNote && !showSettings && !(orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen || topicsOpen) && (
+          {/* Signed in, the count sits inside the zoom/undo bar instead (it owns the bottom-right). */}
+          {!user && wordCountVisible && !isNarrow && activeNote && !showSettings && !(orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen || topicsOpen) && (
             <div style={{
-              // bottom-right, above the "sign in to sync" button when it's showing; the timer panel owns the bottom-left
-              position: "fixed", bottom: user ? 12 : 66, right: 18, zIndex: 60, pointerEvents: "none",
+              // above the "sign in to sync" button; the timer panel owns the bottom-left
+              position: "fixed", bottom: 66, right: 18, zIndex: 60, pointerEvents: "none",
               fontFamily: "Crimson Pro, serif", fontSize: 12.5, letterSpacing: "0.02em",
               padding: "2px 9px", borderRadius: 999,
               background: theme === "dark" ? "rgba(9,9,11,0.55)" : "rgba(240,236,234,0.7)",
