@@ -44,8 +44,9 @@ import { TopicsView } from "@/app/components/TopicsView"
 import { totalDueAll, buildTopicIndex } from "@/lib/topicIndex"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { ImportModal } from "@/app/components/ImportModal"
-import { sectionToHtml, type ImportDoc } from "@/lib/importNotes"
-import { paginateImport } from "@/lib/importPaginate"
+import { sectionToHtml, pasteHtmlToEditor, type ImportDoc } from "@/lib/importNotes"
+import { paginateImport, PAGE_H, PAGE_FOOT } from "@/lib/importPaginate"
+import { insertPagesAfter } from "@/lib/notePages"
 import { saveDeck, hashNotes } from "@/lib/recallSchedule"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
@@ -959,6 +960,34 @@ const BoxTextarea = memo(function BoxTextarea({
     }
   }, [id, isSticky, sizeLocked, onUpdate])
 
+  // A paste that runs past the foot of the page continues on new pages right after this
+  // one (like Docs), instead of being cut off. Plain body-text boxes only; the notebook
+  // decides (via the event) whether it has pages to flow onto.
+  const flowOverflow = useCallback(() => {
+    const el = ref.current
+    if (!el || isSticky || sizeLocked || boxFontSize || boxFontFamily || (boxHeadingStyle && boxHeadingStyle !== "default")) return
+    const paper = el.closest("#editor-paper")
+    if (!paper) return
+    const pr = paper.getBoundingClientRect()
+    const er = el.getBoundingClientRect()
+    const k = er.width / (parseFloat(getComputedStyle(el).width) || er.width) || 1 // page zoom
+    const top = (er.top - pr.top) / k
+    if ((er.bottom - pr.top) / k <= PAGE_H - PAGE_FOOT + 1) return
+    const pages = paginateImport([el.innerHTML], { top, width: er.width / k })
+    if (pages.length < 2) return
+    const detail = { boxId: id, pages: pages.slice(1), accepted: false }
+    window.dispatchEvent(new CustomEvent("pulp-box-overflow", { detail }))
+    if (!detail.accepted) return
+    el.innerHTML = pages[0]
+    const range = document.createRange()
+    range.selectNodeContents(el)
+    range.collapse(false)
+    const sel = window.getSelection()
+    sel?.removeAllRanges()
+    sel?.addRange(range)
+    syncState()
+  }, [id, isSticky, sizeLocked, boxFontSize, boxFontFamily, boxHeadingStyle, syncState])
+
   const styleKey = boxHeadingStyle || "default"
   const isMarginStyle = styleKey === "margin"
   // Unstyled boxes follow Settings → Appearance (set as CSS variables on <html>):
@@ -1156,6 +1185,18 @@ const BoxTextarea = memo(function BoxTextarea({
           const code = `<pre style="background:rgba(0,0,0,0.05);border-radius:6px;padding:12px 16px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:13px;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;tab-size:2;color:#1a1a1a;"><code>${esc(text)}</code></pre>`
           document.execCommand("insertHTML", false, code)
           syncState()
+          flowOverflow()
+          return
+        }
+
+        // Docs / Word / Notion / web pages: keep lists, bold, links, tables and spacing.
+        const richHtml = clip.getData("text/html")
+        const rich = richHtml ? pasteHtmlToEditor(richHtml) : null
+        if (rich) {
+          e.preventDefault()
+          document.execCommand("insertHTML", false, sanitizeHTML(rich))
+          syncState()
+          flowOverflow()
           return
         }
 
@@ -1163,6 +1204,7 @@ const BoxTextarea = memo(function BoxTextarea({
         const plain = `<span style="color:${inkColor};">${esc(text).replace(/\n/g, "<br>")}</span>`
         document.execCommand("insertHTML", false, plain)
         syncState()
+        flowOverflow()
       }}
       onMouseDown={e => e.stopPropagation()}
       onFocus={() => { onFocus() }}
@@ -1832,6 +1874,23 @@ export default function NoteApp() {
     const titleText = titleBox?.content?.replace(/<[^>]*>/g, '').trim()
     setBookmarks(prev => [...prev, { id: uid(), noteId: activeTabId, pageIdx: currentPageIdx, noteTitle: activeNote.subject, label: titleText || undefined, icon: activeNote.icon }])
   }, [activeNote, activeTabId, bookmarks, currentPageIdx, setBookmarks])
+
+  // A paste that runs past the foot of a page (BoxTextarea) continues on new pages inserted
+  // right after it; later pages and their bookmarks move along.
+  useEffect(() => {
+    const onOverflow = (e: Event) => {
+      const d = (e as CustomEvent<{ boxId: string; pages: string[]; accepted: boolean }>).detail
+      const note = notesRef.current.find(n => n.id === activeTabIdRef.current)
+      if (!note || (note.noteType && note.noteType !== "notebook")) return
+      const after = useNotesStore.getState().currentPageIdx
+      if (!(note.boxes[after] || []).some(b => b.id === d.boxId)) return
+      d.accepted = true
+      setNotes(prev => prev.map(n => n.id === note.id ? insertPagesAfter(n, after, d.pages) : n))
+      setBookmarks(prev => prev.map(b => b.noteId === note.id && b.pageIdx > after ? { ...b, pageIdx: b.pageIdx + d.pages.length } : b))
+    }
+    window.addEventListener("pulp-box-overflow", onOverflow)
+    return () => window.removeEventListener("pulp-box-overflow", onOverflow)
+  }, [setNotes, setBookmarks])
 
 
   const wordCount = useMemo(() => {

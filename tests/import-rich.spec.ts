@@ -133,3 +133,27 @@ test("plain paste without blank lines: headings, one list, title from the first 
   expect(r.rows).toEqual(["Supply and Demand", "Elasticity"])
   expect(r.html[0]).toContain("<ul><li>shortage</li><li>surplus</li></ul>")
 })
+
+test("Docs bold lines stay bold; headings set at body size become bold lines, not big headings", async ({ page }) => {
+  test.setTimeout(90_000)
+  await page.route("**/api/import", r => r.fulfill({ status: 401, json: { error: "Unauthorized" } }))
+  await bootGuest(page)
+  const P = (t: string, bold = false) => `<p dir="ltr" style="margin-top:0pt;margin-bottom:0pt;"><span style="font-size:11pt;font-weight:${bold ? 700 : 400};">${t}</span></p>`
+  // Bold lines only (no heading styles): nothing becomes a heading.
+  const bold = `<meta charset="utf-8"><b style="font-weight:normal;" id="docs-internal-guid-4">${P("Psych Notes", true)}${P("Types of reasoning:", true)}${P(filler("Reasoning"))}${P("Science", true)}${P(filler("Science"))}</b>`
+  const d1 = await richPaste(page, bold, "Psych Notes\nTypes of reasoning:\nScience")
+  await d1.getByPlaceholder("Title (optional)").fill("Bold Lines")
+  const b = await importAndRead(page, d1)
+  expect(b.html.join("")).not.toMatch(/<h[1-6]/)
+  expect(b.html.join("")).toContain("<b>Types of reasoning:</b>")
+  expect(b.html.join("")).toContain("<b>Science</b>")
+  // Heading styles shrunk to body size in Docs: still split topics, but look like bold text.
+  const H = (tag: string, t: string) => `<${tag} dir="ltr" style="margin-top:12pt;margin-bottom:0pt;"><span style="font-size:11pt;font-weight:700;">${t}</span></${tag}>`
+  const small = `<meta charset="utf-8"><b style="font-weight:normal;" id="docs-internal-guid-5">${H("h2", "Memory")}${P(filler("Memory"))}${H("h2", "Attention")}${P(filler("Attention"))}</b>`
+  const d2 = await richPaste(page, small, "Memory\nAttention")
+  await d2.getByPlaceholder("Title (optional)").fill("Small Headings")
+  const s = await importAndRead(page, d2)
+  expect(s.rows).toEqual(["Memory", "Attention"])
+  expect(s.html.join("")).not.toMatch(/<h[1-6]/)
+  expect(s.html.join("")).toContain("<b>Attention</b>")
+})

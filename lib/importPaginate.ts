@@ -4,16 +4,20 @@
 // between items, tables between rows, paragraphs between words; a heading is never left
 // alone at the bottom of a page. Browser-only (falls back to one page per section).
 
-const PAGE_H = 1250 // #editor-paper height
+export const PAGE_H = 1250 // #editor-paper height
 const TEXT_TOP = 49 // text box y (40) + border (1) + padding (8)
 const TEXT_W = 874 // text box w (900) − borders − padding
-const FOOT = 40 // same margin at the foot of the page as at the top
+export const PAGE_FOOT = 40 // same margin at the foot of the page as at the top
+const FOOT = PAGE_FOOT
+
+/** Where the text of a page's box starts and how wide it is (unzoomed page px). */
+export type TextArea = { top: number; width: number }
 
 const SPLIT_BY_ITEMS = new Set(["UL", "OL", "TABLE"])
 const HEADINGS = new Set(["H1", "H2", "H3", "H4", "H5", "H6"])
 const INLINE = new Set(["A", "B", "STRONG", "I", "EM", "U", "S", "STRIKE", "DEL", "MARK", "CODE", "SPAN", "SUB", "SUP", "BR", "SMALL", "IMG"])
 
-type Measurer = { fits: (extra?: Node) => boolean; box: HTMLElement; done: () => void }
+type Measurer = { fits: (extra?: Node) => boolean; box: HTMLElement; setArea: (a: TextArea) => void; done: () => void }
 
 function measurer(): Measurer {
   // Measure inside the open page when there is one (it has the editor's CSS).
@@ -37,17 +41,24 @@ function measurer(): Measurer {
   ].join(";")
   host.appendChild(box)
   const rule = parseFloat(getComputedStyle(box).lineHeight) || 32
-  // Whole rows only, so the last line on a page still sits on a ruled line.
-  const cap = Math.floor((PAGE_H - TEXT_TOP - FOOT) / rule) * rule + 0.5
+  let width = TEXT_W
+  let cap = 0
+  const setArea = (a: TextArea) => {
+    width = a.width
+    box.style.width = `${a.width}px`
+    // Whole rows only, so the last line on a page still sits on a ruled line.
+    cap = Math.max(1, Math.floor((PAGE_H - a.top - FOOT) / rule)) * rule + 0.5
+  }
+  setArea({ top: TEXT_TOP, width: TEXT_W })
   const fits = (extra?: Node) => {
     if (extra) box.appendChild(extra)
     const r = box.getBoundingClientRect()
     // Pages are zoomed (#pulp-page-surface); the width is known, so it gives the scale.
-    const h = r.height / (r.width / TEXT_W || 1)
+    const h = r.height / (r.width / width || 1)
     if (extra) box.removeChild(extra)
     return h <= cap
   }
-  return { fits, box, done: () => { box.remove(); if (!paper) host!.remove() } }
+  return { fits, box, setArea, done: () => { box.remove(); if (!paper) host!.remove() } }
 }
 
 const isSpacer = (n: Node) =>
@@ -149,10 +160,15 @@ function split(n: Node, m: Measurer, pageEmpty: boolean): [Node, Node] | null {
   return splitWords(el, m)
 }
 
-/** One HTML string per page, filled in order. */
-export function paginateImport(sectionsHtml: string[]): string[] {
+/**
+ * One HTML string per page, filled in order. Every page's text goes in a default text box;
+ * `first` = where the text area on the first page is instead (a box lower on the page or
+ * narrower), e.g. when a paste overflows the box it went into.
+ */
+export function paginateImport(sectionsHtml: string[], first?: TextArea): string[] {
   if (typeof document === "undefined") return sectionsHtml
   const m = measurer()
+  if (first) m.setArea(first)
   try {
     const queue: Node[] = []
     sectionsHtml.forEach((html, i) => {
@@ -173,6 +189,7 @@ export function paginateImport(sectionsHtml: string[]): string[] {
       }
       pages.push(m.box.innerHTML)
       m.box.replaceChildren()
+      m.setArea({ top: TEXT_TOP, width: TEXT_W })
       onPage = []
       queue.unshift(...carry)
     }
@@ -185,6 +202,7 @@ export function paginateImport(sectionsHtml: string[]): string[] {
       if (m.fits(n)) { place(n); continue }
       const parts = split(n, m, !onPage.length)
       if (parts) { place(parts[0]); queue.unshift(parts[1]); flush(); continue }
+      if (!onPage.length && first && !pages.length) { queue.unshift(n); flush(); continue } // no room left in that first box
       if (!onPage.length) { place(n); flush(); continue } // too big to split: give it a page
       queue.unshift(n)
       flush()
