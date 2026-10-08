@@ -20,14 +20,10 @@ export async function fetchPlan(): Promise<PlanStatus | null> {
   } catch { return null }
 }
 
-// Send the user to Stripe Checkout (or the portal if they're already on Plus).
+// Send the user to Pulp's checkout page (it hands off to the billing portal if
+// they're already on Plus, or to Stripe's hosted page if Elements isn't set up).
 export async function startCheckout(plan: PlusPlan): Promise<void> {
-  try {
-    const res = await apiFetch("/api/stripe/checkout", { method: "POST", body: JSON.stringify({ plan }) })
-    if (res.status === 401) { window.location.href = "/login"; return }
-    const json = await res.json()
-    window.location.href = json.url || "/oops"
-  } catch { window.location.href = "/oops" }
+  window.location.href = `/checkout?plan=${plan}`
 }
 
 export async function openBillingPortal(): Promise<string | null> {

@@ -2899,13 +2899,7 @@ export default function NoteApp() {
       if (!plan) return
       if (!user) { window.location.href = '/login'; return }
       localStorage.removeItem('pulp-pending-checkout')
-      ;(async () => {
-        try {
-          const res = await apiFetch('/api/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan }) })
-          const json = await res.json()
-          window.location.href = json.url || '/oops'
-        } catch { window.location.href = '/oops' }
-      })()
+      window.location.href = `/checkout?plan=${encodeURIComponent(plan)}`
     } catch { /* no-op */ }
   }, [user, isLoading])
 

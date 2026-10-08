@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
-import { apiFetch } from "@/lib/apiFetch"
 import { motion } from "framer-motion"
 import { PlantIcon } from "./components/PlantIcon"
 import { LandingTerrain } from "./components/LandingTerrain"
@@ -489,10 +488,8 @@ export default function PulpLanding() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { window.location.href = `/login?checkout=${plan}`; return }
-      const res = await apiFetch('/api/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan, from: 'site' }) })
-      const json = await res.json().catch(() => ({}))
-      if (json.url) { window.location.href = json.url; return }
-      setCheckoutError(json.error || "couldn't open checkout — try again")
+      window.location.href = `/checkout?plan=${plan}&from=site`
+      return
     } catch { setCheckoutError("couldn't open checkout — try again") }
     setCheckoutBusy(null)
   }, [])

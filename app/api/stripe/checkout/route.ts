@@ -6,6 +6,7 @@ import { hasPro } from "@/lib/aiQuota"
 import { stripe, normalizePlan, priceIdForPlan, siteOrigin } from "@/lib/stripe"
 
 // POST { plan: "plus_monthly" | "plus_yearly" } -> { url } of a Stripe Checkout page.
+// With ui: "elements" -> { clientSecret } for our own /checkout page (Payment Element).
 // Already on Plus -> { url } of the billing portal instead (no double subscriptions).
 export async function POST(req: Request) {
   const ip = getRateLimitKey(req)
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
   const user = await getAuthUser(req)
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  let body: { plan?: unknown; from?: unknown }
+  let body: { plan?: unknown; from?: unknown; ui?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }) }
 
   const plan = normalizePlan(String(body.plan ?? ''))
@@ -51,8 +52,8 @@ export async function POST(req: Request) {
       .update({ stripe_customer_id: customerId }).eq('user_id', user.id)
   }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
+  const shared = {
+    mode: 'subscription' as const,
     customer: customerId,
     client_reference_id: user.id,
     line_items: [{ price: priceId, quantity: 1 }],
@@ -61,6 +62,20 @@ export async function POST(req: Request) {
     subscription_data: { metadata: { user_id: user.id, plan } },
     metadata: { user_id: user.id, plan },
     integration_identifier: 'pulp_plus_checkout_qzmwkrtd',
+  }
+
+  if (body.ui === 'elements') {
+    // Our /checkout page renders the form; cancelling is just its back link.
+    const session = await stripe.checkout.sessions.create({
+      ...shared,
+      ui_mode: 'elements',
+      return_url: `${origin}/app?upgraded=1`,
+    })
+    return NextResponse.json({ clientSecret: session.client_secret })
+  }
+
+  const session = await stripe.checkout.sessions.create({
+    ...shared,
     success_url: `${origin}/app?upgraded=1`,
     // Started from the website: a cancelled checkout returns to the site's pricing, not the app.
     cancel_url: body.from === 'site' ? `${origin}/?upgrade_cancelled=1#pricing` : `${origin}/app?upgrade_cancelled=1`,
