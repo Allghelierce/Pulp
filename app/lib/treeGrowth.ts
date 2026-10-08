@@ -61,22 +61,27 @@ const oldest = (trees: Tree[]): Tree | undefined =>
 //   anywhere, else no growth.
 // Full trees and legacy trees are never touched by the topic paths.
 // NOTE: banking writes localStorage — call outside React state updaters.
-export function applyRecall(grove: Tree[], topic: string | undefined, weight: number, notebookId?: string, treeId?: number): Tree[] {
-  if (weight <= 0) return grove
+// The sapling a recall answer feeds (the choice applyRecall makes), or undefined:
+// a topic card then banks nutrients, a topic-less card grows nothing.
+export function recallTarget(grove: Tree[], topic: string | undefined, notebookId?: string, treeId?: number): Tree | undefined {
   const waiting = grove.filter(t => isTopicTree(t) && !isFullyGrown(t))
   // Card from a specific session: grow that session's own tree first.
-  if (treeId != null && waiting.some(t => t.id === treeId)) return feedTopicTree(grove, treeId, weight)
+  const own = treeId != null ? waiting.find(t => t.id === treeId) : undefined
+  if (own) return own
   if (topic && topic.trim()) {
     const k = normalizeTopic(topic)
-    const match = oldest(waiting.filter(t => t.topic && normalizeTopic(t.topic) === k))
-    if (match) return feedTopicTree(grove, match.id, weight)
-    bankNutrients(topic, weight)
-    return grove
+    return oldest(waiting.filter(t => t.topic && normalizeTopic(t.topic) === k))
   }
   const inNotebook = waiting.filter(t => (t.notebookId ?? undefined) === (notebookId ?? undefined))
   // Fallback: a topic-less sapling anywhere (paper sessions, no notebook) so none get stuck.
-  const target = oldest(inNotebook.filter(t => !t.topic)) ?? oldest(inNotebook) ?? oldest(waiting.filter(t => !t.topic))
+  return oldest(inNotebook.filter(t => !t.topic)) ?? oldest(inNotebook) ?? oldest(waiting.filter(t => !t.topic))
+}
+
+export function applyRecall(grove: Tree[], topic: string | undefined, weight: number, notebookId?: string, treeId?: number): Tree[] {
+  if (weight <= 0) return grove
+  const target = recallTarget(grove, topic, notebookId, treeId)
   if (target) return feedTopicTree(grove, target.id, weight)
+  if (topic && topic.trim()) bankNutrients(topic, weight)
   // Nothing waiting: only the timer plants trees, so recall just pays its sap.
   return grove
 }

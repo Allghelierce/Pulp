@@ -1,5 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, memo, useCallback, useMemo, lazy, Suspense, startTransition } from "react"
+import { claimFullReviewGrowth } from "@/lib/fullReview"
 import { playSound } from "@/lib/sound"
 import { LazyMotion, domAnimation, m, motion, AnimatePresence } from "framer-motion"
 import { flushSync } from "react-dom"
@@ -11,8 +12,8 @@ import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User, HLine } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
 import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
-import { applyRecall } from "@/app/lib/treeGrowth"
-import { isFullyGrown } from "@/lib/topics"
+import { applyRecall, recallTarget } from "@/app/lib/treeGrowth"
+import { isFullyGrown, normalizeTopic } from "@/lib/topics"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, rulePitch, type PaperStyle } from "@/app/lib/paperStyle"
@@ -331,7 +332,7 @@ const ScrollModePage = memo(function ScrollModePage({
 
 const BoxItem = memo(function BoxItem({
   box, boxIndex = 0, isSelected, selectedCount, loadingBoxId, accentSolid, theme, paperStyle, handwrittenEffect,
-  startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
+  startDrag, startResize, deleteBox, removeIfEmpty, updateBox, updateBoxContent, setSelectedBoxIds,
   onKeyDown, onInput, onRewrite,
   formattingOpen, setFormattingOpen, aiOpen, setAiOpen,
   onDragStart, onDragEnd, spellCheck: spellCheckProp, autoCorrect
@@ -341,6 +342,7 @@ const BoxItem = memo(function BoxItem({
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
   deleteBox: (id: string) => void
+  removeIfEmpty?: (id: string) => void
   updateBox: (id: string, updates: Partial<TextBoxType>) => void
   updateBoxContent: (id: string, v: string) => void
   setSelectedBoxIds: (v: Set<string> | ((p: Set<string>) => Set<string>)) => void
@@ -620,6 +622,7 @@ const BoxItem = memo(function BoxItem({
             sizeLocked={box.sizeLocked}
             onUpdate={(id, updates) => updateBox(id, updates)}
             onFocus={() => setSelectedBoxIds(new Set([box.id]))}
+            onBlurEmpty={removeIfEmpty && !isSticky ? () => removeIfEmpty(box.id) : undefined}
             onKeyDown={onKeyDown}
             onInput={onInput}
             theme={theme}
@@ -917,6 +920,8 @@ interface BoxTextareaProps {
   isSticky?: boolean; sizeLocked?: boolean; theme: "light" | "dark"; paperStyle: PaperStyle; handwrittenEffect: boolean
   onUpdate: (id: string, updates: Partial<TextBoxType>) => void
   onFocus: () => void
+  /** Called when the user clicks away and the box is still empty (it gets removed). */
+  onBlurEmpty?: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
   onInput: (e: React.FormEvent<HTMLElement>) => void
   spellCheck?: boolean
@@ -924,7 +929,7 @@ interface BoxTextareaProps {
 }
 
 const BoxTextarea = memo(function BoxTextarea({
-  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, sizeLocked, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput, spellCheck: spellCheckProp, autoCorrect
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, sizeLocked, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onBlurEmpty, onKeyDown, onInput, spellCheck: spellCheckProp, autoCorrect
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
@@ -1159,6 +1164,17 @@ const BoxTextarea = memo(function BoxTextarea({
       onBlur={() => {
         clearTimeout(timerRef.current)
         syncState()
+        // Clicked away from an empty box: remove it — unless focus just moved to this
+        // box's own controls (formatting / AI menus), checked after the click lands.
+        if (!onBlurEmpty) return
+        setTimeout(() => {
+          const el = ref.current
+          if (!el || !el.isConnected) return
+          const container = document.getElementById(`box-${id}`)
+          if (container && container.contains(document.activeElement)) return
+          const hasMedia = !!el.querySelector('img, video, iframe, table, hr, input, svg')
+          if (!el.innerText.replace(/\u200b/g, '').trim() && !hasMedia) onBlurEmpty()
+        }, 120)
       }}
       style={{
         width: "100%", outline: "none",
@@ -1377,9 +1393,11 @@ export default function NoteApp() {
   }, [reviewOpen])
   // Orchard "Review <topic>": topic filter + notebook override (cleared by closeAllPanels).
   const [reviewTopic, setReviewTopic] = useState<string | undefined>(undefined)
+  // "full" = study every card in the notebook (full review); "due" = spaced-repetition session.
+  const [reviewMode, setReviewMode] = useState<"due" | "full">("due")
   const [reviewNoteId, setReviewNoteId] = useState<string | undefined>(undefined)
   fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen || topicsOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setReviewMode("due"); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
   const openParty = useCallback(() => { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) }, [closeAllPanels])
 
   useEffect(() => {
@@ -2810,13 +2828,13 @@ export default function NoteApp() {
   }, [])
 
   // Plus upgrade prompt: any free-plan limit (402) or upsell link opens it.
-  // grade_limit is handled inline in recall; the same reason won't re-open within 2 min.
+  // grade_limit / rephrase_limit are handled inline in recall; the same reason won't re-open within 2 min.
   const [upgradeReason, setUpgradeReason] = useState<string | null>(null)
   const lastUpgradeRef = useRef<Record<string, number>>({})
   useEffect(() => {
     const onUpgrade = (e: Event) => {
       const code = (e as CustomEvent<UpgradeDetail>).detail?.code || "generic"
-      if (code === "grade_limit") return
+      if (code === "grade_limit" || code === "rephrase_limit") return
       const now = Date.now()
       if (now - (lastUpgradeRef.current[code] || 0) < 120_000) return
       lastUpgradeRef.current[code] = now
@@ -4454,6 +4472,7 @@ export default function NoteApp() {
                                   startDrag={boxes.startDrag}
                                   startResize={boxes.startResize}
                                   deleteBox={boxes.deleteBox}
+                                  removeIfEmpty={boxes.removeIfEmpty}
                                   updateBox={boxes.updateBox}
                                   updateBoxContent={boxes.updateBoxContent}
                                   setSelectedBoxIds={boxes.setSelectedBoxIds}
@@ -4673,6 +4692,7 @@ export default function NoteApp() {
                   onClose={() => setTopicsOpen(false)}
                   onRecall={(topic, notebookId) => { startTransition(() => { closeAllPanels(); setReviewTopic(topic); setReviewNoteId(notebookId); setReviewOpen(true) }) }}
                   onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}
+                  onFullReview={(notebookId) => { startTransition(() => { closeAllPanels(); setReviewNoteId(notebookId); setReviewMode("full"); setReviewOpen(true) }) }}
                 />
               </m.div>
             )}
@@ -4690,20 +4710,32 @@ export default function NoteApp() {
               >
                 <Suspense fallback={<PulpLoader variant="panel" />}>
                   <ReviewView
-                    key={`${reviewNote.id}:${reviewTopic ?? ''}`}
+                    key={`${reviewNote.id}:${reviewTopic ?? ''}:${reviewMode}`}
                     note={reviewNote}
                     topic={reviewTopic}
+                    mode={reviewMode}
                     theme={theme}
                     accent={accentUi}
-                    onClose={() => { setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined) }}
+                    onClose={() => { setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setReviewMode("due") }}
                     onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}
-                    onCorrect={(weight, topic) => {
+                    onCorrect={(weight, topic, meta) => {
                       // Topics as trees: recall finishes that topic's sapling, or banks
                       // nutrients if none is waiting. Read the store directly (not an
                       // updater) since banking writes localStorage.
                       const current = useGroveStore.getState().grove
+                      if (meta?.full) {
+                        // Full review is paced: a card counts once a day, and a tree grows at
+                        // most about a third of the way per day (no finishing it in one sitting).
+                        // Capped per the tree applyRecall will actually feed (tagged or not).
+                        const tree = recallTarget(current, topic, reviewNote.id)
+                        if (!tree && !topic?.trim()) return 0 // nothing would grow or bank
+                        const cap = tree ? Math.max(1, Math.ceil((tree.recallNeeded ?? 3) / 3)) : 2
+                        weight = claimFullReviewGrowth(meta.cardId, tree ? `tree:${tree.id}` : `bank:${normalizeTopic(topic!)}`, weight, cap)
+                        if (weight <= 0) return 0
+                      }
                       const next = applyRecall(current, topic, weight, reviewNote.id)
                       if (next !== current) setGrove(next)
+                      return weight
                     }}
                     onComplete={({ reviewed, again }) => {
                       // Sap from recall — rate scaled by the quality of the orchard (full trees only).

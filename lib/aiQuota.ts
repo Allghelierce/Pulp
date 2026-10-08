@@ -106,8 +106,9 @@ export async function refundImportTopic(userId: string): Promise<void> {
 // limited only by the daily fair-use cap above.
 export const FREE_CARD_SESSIONS_PER_DAY = Number(process.env.FREE_CARD_SESSIONS_PER_DAY) || 2
 export const FREE_GRADES_PER_DAY = Number(process.env.FREE_GRADES_PER_DAY) || 15
-export type AllowanceKind = "cards" | "grades"
-const DAILY_FREE: Record<AllowanceKind, number> = { cards: FREE_CARD_SESSIONS_PER_DAY, grades: FREE_GRADES_PER_DAY }
+export const FREE_REPHRASE_PER_DAY = Number(process.env.FREE_REPHRASE_PER_DAY) || 3
+export type AllowanceKind = "cards" | "grades" | "rephrase"
+const DAILY_FREE: Record<AllowanceKind, number> = { cards: FREE_CARD_SESSIONS_PER_DAY, grades: FREE_GRADES_PER_DAY, rephrase: FREE_REPHRASE_PER_DAY }
 
 // Spend one of today's free uses. true = allowed. Plus/dev always allowed.
 // Fails OPEN if the migration is missing: recall is the core study loop.

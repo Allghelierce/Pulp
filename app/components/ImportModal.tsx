@@ -1,7 +1,8 @@
 "use client"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
+import { markCovered, htmlLines } from "@/lib/fullReview"
 import { motion } from "framer-motion"
-import { parseImportFile, parsePastedText, parsePastedHtml, ACCEPTED_IMPORT_TYPES, type ImportDoc } from "@/lib/importNotes"
+import { parseImportFile, parsePastedText, parsePastedHtml, ACCEPTED_IMPORT_TYPES, type ImportDoc, sectionToHtml } from "@/lib/importNotes"
 import { apiFetch } from "@/lib/apiFetch"
 import { addTopicCards } from "@/lib/recallSchedule"
 import { playSound } from "@/lib/sound"
@@ -154,6 +155,7 @@ export const ImportModal = memo(function ImportModal({ theme, signedIn, onClose,
           if (!topic || !cards.length) { set(i, { status: "nocards" }); continue }
           const now = Date.now()
           const added = addTopicCards(id, cards, topic, now, undefined, undefined, now) // due now — studyable immediately
+          markCovered(id, htmlLines(sectionToHtml(s))) // full review won't re-card this page
           if (!topics.includes(topic)) topics.push(topic)
           total += added
           set(i, added ? { status: "ok", topic, count: added } : { status: "nocards" })
