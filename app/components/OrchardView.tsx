@@ -17,7 +17,7 @@ import { toPng } from "html-to-image"
 import { isTopicTree, isFullyGrown, topicFreshness, freshnessFilter, normalizeTopic } from "@/lib/topics"
 import { buildTopicIndex, bestNotebookFor, untaggedDueByNotebook } from "@/lib/topicIndex"
 import { SapCollectFX, type SapCollectRun } from "@/app/components/SapCollectFX"
-import { ACCENT, accentAlpha, ACCENT_DARK_SURFACE } from "@/lib/accent"
+import { ACCENT, accentAlpha, ACCENT_CONTRAST, ACCENT_DARK_SURFACE } from "@/lib/accent"
 
 /** Accent lightened toward white, for text on the orchard's always-dark glass chrome (was amber-200/400). */
 const accentTint = (accentPct: number) => `color-mix(in srgb, ${ACCENT} ${accentPct}%, #fff)`
@@ -195,12 +195,95 @@ function getTillX(col: number, y: number): number {
 
 const ALL_SLOTS = Array.from({ length: 40 }, (_, i) => ({ ...gridSlotPos(i), slotIndex: i }))
 
-function orchardPlacement(trees: any[]): { x: number; y: number; tree: any; col: number; slotIndex: number }[] {
-  if (trees.length === 0) return []
-  return trees.map((tree, i) => {
-    const slot = ALL_SLOTS[i]
-    return { x: slot.x, y: slot.y, tree, col: slot.col, slotIndex: slot.slotIndex }
-  }).sort((a, b) => a.y - b.y)
+// ── Topic groves ────────────────────────────────────────────────────
+// Trees that share a topic stand together as a grove with a signpost in front.
+// Untagged trees keep their order and fill the back first (an orchard with no
+// topics lays out exactly as before); each topic's trees follow as one run,
+// topics in the order of their first tree.
+const ROW_SLOTS = GRID_COLS * GRID_SLOTS_PER_COL
+
+type GrovePlacement = { x: number; y: number; tree: any; col: number; slotIndex: number } // eslint-disable-line @typescript-eslint/no-explicit-any -- grove trees are untyped downstream (drag code keys ids as strings)
+type GroveSignSpot = { key: string; name: string; x: number; y: number; avail: number; rowIdx: number }
+
+const topicKeyOf = (t: Tree | null | undefined): string | null => (t?.topic?.trim() ? normalizeTopic(t.topic) : null)
+
+function groveOrder(trees: Tree[]): Tree[] {
+  const untagged: Tree[] = []
+  const groves = new Map<string, Tree[]>()
+  for (const t of trees) {
+    const k = topicKeyOf(t)
+    if (!k) { untagged.push(t); continue }
+    const g = groves.get(k)
+    if (g) g.push(t); else groves.set(k, [t])
+  }
+  return untagged.concat(...groves.values())
+}
+
+// Slots for one page of grove-ordered trees, plus a sign per topic grove. Each grove
+// starts on a fresh till pair — and a fresh row when it fits there — so groves read
+// as blocks with an aisle between. If that padding would overflow the plot it packs
+// tighter, down to plain slot order. Pure and deterministic: no jitter between renders.
+function layoutGroves(trees: Tree[]): { placed: GrovePlacement[]; signs: GroveSignSpot[]; signSlots: Set<number> } {
+  const runs: { key: string | null; trees: Tree[] }[] = []
+  for (const t of trees) {
+    const key = topicKeyOf(t)
+    const last = runs[runs.length - 1]
+    if (last && last.key === key) last.trees.push(t)
+    else runs.push({ key, trees: [t] })
+  }
+  let slotsByRun: number[][] = []
+  let mode = 2 // 2 = pair + row aligned, 1 = pair aligned, 0 = tight
+  for (; mode >= 0; mode--) {
+    slotsByRun = []
+    let s = 0
+    for (const run of runs) {
+      if (run.key && mode > 0) {
+        s = Math.ceil(s / 2) * 2
+        const left = ROW_SLOTS - (s % ROW_SLOTS)
+        if (mode === 2 && left < ROW_SLOTS && run.trees.length > left && run.trees.length <= ROW_SLOTS) s += left
+      }
+      slotsByRun.push(run.trees.map(() => s++))
+    }
+    if (s <= ALL_SLOTS.length) break
+  }
+
+  const placed: GrovePlacement[] = []
+  const signs: GroveSignSpot[] = []
+  const signSlots = new Set<number>() // a grove's spare half-pair, where its sign stands
+  runs.forEach((run, ri) => {
+    const slots = slotsByRun[ri]
+    run.trees.forEach((tree, i) => {
+      const slot = ALL_SLOTS[slots[i]]
+      placed.push({ x: slot.x, y: slot.y, tree, col: slot.col, slotIndex: slot.slotIndex })
+    })
+    if (!run.key) return
+    // The sign stands just in front of the grove's front row (see GroveSign), centred on it —
+    // padding slot included, so a lone tree's sign sits on the furrow beside it, not on its trunk.
+    const frontRow = Math.floor(slots[slots.length - 1] / ROW_SLOTS)
+    const front = slots.filter(s => Math.floor(s / ROW_SLOTS) === frontRow)
+    const a = ALL_SLOTS[front[0]]
+    const b = ALL_SLOTS[mode > 0 ? front[front.length - 1] | 1 : front[front.length - 1]]
+    if (b.slotIndex !== front[front.length - 1]) signSlots.add(b.slotIndex)
+    signs.push({
+      key: run.key, name: run.trees[0].topic!.trim(), x: (a.x + b.x) / 2, y: a.y, rowIdx: 0,
+      // Width (in % of the field) a plank may take: its grove's span plus an aisle…
+      avail: (b.x - a.x) + (getTillX(1, a.y) - getTillX(0, a.y)),
+    })
+  })
+  // …and never past a neighbouring sign's centre line or the field's edge.
+  const byRow = new Map<number, GroveSignSpot[]>()
+  for (const s of signs) { const r = byRow.get(s.y); if (r) r.push(s); else byRow.set(s.y, [s]) }
+  for (const row of byRow.values()) {
+    row.sort((p, q) => p.x - q.x)
+    row.forEach((s, i) => {
+      s.rowIdx = i
+      const gaps = [2 * (s.x - 2), 2 * (98 - s.x)]
+      if (i > 0) gaps.push(s.x - row[i - 1].x)
+      if (i < row.length - 1) gaps.push(row[i + 1].x - s.x)
+      s.avail = Math.min(s.avail, ...gaps)
+    })
+  }
+  return { placed: placed.sort((p, q) => p.y - q.y), signs, signSlots }
 }
 
 function getRarityPlantClass(type: string): string {
@@ -2659,6 +2742,111 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
   )
 })
 
+// Wood for grove signposts — the same browns as the fence and the stall.
+const SIGN_WOOD = {
+  light: { top: '#d2bf98', mid: '#b8a078', bot: '#9c8462', edge: '#6e5a3c', grain: '#806a4a', nail: '#4a3c28', post: '#7a6546', postHi: '#9a8462', postLo: '#5a4a32', text: '#2e2414', textGlow: '0 1px 0 rgba(255,244,220,0.45)', ground: 'rgba(30,25,15,0.3)', grass: '#4a7a36' },
+  dark: { top: '#6e5c42', mid: '#584730', bot: '#463824', edge: '#241c12', grain: '#3a2e1e', nail: '#1a140c', post: '#4a3c28', postHi: '#5e4c34', postLo: '#2e2418', text: '#f2e5c6', textGlow: '0 1px 1px rgba(0,0,0,0.55)', ground: 'rgba(0,0,0,0.4)', grass: '#2a4a1e' },
+}
+
+// A wooden signpost planted in front of a topic grove: hand-cut plank on a post,
+// the topic carved in, a due badge when it has cards to recall. Clicking it opens
+// that topic's recall. `y` is its grove's row; `footPx` drops it just past the
+// trunks, so the row in front may hide the foot of the post but not the plank.
+// Sized by depth like the trees around it.
+const GroveSign = memo(function GroveSign({ topicKey, name, due, x, y, footPx, depth, scale, maxWidth, isDark, interactive, delay, reduceMotion, onOpen, onLight }: {
+  topicKey: string; name: string; due: number; x: number; y: number; footPx: number; depth: number; scale: number; maxWidth: string
+  isDark: boolean; interactive: boolean; delay: number; reduceMotion: boolean; onOpen: (key: string) => void
+  /** Hover/focus: light up this grove's trees (null clears). */
+  onLight: (key: string | null) => void
+}) {
+  const w = isDark ? SIGN_WOOD.dark : SIGN_WOOD.light
+  // A slight, stable lean so a row of signs looks hand-planted.
+  let h = 0
+  for (let i = 0; i < topicKey.length; i++) h = (h * 31 + topicKey.charCodeAt(i)) | 0
+  const tilt = ((Math.abs(h) % 9) - 4) * 0.55
+  const fontSize = (12.5 + depth * 2.5) * scale
+  // Don't leave the grove lit if this sign goes away under the pointer.
+  useEffect(() => () => onLight(null), [onLight])
+  return (
+    <button
+      type="button"
+      className="grove-sign"
+      data-grove-sign={topicKey}
+      title={due > 0 ? `${name} · ${due} due` : name}
+      aria-label={`${name} grove${due > 0 ? `, ${due} due` : ''}`}
+      // The grove layer hit-tests trees under the pointer; a sign is its own target.
+      onPointerDown={e => e.stopPropagation()}
+      onPointerMove={e => e.stopPropagation()}
+      onClick={() => onOpen(topicKey)}
+      onPointerEnter={() => onLight(topicKey)}
+      onPointerLeave={() => onLight(null)}
+      onFocus={() => onLight(topicKey)}
+      onBlur={() => onLight(null)}
+      tabIndex={interactive ? 0 : -1}
+      style={{
+        position: 'absolute', left: `${x}%`, top: `${y}%`, zIndex: Math.round(y) + 1, // in front of its own row
+        transform: `translate(-50%, calc(-100% + ${footPx.toFixed(1)}px))`, width: 'max-content', maxWidth, minWidth: '3.4em',
+        padding: 0, border: 0, background: 'none', fontSize, lineHeight: 1,
+        cursor: interactive ? 'pointer' : 'default', pointerEvents: interactive ? 'auto' : 'none',
+      }}
+    >
+      {/* Ground shadow + a few blades of grass round the foot */}
+      <svg aria-hidden width="3.2em" height="0.9em" viewBox="0 0 32 9" style={{ position: 'absolute', left: '50%', bottom: '-0.42em', transform: 'translateX(-50%)', overflow: 'visible', pointerEvents: 'none' }}>
+        <ellipse cx="16" cy="4.6" rx="11" ry="2.4" fill={w.ground} />
+        <path d="M9.5,5.2 q-0.6,-2 -1.6,-3.2 M11,5.4 q0.2,-2.2 1,-3.4 M21.5,5.3 q0.4,-2.1 1.5,-3 M23,5 q-0.2,-1.6 -0.9,-2.4" stroke={w.grass} strokeWidth="0.9" fill="none" strokeLinecap="round" />
+      </svg>
+      <span style={{ display: 'block', animation: reduceMotion ? undefined : `tree-pop 0.35s ease-out ${delay}ms backwards` }}>
+        <span className="grove-sign-lift" style={{ display: 'block' }}>
+          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', transform: `rotate(${tilt}deg)`, transformOrigin: '50% 100%' }}>
+            {/* Plank: hand-cut ends (clip-path), wood gradient, grain and two nails */}
+            <span className="grove-sign-plank" style={{ position: 'relative', display: 'block', filter: `drop-shadow(0 ${isDark ? 2 : 1.5}px ${isDark ? 2 : 1.5}px rgba(0,0,0,${isDark ? 0.5 : 0.28}))` }}>
+              <span aria-hidden style={{
+                position: 'absolute', inset: 0,
+                clipPath: 'polygon(0.8% 14%, 3.5% 0, 96% 5%, 100% 18%, 99.2% 86%, 96.5% 100%, 2.5% 95%, 0 80%)',
+                background: `linear-gradient(180deg, ${w.top} 0%, ${w.mid} 38%, ${w.mid} 70%, ${w.bot} 100%)`,
+              }}>
+                <svg width="100%" height="100%" viewBox="0 0 100 20" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0 }}>
+                  <path d="M3,6.5 C22,5.2 34,7.8 52,6.4 S82,5.4 97,7" stroke={w.grain} strokeWidth="0.7" fill="none" opacity="0.55" vectorEffect="non-scaling-stroke" />
+                  <path d="M6,13.2 C24,14.6 44,12.2 63,13.6 S86,14.2 95,12.8" stroke={w.grain} strokeWidth="0.6" fill="none" opacity="0.4" vectorEffect="non-scaling-stroke" />
+                  <path d="M60,9.6 c3,-1.4 7,-1.2 9,0.2 c-2.6,1.2 -6,1.2 -9,-0.2 z" fill={w.grain} opacity="0.35" />
+                  <path d="M0,19.2 L100,19.2" stroke={w.edge} strokeWidth="1.4" opacity="0.6" vectorEffect="non-scaling-stroke" />
+                </svg>
+                <span style={{ position: 'absolute', left: '0.42em', top: '50%', width: '0.24em', height: '0.24em', marginTop: '-0.12em', borderRadius: '50%', background: w.nail, opacity: 0.85 }} />
+                <span style={{ position: 'absolute', right: '0.42em', top: '50%', width: '0.24em', height: '0.24em', marginTop: '-0.12em', borderRadius: '50%', background: w.nail, opacity: 0.85 }} />
+              </span>
+              <span data-sign-label style={{
+                position: 'relative', display: 'block', padding: '0.36em 0.85em 0.32em',
+                fontFamily: 'Crimson Pro, serif', fontWeight: 600, letterSpacing: '0.02em', color: w.text, textShadow: w.textGlow,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center',
+              }}>
+                {name}
+              </span>
+              {due > 0 && (
+                <span data-orchard-ui data-sign-due style={{
+                  ...ACCENT_DARK_SURFACE, position: 'absolute', top: '-0.62em', right: '-0.55em',
+                  minWidth: '1.5em', height: '1.5em', padding: '0 0.38em', borderRadius: 999, boxSizing: 'border-box',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: ACCENT, color: ACCENT_CONTRAST, border: '1.5px solid #fff7ed', boxShadow: `0 0 9px 1px ${accentAlpha(0.65)}`,
+                  fontFamily: 'Inter, system-ui, sans-serif', fontSize: '0.74em', fontWeight: 600, fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {due > 99 ? '99+' : due}
+                </span>
+              )}
+            </span>
+            {/* Post */}
+            <svg aria-hidden width="0.62em" height="0.95em" viewBox="0 0 6 12" preserveAspectRatio="none" style={{ alignSelf: 'center', display: 'block', marginTop: -1 }}>
+              <path d="M1.2,0 L4.9,0 L4.7,11.6 L1.4,12 Z" fill={w.post} />
+              <path d="M1.2,0 L2.3,0 L2.4,11.8 L1.4,12 Z" fill={w.postHi} opacity="0.7" />
+              <path d="M4.1,0 L4.9,0 L4.7,11.6 L4.0,11.7 Z" fill={w.postLo} opacity="0.8" />
+              <path d="M2.6,4 l1,0.5 M2.8,8.2 l0.9,-0.4" stroke={w.postLo} strokeWidth="0.35" opacity="0.6" />
+            </svg>
+          </span>
+        </span>
+      </span>
+    </button>
+  )
+})
+
 const NOTE_TYPE_ICONS: Record<string, string> = {
   notebook: '📓',
   singlepage: '📄',
@@ -2822,20 +3010,27 @@ export const OrchardView = memo(function OrchardView({
   }, [filteredTrees, isOpen])
   const freshnessOf = (t: any): number => (t?.topic ? topicFreshnessMap[normalizeTopic(t.topic)] ?? 1 : 1)
 
+  // Every topic's recall state (due cards, where they live) — read from localStorage once per open/grove change.
+  const topicRows = useMemo(() => {
+    if (!isOpen || typeof window === 'undefined') return []
+    return buildTopicIndex(grove)
+  }, [isOpen, grove])
+
   // What's ready to recall — read when the orchard opens, so it can point the way.
   const recallDue = useMemo(() => {
     const topics: { key: string; name: string; due: number; notebookId?: string }[] = []
     const byKey: Record<string, number> = {}
     let untagged: { notebookId: string; due: number }[] = []
     if (!isOpen || typeof window === 'undefined') return { topics, byKey, untagged }
-    for (const r of buildTopicIndex(grove)) {
+    for (const r of topicRows) {
       if (r.due <= 0) continue
       topics.push({ key: r.key, name: r.name, due: r.due, notebookId: bestNotebookFor(r) })
       byKey[r.key] = r.due
     }
     untagged = Object.entries(untaggedDueByNotebook()).map(([notebookId, due]) => ({ notebookId, due }))
     return { topics, byKey, untagged }
-  }, [isOpen, grove])
+  }, [isOpen, topicRows])
+  const topicRowByKey = useMemo(() => new Map(topicRows.map(r => [r.key, r])), [topicRows])
   const dueOf = (t: any): number => (t?.topic ? recallDue.byKey[normalizeTopic(t.topic)] ?? 0 : 0)
   // Strip chip: jump to the topic's newest tree (its card has Recall), or recall directly if it has none here.
   const goToTopic = (key: string, name: string, notebookId?: string) => {
@@ -2845,6 +3040,27 @@ export const OrchardView = memo(function OrchardView({
     if (tree) setFocusedTree({ tree, x: 50, y: 50 })
     else onReviewTopic?.(name, notebookId)
   }
+  // Grove sign: recall that topic where its cards are — the filtered notebook when it has
+  // them due (or nothing is due anywhere), else wherever most are due. Stable for memo'd signs.
+  const openGroveSignRef = useRef<(key: string) => void>(() => {})
+  openGroveSignRef.current = (key: string) => {
+    const row = topicRowByKey.get(key)
+    const newest = (filteredTrees as Tree[])
+      .filter(t => topicKeyOf(t) === key)
+      .reduce<Tree | undefined>((a, t) => (!a || t.plantedAt > a.plantedAt ? t : a), undefined)
+    const nb = selectedNotebook !== '_all' && selectedNotebook !== '_unassigned' ? selectedNotebook : undefined
+    const notebookId = nb && (!row?.due || row.dueByNotebook[nb]) ? nb : (row && bestNotebookFor(row)) || newest?.notebookId
+    onReviewTopic?.(row?.name || newest?.topic?.trim() || key, notebookId)
+  }
+  const openGroveSign = useCallback((key: string) => openGroveSignRef.current(key), [])
+  // Hovering a sign lights its grove and fades the rest — straight on the DOM, no re-render.
+  const lightGrove = useCallback((key: string | null) => {
+    const layer = groveLayerRef.current
+    if (!layer) return
+    layer.querySelectorAll('.grove-lit').forEach(el => el.classList.remove('grove-lit'))
+    layer.classList.toggle('grove-lit-on', !!key)
+    if (key) layer.querySelectorAll(`[data-grove-topic="${CSS.escape(key)}"]`).forEach(el => el.classList.add('grove-lit'))
+  }, [])
 
   const filteredTreesRef = useRef(filteredTrees)
   filteredTreesRef.current = filteredTrees
@@ -3008,37 +3224,27 @@ export const OrchardView = memo(function OrchardView({
     if (userId) overflow.forEach((t: any) => db.deleteTree(userId, t.id).catch(() => {}))
   }, [filteredTrees.length, nbUnlocked, selectedNotebook])
 
+  // Display order: the arranged order (edit-mode drags) first, then the rest as planted;
+  // grouped into topic groves before paging, so a grove isn't scattered across plots.
+  const orderedTrees = useMemo(() => {
+    const order = slotOrder[selectedNotebook ?? '_all']
+    if (!order || order.length === 0) return groveOrder(filteredTrees)
+    const rank = new Map(order.map((id, i) => [id, i]))
+    const arranged = filteredTrees.filter(t => rank.has(t.id)).sort((a, b) => rank.get(a.id)! - rank.get(b.id)!)
+    return groveOrder(arranged.concat(filteredTrees.filter(t => !rank.has(t.id))))
+  }, [filteredTrees, slotOrder, selectedNotebook])
+
   const currentPlotTrees = useMemo(() => {
     const start = plotPage * TREES_PER_PLOT
-    return filteredTrees.slice(start, start + TREES_PER_PLOT)
-  }, [filteredTrees, plotPage])
+    return orderedTrees.slice(start, start + TREES_PER_PLOT)
+  }, [orderedTrees, plotPage])
 
-  const placed = useMemo(() => {
-    const order = slotOrder[selectedNotebook ?? '_all']
-    if (!order || order.length === 0) return orchardPlacement(currentPlotTrees)
-    const treeById = new Map(currentPlotTrees.map(t => [t.id, t]))
-    const result: { x: number; y: number; tree: any; col: number; slotIndex: number }[] = []
-    const assigned = new Set<string>()
-    for (const treeId of order) {
-      const tree = treeById.get(treeId)
-      if (tree && result.length < ALL_SLOTS.length) {
-        const slot = ALL_SLOTS[result.length]
-        result.push({ x: slot.x, y: slot.y, tree, col: slot.col, slotIndex: slot.slotIndex })
-        assigned.add(treeId)
-      }
-    }
-    for (const tree of currentPlotTrees) {
-      if (!assigned.has(tree.id) && result.length < ALL_SLOTS.length) {
-        const slot = ALL_SLOTS[result.length]
-        result.push({ x: slot.x, y: slot.y, tree, col: slot.col, slotIndex: slot.slotIndex })
-      }
-    }
-    return result.sort((a, b) => a.y - b.y)
-  }, [currentPlotTrees, slotOrder, selectedNotebook])
+  const { placed, signs: groveSigns, signSlots } = useMemo(() => layoutGroves(currentPlotTrees), [currentPlotTrees])
 
   const occupiedSlots = useMemo(() => new Set(placed.map(p => p.slotIndex)), [placed])
 
-  const emptySlots = useMemo(() => ALL_SLOTS.filter(s => !occupiedSlots.has(s.slotIndex)), [occupiedSlots])
+  // Open planting spots (dashed rings) — not the spare spot a grove's sign stands beside.
+  const emptySlots = useMemo(() => ALL_SLOTS.filter(s => !occupiedSlots.has(s.slotIndex) && !signSlots.has(s.slotIndex)), [occupiedSlots, signSlots])
 
   const dragRef = useRef<{ treeId: string; startX: number; startY: number; currentX: number; currentY: number; slotIdx: number; active: boolean } | null>(null)
   const dragElRef = useRef<HTMLElement | null>(null)
@@ -3344,6 +3550,18 @@ export const OrchardView = memo(function OrchardView({
         .grove-tree-art svg { pointer-events: none; }
         .grove-tree-art svg * { pointer-events: visiblePainted; }
         @media (prefers-reduced-motion: reduce) { .grove-tree-card, .grove-tree-art { transition: none; } .grove-tree.is-hovered .grove-tree-art { transform: none; } }
+        /* Grove signposts: lift a little and come forward on hover/focus */
+        .grove-sign { -webkit-tap-highlight-color: transparent; }
+        .grove-sign:hover, .grove-sign:focus-visible { z-index: 997 !important; }
+        .grove-sign:focus-visible { outline: none; }
+        .grove-sign:focus-visible .grove-sign-plank { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+        .grove-sign-lift { transition: transform .22s cubic-bezier(.2,.8,.2,1), filter .22s ease; }
+        .grove-sign:hover .grove-sign-lift, .grove-sign:focus-visible .grove-sign-lift { transform: translateY(-3px); filter: brightness(1.07); }
+        /* …and light up their grove while the other trees fade back (see lightGrove) */
+        .grove-tree { transition: opacity .2s ease; }
+        .grove-lit-on .grove-tree:not(.grove-lit) { opacity: .45 !important; }
+        .grove-tree.grove-lit .grove-tree-art { transform: translateY(-2px) scale(1.035); }
+        @media (prefers-reduced-motion: reduce) { .grove-sign-lift { transition: none; } .grove-sign:hover .grove-sign-lift, .grove-tree.grove-lit .grove-tree-art { transform: none; } }
         @keyframes sap-collect { 0% { transform: translateY(0); opacity:1 } 100% { transform: translateY(-30px); opacity:0 } }
         @keyframes sap-drop-burst { 0% { opacity:0; transform: scale(0) translateY(0) } 15% { opacity:1; transform: scale(1.3) translateY(-5px) } 40% { opacity:0.9; transform: scale(1) translateY(-15px) } 100% { opacity:0; transform: scale(0.5) translateY(-40px) } }
         @keyframes sap-funnel { 0% { opacity:0; transform: scale(0.3) translate(0,0) } 20% { opacity:1; transform: scale(1.2) translate(0,0) } 100% { opacity:0; transform: scale(0.4) translate(var(--funnel-tx), var(--funnel-ty)) } }
@@ -3693,6 +3911,7 @@ export const OrchardView = memo(function OrchardView({
                         <div
                           key={`${tree.id ?? 'tree'}-${renderIdx}`}
                           data-grove-tree={tree.id}
+                          data-grove-topic={topicKeyOf(tree) ?? undefined}
                           className="absolute flex flex-col items-center grove-tree"
                           style={{
                             left: `${x}%`,
@@ -3802,6 +4021,41 @@ export const OrchardView = memo(function OrchardView({
                             )
                           })()}
                         </div>
+                      )
+                    })}
+                    {/* Grove signposts — one per topic grove on this plot */}
+                    {groveSigns.map((s, i) => {
+                      // Too narrow for side-by-side planks (phones): every other sign in a row steps forward.
+                      const fieldW = Math.max(320, windowWidth - (windowWidth >= 640 ? 58 : 0))
+                      const scale = fieldW < 640 ? 0.85 : 1 // phones: smaller planks for the tighter rows
+                      const narrow = (s.avail / 100) * fieldW < 76
+                      const stagger = narrow && s.rowIdx % 2 === 1
+                      const avail = narrow ? s.avail * 2 : s.avail
+                      const row = topicRowByKey.get(s.key)
+                      // Foot just past the trunks: a tree's box hangs (25 - 10·depth)% of its height
+                      // below its row line (see the tree transform above); trunks end near the box bottom.
+                      const depthT = Math.max(0, Math.min(1, (s.y - 40) / 55))
+                      const treeSize = baseSize * (0.55 + depthT * 0.55) * 1.1
+                      const footPx = (0.25 - depthT * 0.1) * 1.3 * treeSize * (0.75 + depthT * 0.25) + 13
+                      return (
+                        <GroveSign
+                          key={s.key}
+                          topicKey={s.key}
+                          name={row?.name || s.name}
+                          due={row?.due ?? 0}
+                          x={s.x}
+                          y={s.y + (stagger ? 3.4 : 0)}
+                          footPx={footPx}
+                          depth={depthT}
+                          scale={scale}
+                          maxWidth={`min(${Math.round((120 + depthT * 60) * scale)}px, calc(${avail.toFixed(2)}% - 8px))`}
+                          isDark={isDark}
+                          interactive={!!onReviewTopic && !editMode && activeTool === 'none'}
+                          delay={reduceMotion ? 0 : 120 + i * 40}
+                          reduceMotion={reduceMotion}
+                          onOpen={openGroveSign}
+                          onLight={lightGrove}
+                        />
                       )
                     })}
                   </>
