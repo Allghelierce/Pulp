@@ -3844,7 +3844,7 @@ export default function NoteApp() {
 
           {/* Narrow windows: the sidebar slides over the page (tap outside to close) instead of squeezing it. */}
           {isNarrow && !gridView && sidebarWidth > 40 && notes.filter(n => !n.archived).length > 0 && (
-            <div onClick={() => setSidebarWidth(0)} aria-hidden style={{ position: 'fixed', inset: 0, zIndex: 249, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(1px)' }} />
+            <div onClick={() => { sidebarUserOpenedRef.current = false; setSidebarWidth(0) }} aria-hidden style={{ position: 'fixed', inset: 0, zIndex: 249, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(1px)' }} />
           )}
           {!gridView && sidebarWidth > 40 && notes.filter(n => !n.archived).length > 0 && (
             <m.div
@@ -4084,7 +4084,7 @@ export default function NoteApp() {
                   onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
                   onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) } }}
                   sidebarOpen={sidebarWidth > 40}
-                  onSidebarToggle={() => { if (isNarrow && sidebarWidth <= 40) sidebarUserOpenedRef.current = true; setSidebarWidth(sidebarWidth > 40 ? 0 : 240) }}
+                  onSidebarToggle={() => { if (isNarrow) sidebarUserOpenedRef.current = sidebarWidth <= 40; setSidebarWidth(sidebarWidth > 40 ? 0 : 240) }}
                   onTimerOpen={() => { if (timerOpen && timerRunning) return; setTimerOpen(!timerOpen) }}
                   onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
                   onOpenGrove={() => { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }}

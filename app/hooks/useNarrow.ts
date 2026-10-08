@@ -8,14 +8,48 @@ import { useSyncExternalStore } from "react"
 export const NARROW_PX = 1024
 const QUERY = `(max-width: ${NARROW_PX - 1}px)`
 
-function subscribe(cb: () => void) {
+// Settled narrow state. Window width flickers while switching desktops/Spaces
+// (and while hidden), which used to reopen the sidebar in split screen; a change
+// only counts once it has held for SETTLE_MS while the window is visible.
+const SETTLE_MS = 350
+let settled: boolean | null = null
+const listeners = new Set<() => void>()
+let teardown: (() => void) | null = null
+
+function start() {
   const mq = window.matchMedia(QUERY)
-  mq.addEventListener("change", cb)
-  return () => mq.removeEventListener("change", cb)
+  settled = mq.matches
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const check = () => {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      if (document.visibilityState !== "visible") return // re-checked when shown
+      if (mq.matches === settled) return
+      settled = mq.matches
+      listeners.forEach(l => l())
+    }, SETTLE_MS)
+  }
+  mq.addEventListener("change", check)
+  document.addEventListener("visibilitychange", check)
+  teardown = () => { clearTimeout(timer); mq.removeEventListener("change", check); document.removeEventListener("visibilitychange", check) }
+}
+
+function subscribe(cb: () => void) {
+  if (!teardown) start()
+  listeners.add(cb)
+  return () => {
+    listeners.delete(cb)
+    if (!listeners.size && teardown) { teardown(); teardown = null; settled = null }
+  }
+}
+
+function snapshot(): boolean {
+  if (settled === null) settled = window.matchMedia(QUERY).matches
+  return settled
 }
 
 export function useNarrow(): boolean {
-  return useSyncExternalStore(subscribe, () => window.matchMedia(QUERY).matches, () => false)
+  return useSyncExternalStore(subscribe, snapshot, () => false)
 }
 
 function subscribeResize(cb: () => void) {
