@@ -353,66 +353,6 @@ function MarketGroundGrass({ isDark, groundY }: { isDark: boolean; groundY: numb
   </>
 }
 
-function getGroundPath(type: string): { fill: string; edge: string } {
-  const shape = TREE_TYPES[type]?.shape || ''
-  if (['palm', 'papaya', 'pineapple', 'agave'].includes(shape)) {
-    return { fill: 'M0 22 Q30 14 60 18 Q90 12 120 16 Q150 13 180 20 L180 60 L0 60 Z', edge: 'M0 22 Q30 14 60 18 Q90 12 120 16 Q150 13 180 20' }
-  }
-  if (['cactus', 'sage', 'baobab'].includes(shape)) {
-    return { fill: 'M0 20 L30 16 Q60 12 90 15 L120 13 Q150 16 180 18 L180 60 L0 60 Z', edge: 'M0 20 L30 16 Q60 12 90 15 L120 13 Q150 16 180 18' }
-  }
-  if (shape === 'winterveil') {
-    return { fill: 'M0 16 Q20 10 50 14 Q80 6 110 12 Q140 8 160 14 Q170 12 180 16 L180 60 L0 60 Z', edge: 'M0 16 Q20 10 50 14 Q80 6 110 12 Q140 8 160 14 Q170 12 180 16' }
-  }
-  if (['coral', 'whirlpool', 'lotus', 'leviathan'].includes(shape)) {
-    return { fill: 'M0 24 Q40 20 90 22 Q140 19 180 24 L180 60 L0 60 Z', edge: 'M0 24 Q40 20 90 22 Q140 19 180 24' }
-  }
-  if (['mushroom', 'mangrove', 'cattail', 'ivy'].includes(shape)) {
-    return { fill: 'M0 20 Q15 14 35 17 Q55 10 80 15 Q105 9 130 14 Q155 11 180 18 L180 60 L0 60 Z', edge: 'M0 20 Q15 14 35 17 Q55 10 80 15 Q105 9 130 14 Q155 11 180 18' }
-  }
-  if (['void', 'starweaver', 'prismatic'].includes(shape)) {
-    return { fill: 'M0 22 Q45 16 90 20 Q135 14 180 22 L180 60 L0 60 Z', edge: 'M0 22 Q45 16 90 20 Q135 14 180 22' }
-  }
-  return { fill: 'M0 18 Q20 10 45 13 Q70 8 90 11 Q120 7 145 12 Q165 10 180 14 L180 60 L0 60 Z', edge: 'M0 18 Q20 10 45 13 Q70 8 90 11 Q120 7 145 12 Q165 10 180 14' }
-}
-
-function getTerrainColors(type: string, isDark: boolean): { top: string; mid: string; bottom: string; edge: string; blendBase: string } {
-  const shape = TREE_TYPES[type]?.shape || ''
-  if (['palm', 'papaya', 'pineapple', 'agave'].includes(shape)) {
-    return isDark
-      ? { top: '#4a3a20', mid: '#3a2c18', bottom: '#2a1e10', edge: '#5a4a30', blendBase: '#3a2c18' }
-      : { top: '#e0c890', mid: '#d0b870', bottom: '#b89850', edge: '#c8a858', blendBase: '#d0b870' }
-  }
-  if (['cactus', 'sage', 'baobab'].includes(shape)) {
-    return isDark
-      ? { top: '#3a3020', mid: '#302818', bottom: '#241e10', edge: '#4a3828', blendBase: '#302818' }
-      : { top: '#d8c4a0', mid: '#c8b088', bottom: '#a89068', edge: '#b8a078', blendBase: '#c8b088' }
-  }
-  if (shape === 'winterveil') {
-    return isDark
-      ? { top: '#3a4050', mid: '#2a3040', bottom: '#1e2430', edge: '#4a5060', blendBase: '#2a3040' }
-      : { top: '#dce4f0', mid: '#c8d4e4', bottom: '#a8b8cc', edge: '#b8c8dc', blendBase: '#c8d4e4' }
-  }
-  if (['coral', 'whirlpool', 'lotus', 'leviathan'].includes(shape)) {
-    return isDark
-      ? { top: '#1e2a30', mid: '#162228', bottom: '#0e181e', edge: '#2a3a42', blendBase: '#162228' }
-      : { top: '#b8d0d8', mid: '#a0c0cc', bottom: '#80a8b8', edge: '#90b4c0', blendBase: '#a0c0cc' }
-  }
-  if (['mushroom', 'mangrove', 'cattail', 'ivy'].includes(shape)) {
-    return isDark
-      ? { top: '#282418', mid: '#201c12', bottom: '#18140c', edge: '#342e20', blendBase: '#201c12' }
-      : { top: '#a89878', mid: '#988868', bottom: '#887858', edge: '#8a7a5a', blendBase: '#988868' }
-  }
-  if (['void', 'starweaver', 'prismatic'].includes(shape)) {
-    return isDark
-      ? { top: '#1a1420', mid: '#140e18', bottom: '#0e0a12', edge: '#2a1e30', blendBase: '#140e18' }
-      : { top: '#9888a0', mid: '#887898', bottom: '#706080', edge: '#7a6a88', blendBase: '#887898' }
-  }
-  return isDark
-    ? { top: '#3a3020', mid: '#2e2618', bottom: '#221c10', edge: '#4a3a28', blendBase: '#2e2618' }
-    : { top: '#c8b090', mid: '#b8a080', bottom: '#a08868', edge: '#a89070', blendBase: '#b8a080' }
-}
-
 function rarityPlantClass(rarity: string): string {
   switch (rarity) {
     case 'uncommon': return 'rarity-uncommon'
@@ -825,13 +765,8 @@ const MarketCountdown = memo(function MarketCountdown({ isDark }: { isDark: bool
 })
 
 // Where a revealed card's plant stands, as a fraction of card height from the bottom.
-function plantBottomFrac(type: string): number {
-  const sh = TREE_TYPES[type]?.shape || ''
-  return ['coral', 'whirlpool', 'lotus', 'cattail', 'mushroom'].includes(sh) ? 0.10
-    : ['cactus', 'agave', 'sage'].includes(sh) ? 0.12
-    : ['palm', 'papaya', 'bamboo', 'mangrove'].includes(sh) ? 0.14
-    : 0.15
-}
+// Where the floating plant's box sits, as a fraction of card height from the bottom.
+const PLANT_FLOAT_BOTTOM = 0.2
 
 // The market's landscape + shopkeeper stall. Static apart from the theme and the seed jars.
 const MarketBackdrop = memo(function MarketBackdrop({ isDark, dailySeeds }: { isDark: boolean; dailySeeds: string[] }) {
@@ -1531,6 +1466,8 @@ const MarketCard = memo(function MarketCard({
   const cardH = 270
   const arcOffset = [18, 0, 0, 18][i] || 0
   const arcRotate = [-7, -2.5, 2.5, 7][i] || 0
+  const plantFloatDur = 4.2 + i * 0.45
+  const plantFloatDelay = -i * 1.1
 
   return (
     <div className="seed-card-wrap" style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: arcOffset, rotate: `${arcRotate}deg`, ['--float-y' as string]: `${-5 - i * 1.2}px`, animation: `card-float ${5 + i * 0.6}s ease-in-out ${i * 0.4}s infinite` }}>
@@ -1754,9 +1691,15 @@ const MarketCard = memo(function MarketCard({
                 zIndex: 5,
               }}>-{discount}%</div>
             )}
-            {/* Plant — centered, base on ground */}
+            {/* Shadow under the floating plant — shrinks as the plant rises */}
             <div style={{
-              position: 'absolute', bottom: `${Math.round(plantBottomFrac(type) * 100)}%`, left: 0, right: 0,
+              position: 'absolute', bottom: `${PLANT_FLOAT_BOTTOM * 100 - 7}%`, left: '50%', width: 70, height: 12, marginLeft: -35,
+              borderRadius: '50%', background: `radial-gradient(ellipse at center, ${isDark ? 'rgba(0,0,0,0.55)' : 'rgba(60,40,20,0.22)'} 0%, transparent 70%)`,
+              animation: `plant-float-shadow ${plantFloatDur}s ease-in-out ${plantFloatDelay}s infinite`, zIndex: 1,
+            }} />
+            {/* Plant — floats in the middle of the card */}
+            <div style={{
+              position: 'absolute', bottom: `${PLANT_FLOAT_BOTTOM * 100}%`, left: 0, right: 0,
               display: 'flex', justifyContent: 'center',
               zIndex: 2,
             }}>
@@ -1764,34 +1707,13 @@ const MarketCard = memo(function MarketCard({
                 transformOrigin: rarityPlantClass(t.rarity) && t.rarity !== 'rare' ? 'bottom center' : undefined,
                 animation: fresh ? faceAnimCss(face.pop) : undefined,
               }}>
+              <div style={{ animation: `plant-float ${plantFloatDur}s ease-in-out ${plantFloatDelay}s infinite` }}>
               <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative' }}>
                 <CachedPlantIcon type={type} size={120} stage={3} hideGround />
-                {/* Ground blend */}
-                {(() => { const tc = getTerrainColors(type, isDark); return (
-                <div style={{
-                  position: 'absolute', bottom: -3, left: '50%', transform: 'translateX(-50%)',
-                  width: '60%', height: 10, zIndex: 5,
-                  background: `linear-gradient(to top, ${tc.blendBase} 0%, transparent 100%)`,
-                  borderRadius: '50%',
-                }} />
-                )})()}
+              </div>
               </div>
               </div>
             </div>
-            {/* Ground */}
-            {(() => { const tc = getTerrainColors(type, isDark); const gp = getGroundPath(type); return (
-            <svg viewBox="0 0 180 60" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '22%', zIndex: 3 }}>
-              <defs>
-                <linearGradient id={`ground-${i}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={tc.top} />
-                  <stop offset="40%" stopColor={tc.mid} />
-                  <stop offset="100%" stopColor={tc.bottom} />
-                </linearGradient>
-              </defs>
-              <path d={gp.fill} fill={`url(#ground-${i})`} />
-              <path d={gp.edge} fill="none" stroke={tc.edge} strokeWidth="0.6" opacity="0.3" />
-            </svg>
-            )})()}
           </div>
         )}
         {/* Rarity color bleeding through crack */}
@@ -1866,7 +1788,7 @@ const MarketCard = memo(function MarketCard({
 
       {/* Pop effects on reveal */}
       {isRevealed && freshToken !== undefined && (
-        <RevealBurst key={freshToken} rarity={t.rarity} originY={arcOffset + cardH * (1 - plantBottomFrac(type)) - 58} />
+        <RevealBurst key={freshToken} rarity={t.rarity} originY={arcOffset + cardH * (1 - PLANT_FLOAT_BOTTOM) - 58} />
       )}
     </div>
   )
@@ -2261,6 +2183,8 @@ export const BoutiqueView = memo(function BoutiqueView({
           50% { box-shadow: 0 0 20px #d9770650, 0 0 40px #d9770625; }
         }
         @keyframes card-float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(var(--float-y, -6px)); } }
+        @keyframes plant-float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-7px); } }
+        @keyframes plant-float-shadow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.8); opacity: 0.65; } }
         .seed-packet { transition: box-shadow 0.3s ease, filter 0.5s ease; }
         .seed-card-wrap { transition: translate 0.5s cubic-bezier(0.22, 1, 0.36, 1), scale 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
         .seed-card-wrap:hover { translate: 0 -8px; scale: 1.02; }
