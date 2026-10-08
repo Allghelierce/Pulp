@@ -3234,20 +3234,41 @@ export default function NoteApp() {
   }, [scrollMode, scrollRoot, activeNote?.pages?.length, activeTabId, currentPageIdx])
 
   // After a scroll-driven page switch, put the anchored page back where it was.
+  // Any other jump (keys, bookmark, search, grid, new page) scrolls the page
+  // into view — otherwise the observer sees the old page and snaps back to it.
   const scrollAnchorRef = useRef<{ idx: number; top: number } | null>(null)
+  const scrollClickNav = useRef(false)
+  const navScrollPending = useRef(false)
+  const lastNavKey = useRef("")
   useLayoutEffect(() => {
+    const key = `${activeTabId}:${currentPageIdx}`
+    if (key !== lastNavKey.current) { lastNavKey.current = key; navScrollPending.current = true }
+    if (!scrollRoot) return
     const a = scrollAnchorRef.current
-    if (!a || !scrollRoot) return
-    scrollAnchorRef.current = null
-    const el = scrollPageRefs.current.get(a.idx)
-    if (el) scrollRoot.scrollTop += el.getBoundingClientRect().top - a.top
-    requestAnimationFrame(() => { scrollObserverSkip.current = false })
-  }, [currentPageIdx, scrollRoot])
+    if (a) {
+      scrollAnchorRef.current = null
+      navScrollPending.current = false
+      const el = scrollPageRefs.current.get(a.idx)
+      if (el) scrollRoot.scrollTop += el.getBoundingClientRect().top - a.top
+      requestAnimationFrame(() => { scrollObserverSkip.current = false })
+      return
+    }
+    if (!navScrollPending.current || !scrollMode) return
+    navScrollPending.current = false
+    if (scrollClickNav.current) { scrollClickNav.current = false; return }
+    const el = scrollPageRefs.current.get(currentPageIdx)
+    if (!el) return
+    scrollObserverSkip.current = true
+    // 24 = the scroller's top padding, so page 1 lands exactly at the top
+    scrollRoot.scrollTop = Math.max(0, scrollRoot.scrollTop + el.getBoundingClientRect().top - scrollRoot.getBoundingClientRect().top - 24)
+    requestAnimationFrame(() => requestAnimationFrame(() => { scrollObserverSkip.current = false }))
+  }, [currentPageIdx, activeTabId, scrollRoot, scrollMode])
 
   const handleScrollPageClick = useCallback((pageIdx: number) => {
     if (pageIdx === currentPageIdx) return
     editor.flushSync()
     scrollObserverSkip.current = true
+    scrollClickNav.current = true
     setCurrentPageIdx(pageIdx)
     requestAnimationFrame(() => {
       const el = scrollPageRefs.current.get(pageIdx)
@@ -4642,6 +4663,23 @@ export default function NoteApp() {
                         </div>
                       )
                     })}
+                    {scrollMode && (
+                      <button
+                        onClick={() => {
+                          editor.flushSync()
+                          const pageIdx = activeNote.pages.length
+                          setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: [...n.pages, ""], boxes: { ...n.boxes, [pageIdx]: [{ id: uid(), x: 40, y: 40, w: 900, h: 32, content: '' }] } } : n))
+                          setCurrentPageIdx(pageIdx)
+                        }}
+                        className="no-print group"
+                        style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", marginTop: 32, padding: "10px 0", background: "none", border: "none", cursor: "pointer" }}
+                        title="Add a page at the end"
+                      >
+                        <span style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
+                        <span className="transition-colors group-hover:!text-[var(--pulp-accent-ui)]" style={{ "--pulp-accent-ui": accentUi, fontFamily: "Crimson Pro, serif", fontSize: 13, color: theme === "dark" ? "#71717a" : "#a1a1aa", userSelect: "none" } as React.CSSProperties}>+ Add page</span>
+                        <span style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
+                      </button>
+                    )}
                   </div>
                   {/* Botanical margin engravings */}
                   {!isNarrow && <MarginEngravings theme={theme} />}
