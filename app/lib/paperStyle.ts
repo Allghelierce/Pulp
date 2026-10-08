@@ -8,8 +8,17 @@ const DARK_STYLES: Record<string, { bg: string; line: string }> = {
   "dark-steno":  { bg: "#2e2a1a", line: "rgba(140,180,140,0.2)" },
 }
 
+/** Ruled-line gap (px) for a line-spacing setting. Body text uses this as its line height. */
+export function rulePitch(lineSpacing: LineSpacing | string): number {
+  return ({ compact: 24, normal: 32, relaxed: 40 } as Record<string, number>)[lineSpacing] ?? 32
+}
+// Where text starts inside a page's default text box: box y (40) + border (1) + padding (8).
+// The ruling is shifted so its rows line up with text there, on every spacing setting.
+export const TEXT_TOP = 49
+
 export function getPaperBg(lineSpacing: LineSpacing, paperStyle: PaperStyle, isDark = false, preview = false) {
-  const lh = ({ compact: 24, normal: 32, relaxed: 40 } as Record<string, number>)[lineSpacing] ?? 32
+  const lh = rulePitch(lineSpacing)
+  const backgroundPosition = preview ? "0 0" : `0 ${TEXT_TOP % lh}px`
 
   const dark = DARK_STYLES[paperStyle]
   if (dark) {
@@ -20,7 +29,7 @@ export function getPaperBg(lineSpacing: LineSpacing, paperStyle: PaperStyle, isD
     const backgroundSize = paperStyle === "dark-plain" ? "auto"
       : paperStyle === "dark-grid" ? (preview ? `${lh * 0.75}px ${lh * 0.75}px` : "28px 28px")
         : `100% ${lh}px`
-    return { backgroundColor: dark.bg, backgroundImage, backgroundSize }
+    return { backgroundColor: dark.bg, backgroundImage, backgroundSize, backgroundPosition }
   }
 
   const backgroundColor =
@@ -43,7 +52,7 @@ export function getPaperBg(lineSpacing: LineSpacing, paperStyle: PaperStyle, isD
       : paperStyle === "steno" ? `100% ${lh}px`
           : `100% ${lh}px`
 
-  return { backgroundColor, backgroundImage, backgroundSize }
+  return { backgroundColor, backgroundImage, backgroundSize, backgroundPosition }
 }
 
 export function isDarkPaper(paperStyle: PaperStyle): boolean {

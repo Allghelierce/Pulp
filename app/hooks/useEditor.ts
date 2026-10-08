@@ -340,6 +340,33 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       }
     }
 
+    // Lists, Docs-style: Tab nests the item one level (nested bullets change shape
+    // via CSS: ● → ○ → ■), Shift+Tab un-nests it, Backspace at the start of a nested
+    // item un-nests it. Works in the page and in text boxes.
+    {
+      const startEl = range.startContainer.nodeType === Node.ELEMENT_NODE ? range.startContainer as HTMLElement : range.startContainer.parentElement
+      const host = startEl?.closest<HTMLElement>('[contenteditable="true"]') ?? null
+      const li = startEl?.closest("li") ?? null
+      if (li && host && host.contains(li) && !li.closest("td, th")) {
+        const list = li.parentElement
+        const nested = !!list && !!list.parentElement && host.contains(list.parentElement) && !!list.parentElement.closest("ul, ol, li") && host.contains(list.parentElement.closest("ul, ol, li")!)
+        const atStart = range.collapsed && (() => { const r = document.createRange(); r.setStart(li, 0); r.setEnd(range.startContainer, range.startOffset); return r.toString().replace(/\u200b/g, "") === "" })()
+        if (e.key === "Tab" && !e.altKey && !e.metaKey && !e.ctrlKey) {
+          e.preventDefault()
+          if (!e.shiftKey) document.execCommand("indent")
+          else if (nested) document.execCommand("outdent")
+          syncContent()
+          return
+        }
+        if (e.key === "Backspace" && nested && atStart) {
+          e.preventDefault()
+          document.execCommand("outdent")
+          syncContent()
+          return
+        }
+      }
+    }
+
     // Tab → table navigation
     if (e.key === "Tab") {
       let cell: HTMLElement | null = null, cn: Node | null = range.startContainer

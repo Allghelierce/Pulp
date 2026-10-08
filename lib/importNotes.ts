@@ -36,12 +36,17 @@ type Parsed = { blocks: Block[]; title?: string };
 type ListItem = { level: number; ordered: boolean; html: string; text: string };
 
 const SPACER = "<div><br></div>";
-const headingHtml = (t: string) => `<h2 style="font-size:1.75rem;font-weight:700;margin:1rem 0">${escapeHtml(t)}</h2>`;
-const subheadHtml = (t: string) => `<h3 style="font-size:1.25rem;font-weight:700;margin:0.75rem 0 0.25rem">${escapeHtml(t)}</h3>`;
+// Everything sits on the page's ruled lines: block heights are whole rows of --pulp-rule
+// (the ruling gap, set by the editor), so no margins — a heading takes two rows (one blank
+// above it, its text on the second), a spacer one.
+const RULE = "var(--pulp-rule,32px)";
+const headingHtml = (t: string) => `<h2 style="font-size:1.35em;font-weight:700;margin:0;padding-top:${RULE};line-height:${RULE}">${escapeHtml(t)}</h2>`;
+const subheadHtml = (t: string) => `<h3 style="font-size:1.1em;font-weight:700;margin:0;line-height:${RULE}">${escapeHtml(t)}</h3>`;
 const textHtml = (t: string) => `<div>${t.split("\n").map(escapeHtml).join("<br>")}</div>`;
-const QUOTE_OPEN = '<blockquote style="border-left:3px solid rgba(128,128,128,.45);margin:0.25rem 0;padding-left:0.75rem">';
-const TABLE_OPEN = '<table style="border-collapse:collapse;margin:0.25rem 0">';
-const CELL_OPEN = '<td style="border:1px solid rgba(128,128,128,.35);padding:4px 8px;vertical-align:top">';
+const QUOTE_OPEN = '<blockquote style="border-left:3px solid rgba(128,128,128,.45);margin:0;padding-left:0.75rem">';
+// Cell borders are drawn with shadows so they add no height (rows stay on the ruling).
+const TABLE_OPEN = '<table style="border-collapse:collapse;margin:0;box-shadow:inset 1px 1px 0 rgba(128,128,128,.35)">';
+const CELL_OPEN = '<td style="padding:0 8px;vertical-align:top;box-shadow:inset -1px -1px 0 rgba(128,128,128,.35)">';
 
 let wrapSeq = 0;
 const listWrap = (ordered: boolean): Wrap => ({ id: ++wrapSeq, open: ordered ? "<ol>" : "<ul>", close: ordered ? "</ol>" : "</ul>" });
@@ -108,7 +113,7 @@ export function parsePastedText(text: string, title?: string): ImportDoc {
 
 /**
  * Rich paste (the clipboard's text/html — Google Docs, Word, Notion, Apple Notes,
- * OneNote, web pages): keeps headings → pages, lists, bold/italic, links, tables,
+ * OneNote, web pages): keeps headings → sections, lists, bold/italic, links, tables,
  * and the source's paragraph spacing. Falls back to the plain text when the HTML
  * carries no structure.
  */
@@ -693,7 +698,7 @@ function markdownBlocks(src: string): Parsed {
     if (/^\s*(```|~~~)/.test(raw)) {
       if (code) {
         const t = code.join("\n").replace(/\s+$/, "");
-        if (t.trim()) blocks.push({ text: t, html: `<pre><code>${escapeHtml(t)}</code></pre>`, gap: gap() || blocks.length > 0 });
+        if (t.trim()) blocks.push({ text: t, html: `<pre style="margin:0;white-space:pre-wrap"><code>${escapeHtml(t)}</code></pre>`, gap: gap() || blocks.length > 0 });
         code = null;
       } else { flushAll(); code = []; }
       continue;
@@ -762,7 +767,7 @@ function markdownBlocks(src: string): Parsed {
   }
   if (code) {
     const t = (code as string[]).join("\n").replace(/\s+$/, "");
-    if (t.trim()) blocks.push({ text: t, html: `<pre><code>${escapeHtml(t)}</code></pre>`, gap: blocks.length > 0 });
+    if (t.trim()) blocks.push({ text: t, html: `<pre style="margin:0;white-space:pre-wrap"><code>${escapeHtml(t)}</code></pre>`, gap: blocks.length > 0 });
   }
   flushAll();
   return { blocks, title };
@@ -896,6 +901,7 @@ const BLOCK_TAGS = new Set([
 const BLOCK_SELECTOR = Array.from(BLOCK_TAGS).filter(t => t !== "BODY" && t !== "HTML").map(t => t.toLowerCase()).join(",");
 const HTML_SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE", "SVG", "IFRAME", "OBJECT", "HEAD", "TITLE", "BUTTON", "SELECT", "CANVAS", "IMG", "INPUT", "META", "LINK", "VIDEO", "AUDIO", "MATH"]);
 const DEFAULT_GAP_TAGS = new Set(["P", "UL", "OL", "TABLE", "BLOCKQUOTE", "PRE", "DL", "FIGURE", "H4", "H5", "H6"]);
+const LIST_TAGS = new Set(["UL", "OL", "LI"]);
 
 function hasStructure(html: string): boolean {
   if (typeof DOMParser === "undefined") return false;
@@ -914,6 +920,8 @@ function htmlBlocks(src: string): Parsed {
   let pTitle: string | undefined;
   let pendingGap = false;
   let prevBottom = 0;   // margin-bottom (pt) of the previous block
+  let prevImplicit = false; // …taken from the tag's default, not the source's own styles
+  let prevList = false;
   let inline: Node[] = [];
   let wordItems: ListItem[] = [];
   let wordGap = false;
@@ -925,10 +933,16 @@ function htmlBlocks(src: string): Parsed {
   };
   const gapFor = (el: Element | null): boolean => {
     const m = el ? marginsPt(el) : null;
-    const defaultGap = !!el && DEFAULT_GAP_TAGS.has(el.tagName);
-    const top = m?.top ?? (defaultGap ? 12 : 0);
-    const g = out.length > 0 && (pendingGap || top >= 5 || prevBottom >= 5);
-    prevBottom = m?.bottom ?? (defaultGap ? 12 : 0);
+    const def = el && DEFAULT_GAP_TAGS.has(el.tagName) ? 12 : 0;
+    const list = !!el && LIST_TAGS.has(el.tagName);
+    // Unstyled HTML (Notion, plain web markup): a list hugs the line above and below it,
+    // like in the note apps it came from — tag-default margins don't add a blank row there.
+    const top = m ? m.top : list || prevList ? 0 : def;
+    const before = prevImplicit && (list || prevList) ? 0 : prevBottom;
+    const g = out.length > 0 && (pendingGap || top >= 5 || before >= 5);
+    prevBottom = m?.bottom ?? def;
+    prevImplicit = !m;
+    prevList = list;
     pendingGap = false;
     return g;
   };
@@ -956,7 +970,7 @@ function htmlBlocks(src: string): Parsed {
           flushWordList();
           out.push({ level: Number(tag[1]), text: t, html: "" });
           pendingGap = false;
-          prevBottom = 0;
+          prevBottom = 0; prevImplicit = false; prevList = false;
         }
         return;
       }
@@ -997,7 +1011,7 @@ function htmlBlocks(src: string): Parsed {
       }
       case "PRE": {
         const t = (el.textContent ?? "").replace(/\s+$/, "");
-        if (t.trim()) emit({ text: t, html: `<pre><code>${escapeHtml(t)}</code></pre>` }, el);
+        if (t.trim()) emit({ text: t, html: `<pre style="margin:0;white-space:pre-wrap"><code>${escapeHtml(t)}</code></pre>` }, el);
         return;
       }
       case "BLOCKQUOTE": {
