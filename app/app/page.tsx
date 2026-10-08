@@ -330,7 +330,7 @@ const ScrollModePage = memo(function ScrollModePage({
 
 const BoxItem = memo(function BoxItem({
   box, boxIndex = 0, isSelected, selectedCount, loadingBoxId, accentSolid, theme, paperStyle, handwrittenEffect,
-  startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
+  startDrag, startResize, deleteBox, removeIfEmpty, updateBox, updateBoxContent, setSelectedBoxIds,
   onKeyDown, onInput, onRewrite,
   formattingOpen, setFormattingOpen, aiOpen, setAiOpen,
   onDragStart, onDragEnd, spellCheck: spellCheckProp, autoCorrect
@@ -340,6 +340,7 @@ const BoxItem = memo(function BoxItem({
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
   deleteBox: (id: string) => void
+  removeIfEmpty?: (id: string) => void
   updateBox: (id: string, updates: Partial<TextBoxType>) => void
   updateBoxContent: (id: string, v: string) => void
   setSelectedBoxIds: (v: Set<string> | ((p: Set<string>) => Set<string>)) => void
@@ -619,6 +620,7 @@ const BoxItem = memo(function BoxItem({
             sizeLocked={box.sizeLocked}
             onUpdate={(id, updates) => updateBox(id, updates)}
             onFocus={() => setSelectedBoxIds(new Set([box.id]))}
+            onBlurEmpty={removeIfEmpty && !isSticky ? () => removeIfEmpty(box.id) : undefined}
             onKeyDown={onKeyDown}
             onInput={onInput}
             theme={theme}
@@ -916,6 +918,8 @@ interface BoxTextareaProps {
   isSticky?: boolean; sizeLocked?: boolean; theme: "light" | "dark"; paperStyle: PaperStyle; handwrittenEffect: boolean
   onUpdate: (id: string, updates: Partial<TextBoxType>) => void
   onFocus: () => void
+  /** Called when the user clicks away and the box is still empty (it gets removed). */
+  onBlurEmpty?: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
   onInput: (e: React.FormEvent<HTMLElement>) => void
   spellCheck?: boolean
@@ -923,7 +927,7 @@ interface BoxTextareaProps {
 }
 
 const BoxTextarea = memo(function BoxTextarea({
-  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, sizeLocked, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput, spellCheck: spellCheckProp, autoCorrect
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, sizeLocked, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onBlurEmpty, onKeyDown, onInput, spellCheck: spellCheckProp, autoCorrect
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
@@ -1158,6 +1162,17 @@ const BoxTextarea = memo(function BoxTextarea({
       onBlur={() => {
         clearTimeout(timerRef.current)
         syncState()
+        // Clicked away from an empty box: remove it — unless focus just moved to this
+        // box's own controls (formatting / AI menus), checked after the click lands.
+        if (!onBlurEmpty) return
+        setTimeout(() => {
+          const el = ref.current
+          if (!el || !el.isConnected) return
+          const container = document.getElementById(`box-${id}`)
+          if (container && container.contains(document.activeElement)) return
+          const hasMedia = !!el.querySelector('img, video, iframe, table, hr, input, svg')
+          if (!el.innerText.replace(/\u200b/g, '').trim() && !hasMedia) onBlurEmpty()
+        }, 120)
       }}
       style={{
         width: "100%", outline: "none",
@@ -4448,6 +4463,7 @@ export default function NoteApp() {
                                   startDrag={boxes.startDrag}
                                   startResize={boxes.startResize}
                                   deleteBox={boxes.deleteBox}
+                                  removeIfEmpty={boxes.removeIfEmpty}
                                   updateBox={boxes.updateBox}
                                   updateBoxContent={boxes.updateBoxContent}
                                   setSelectedBoxIds={boxes.setSelectedBoxIds}

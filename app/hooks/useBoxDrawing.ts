@@ -713,6 +713,19 @@ export function useBoxDrawing({
     setHlineSelectionVersion(c => c + 1)
   }, [pushUndo, setNotes, setSelectedBoxIds])
 
+  // A text box left empty when the user clicks away just goes away — quietly (no
+  // eraser dust, no undo step). Sticky notes (highlight color) are kept.
+  const removeIfEmpty = useCallback((id: string) => {
+    updateBoxes(bs => {
+      const b = bs.find(x => x.id === id)
+      if (!b || b.boxHighlightColor) return bs
+      const text = b.content.replace(/<br\s*\/?>|&nbsp;|<\/?(div|p|span|b|i|u|strong|em|font)[^>]*>/gi, "").trim()
+      if (text || /<(img|video|iframe|table|hr|input|svg)\b/i.test(b.content)) return bs
+      return bs.filter(x => x.id !== id)
+    })
+    setSelectedBoxIds(prev => { if (!prev.has(id)) return prev; const n = new Set(prev); n.delete(id); return n })
+  }, [updateBoxes, setSelectedBoxIds])
+
   const deleteBox = useCallback((id: string) => {
     pushUndo()
     const element = document.getElementById(`box-${id}`)
@@ -971,7 +984,7 @@ export function useBoxDrawing({
     selectionVersion, selectedBoxIdsRef, selectedDrawingIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
     lineSelectionVersion, selectedLineRef,
     hlineSelectionVersion, selectedHLineIdsRef, selectHLines, commitHLines, addHLine, pushUndo,
-    onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes,
+    onPaperMouseDown, startDrag, startResize, deleteBox, removeIfEmpty, updateBoxContent, updateBox, updateBoxes,
     autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, rewriteBox
-  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, hlineSelectionVersion, selectHLines, commitHLines, addHLine, pushUndo, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, rewriteBox])
+  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, hlineSelectionVersion, selectHLines, commitHLines, addHLine, pushUndo, onPaperMouseDown, startDrag, startResize, deleteBox, removeIfEmpty, updateBoxContent, updateBox, updateBoxes, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, rewriteBox])
 }
