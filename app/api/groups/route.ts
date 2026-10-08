@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
-import { generateInviteCode, validateTerm, PARTY_CAP } from "@/lib/social"
+import { generateInviteCode, seasonDates, PARTY_CAP } from "@/lib/social"
 import { archiveIfExpired, activePartyOf, IN_A_PARTY } from "@/lib/partyServer"
 
 export async function GET(req: Request) {
@@ -33,8 +33,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ group, members: hydrated })
   }
 
-  const { data: rows } = await supabaseAdmin.from('group_members')
+  const { data: rows, error } = await supabaseAdmin.from('group_members')
     .select('study_groups(*)').eq('user_id', user.id).eq('status', 'active')
+  // An empty list means "no party" to the client, so a failed lookup must not look like one.
+  if (error) return NextResponse.json({ error: "Couldn't load your party" }, { status: 500 })
   const groups = (await Promise.all((rows ?? []).map((r: any) => r.study_groups ? archiveIfExpired(r.study_groups) : null))).filter(Boolean)
   return NextResponse.json({ groups })
 }
@@ -52,8 +54,6 @@ export async function POST(req: Request) {
 
   const name = typeof body.name === 'string' ? body.name.trim().slice(0, 60) : ''
   if (name.length < 2) return NextResponse.json({ error: "Name too short" }, { status: 400 })
-  const term = validateTerm(body.term_start, body.term_end)
-  if (!term.ok) return NextResponse.json({ error: term.error }, { status: 400 })
   // One active party per player.
   if (await activePartyOf(user.id)) return NextResponse.json({ error: IN_A_PARTY }, { status: 409 })
 
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     const { data, error } = await supabaseAdmin.from('study_groups').insert({
       owner_id: user.id, name, school: body.school ?? null,
       invite_code: generateInviteCode(),
-      term_start: body.term_start, term_end: body.term_end,
+      ...seasonDates(), // every party gets a fresh 3-month season; client dates are ignored
       max_members: PARTY_CAP,
     }).select().single()
     if (!error) group = data

@@ -35,9 +35,10 @@ export async function GET(req: Request) {
   const nameOf = (uid: string) => uname[uid] || 'writer'
 
   // Weekly rows since the season's first week. A renewed season starts mid-week,
-  // so that one week can carry a few minutes from the season before.
+  // so that one week can carry a few minutes (and trees) from the season before.
+  const seasonStart = getWeekStart(new Date(`${termStart}T12:00:00Z`))
   const { data: weeks } = await supabaseAdmin.from('group_weekly')
-    .select('user_id, week_start, focus_minutes').eq('group_id', id).gte('week_start', getWeekStart(new Date(`${termStart}T12:00:00Z`)))
+    .select('user_id, week_start, focus_minutes').eq('group_id', id).gte('week_start', seasonStart)
   const weekMin: Record<string, number> = {}
   const termMin: Record<string, number> = {}
   for (const w of weeks ?? []) {
@@ -46,7 +47,7 @@ export async function GET(req: Request) {
   }
 
   const { data: trees } = await supabaseAdmin.from('group_trees')
-    .select('user_id, planted_at').eq('group_id', id).gte('planted_at', termStart)
+    .select('user_id, planted_at').eq('group_id', id).gte('planted_at', seasonStart)
   const weekTrees: Record<string, number> = {}
   const termTrees: Record<string, number> = {}
   for (const t of trees ?? []) {

@@ -15,9 +15,11 @@ export async function archiveIfExpired<T extends { id: number; status: string; t
 }
 
 // The id of an active party this user already belongs to (ignoring `except`), or null.
+// Throws when the lookup fails, so the one-party rule fails closed (a 500).
 export async function activePartyOf(userId: string, except?: number): Promise<number | null> {
-  const { data } = await supabaseAdmin.from('group_members')
+  const { data, error } = await supabaseAdmin.from('group_members')
     .select('study_groups(id, status, term_end)').eq('user_id', userId).eq('status', 'active')
+  if (error) throw new Error(`activePartyOf: ${error.message}`)
   type Group = { id: number; status: string; term_end: string }
   for (const row of (data ?? []) as unknown as { study_groups: Group | Group[] | null }[]) {
     // Many-to-one embeds come back as an object (typed as an array without generated types).

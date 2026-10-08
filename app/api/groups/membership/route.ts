@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
-import { seasonDates } from "@/lib/social"
+import { seasonDates, PARTY_CAP } from "@/lib/social"
 import { activePartyOf, seasonOver, IN_A_PARTY } from "@/lib/partyServer"
 
 // Your own membership in a party: "active", "pending", or null (declined,
@@ -17,10 +17,16 @@ export async function GET(req: Request) {
   const groupId = Number(new URL(req.url).searchParams.get('groupId'))
   if (!groupId) return NextResponse.json({ error: "Missing groupId" }, { status: 400 })
 
-  const { data } = await supabaseAdmin.from('group_members')
+  const { data, error } = await supabaseAdmin.from('group_members')
     .select('status').eq('group_id', groupId).eq('user_id', user.id).maybeSingle()
+  // A failed lookup must not read as "declined": the client keeps waiting on a 500.
+  if (error) return NextResponse.json({ error: "Couldn't check" }, { status: 500 })
   return NextResponse.json({ status: data?.status ?? null })
 }
+
+// The cap is PARTY_CAP even if a row's max_members says more.
+const capOf = (group: { max_members: number | null }) => Math.min(group.max_members ?? PARTY_CAP, PARTY_CAP)
+const failed = (what: string) => NextResponse.json({ error: `Could not ${what}` }, { status: 500 })
 
 export async function POST(req: Request) {
   const ip = getRateLimitKey(req)
@@ -49,7 +55,7 @@ export async function POST(req: Request) {
 
     const { count } = await supabaseAdmin.from('group_members')
       .select('id', { count: 'exact', head: true }).eq('group_id', group.id).eq('status', 'active')
-    if ((count ?? 0) >= group.max_members) return NextResponse.json({ error: "Group full" }, { status: 400 })
+    if ((count ?? 0) >= capOf(group)) return NextResponse.json({ error: "Group full" }, { status: 400 })
 
     const { error } = await supabaseAdmin.from('group_members')
       .upsert({ group_id: group.id, user_id: user.id, role: 'member', status: 'pending' },
@@ -65,18 +71,20 @@ export async function POST(req: Request) {
     if (body.action === 'approve') {
       const { count } = await supabaseAdmin.from('group_members')
         .select('id', { count: 'exact', head: true }).eq('group_id', body.groupId).eq('status', 'active')
-      if ((count ?? 0) >= group.max_members) return NextResponse.json({ error: "Group full" }, { status: 400 })
+      if ((count ?? 0) >= capOf(group)) return NextResponse.json({ error: "Group full" }, { status: 400 })
       // They joined another party while waiting: drop the stale request.
       if (await activePartyOf(String(body.userId), Number(body.groupId))) {
         await supabaseAdmin.from('group_members').delete()
           .eq('group_id', body.groupId).eq('user_id', body.userId).eq('status', 'pending')
         return NextResponse.json({ error: "They already joined another party." }, { status: 409 })
       }
-      await supabaseAdmin.from('group_members').update({ status: 'active' })
+      const { error } = await supabaseAdmin.from('group_members').update({ status: 'active' })
         .eq('group_id', body.groupId).eq('user_id', body.userId)
+      if (error) return failed("let them in")
     } else {
-      await supabaseAdmin.from('group_members').delete()
+      const { error } = await supabaseAdmin.from('group_members').delete()
         .eq('group_id', body.groupId).eq('user_id', body.userId).eq('status', 'pending')
+      if (error) return failed("decline")
     }
     return NextResponse.json({ ok: true })
   }
@@ -87,30 +95,35 @@ export async function POST(req: Request) {
       .select('owner_id').eq('id', body.groupId).single()
     if (!group || group.owner_id !== user.id) return NextResponse.json({ error: "Not allowed" }, { status: 403 })
     if (!body.userId || body.userId === user.id) return NextResponse.json({ error: "You can't remove yourself" }, { status: 400 })
-    await supabaseAdmin.from('group_members').delete().eq('group_id', body.groupId).eq('user_id', body.userId)
+    const { error } = await supabaseAdmin.from('group_members').delete().eq('group_id', body.groupId).eq('user_id', body.userId)
+    if (error) return failed("remove them")
     return NextResponse.json({ ok: true })
   }
 
   // Owner starts a new season: today + 3 months, active again.
   if (body.action === 'renew') {
     const { data: group } = await supabaseAdmin.from('study_groups')
-      .select('owner_id, status').eq('id', body.groupId).single()
+      .select('owner_id, status, term_end').eq('id', body.groupId).single()
     if (!group || group.owner_id !== user.id) return NextResponse.json({ error: "Not allowed" }, { status: 403 })
     const groupId = Number(body.groupId)
     if (await activePartyOf(user.id, groupId)) return NextResponse.json({ error: IN_A_PARTY }, { status: 409 })
-    const { error } = await supabaseAdmin.from('study_groups')
-      .update({ ...seasonDates(), status: 'active' }).eq('id', groupId)
-    if (error) return NextResponse.json({ error: "Could not renew" }, { status: 500 })
-    // Reviving a finished party: members who moved on to another party stay there.
-    if (group.status !== 'active') {
-      const { data: members } = await supabaseAdmin.from('group_members')
+    // Reviving a finished party (archived, or expired but not archived yet):
+    // members who moved on to another party stay there. Done before the
+    // revive, so a failure here never leaves anyone in two active parties.
+    if (group.status !== 'active' || seasonOver(group)) {
+      const { data: members, error } = await supabaseAdmin.from('group_members')
         .select('user_id').eq('group_id', groupId).eq('status', 'active').neq('user_id', user.id)
+      if (error) return failed("renew the season")
       for (const m of members ?? []) {
         if (await activePartyOf(m.user_id, groupId)) {
-          await supabaseAdmin.from('group_members').delete().eq('group_id', groupId).eq('user_id', m.user_id)
+          const { error } = await supabaseAdmin.from('group_members').delete().eq('group_id', groupId).eq('user_id', m.user_id)
+          if (error) return failed("renew the season")
         }
       }
     }
+    const { error } = await supabaseAdmin.from('study_groups')
+      .update({ ...seasonDates(), status: 'active' }).eq('id', groupId)
+    if (error) return failed("renew the season")
     return NextResponse.json({ ok: true })
   }
 
