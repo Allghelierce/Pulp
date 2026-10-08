@@ -2,7 +2,7 @@
 // AI routes need auth, so they're mocked with page.route() — no DEV_SKIP_AUTH.
 import { test, expect, type Page } from "@playwright/test"
 
-const BASE = "http://localhost:3001"
+const BASE = process.env.PULP_URL || "http://localhost:3001"
 const CARDS = [
   { q: "What does photosynthesis convert light into?", a: "Chemical energy" },
   { q: "Where does photosynthesis happen?", a: "Chloroplasts" },
