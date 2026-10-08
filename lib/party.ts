@@ -3,7 +3,7 @@
 // is made by the server on create. A player is in at most one active party.
 import { apiFetch } from "./apiFetch"
 import { supabase } from "./supabase"
-import { PARTY_CAP, seasonDates, seasonOverAt } from "./social"
+import { PARTY_CAP, seasonOverAt, parseInviteCode } from "./social"
 
 export { PARTY_CAP }
 const ID_KEY = "pulp-party-id"           // current party's group id (for focus reporting)
@@ -140,8 +140,12 @@ export async function loadParty(): Promise<PartyState> {
       // or the party ended — stop waiting.
       const status = await membershipStatus(pending.groupId)
       if (status === "pending" || status === undefined) return { kind: "pending", code: pending.code }
-      write(PENDING_KEY, null)
-      if (status === null) write(DECLINED_KEY, pending.code)
+      // The presence sync loads too; whichever load gets here first records the
+      // answer, so a later one can't bring back a note the panel already showed.
+      if (read<{ groupId: number }>(PENDING_KEY)?.groupId === pending.groupId) {
+        write(PENDING_KEY, null)
+        if (status === null) write(DECLINED_KEY, pending.code)
+      }
     }
     // Kept until shown: the presence sync loads the party too, often first.
     const declined = read<string>(DECLINED_KEY) ?? undefined
@@ -202,7 +206,7 @@ export async function loadParty(): Promise<PartyState> {
 export async function createParty(name: string): Promise<void> {
   const res = await apiFetch("/api/groups", {
     method: "POST",
-    body: JSON.stringify({ name: name.trim(), ...seasonDates() }),
+    body: JSON.stringify({ name: name.trim() }), // the server sets the season
   })
   if (!res.ok) throw new Error(await errorOf(res, "Couldn't create the party"))
   markJoined()
@@ -210,8 +214,9 @@ export async function createParty(name: string): Promise<void> {
 }
 
 // Joining asks the owner; returns "active" if you were already in.
+// Takes a code or a pasted invite link.
 export async function joinParty(code: string): Promise<"pending" | "active"> {
-  const clean = code.trim().toUpperCase()
+  const clean = parseInviteCode(code)
   const res = await apiFetch("/api/groups/membership", {
     method: "POST",
     body: JSON.stringify({ action: "join", invite_code: clean }),
@@ -289,7 +294,9 @@ export function standings(p: Party, mode: StandingsMode = "week"): (PartyMember 
     .map((m, i) => ({ ...m, rank: i + 1 }))
 }
 
-// Whole days from today (local) to the season's last day; 0 = ends today.
+// Whole days from today (local) to the season's last day; 0 = ends today,
+// below 0 = your last day has passed but the season is still closing
+// (it stays open until term_end is over everywhere on Earth).
 export function seasonDaysLeft(termEnd: string, now: Date = new Date()): number {
   const [y, m, d] = termEnd.split("-").map(Number)
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -298,5 +305,5 @@ export function seasonDaysLeft(termEnd: string, now: Date = new Date()): number 
 
 export function seasonLabel(termEnd: string): string {
   const n = seasonDaysLeft(termEnd)
-  return n <= 0 ? "season ends today" : n === 1 ? "season ends tomorrow" : `season ends in ${n}d`
+  return n < 0 ? "season ending" : n === 0 ? "season ends today" : n === 1 ? "season ends tomorrow" : `season ends in ${n}d`
 }

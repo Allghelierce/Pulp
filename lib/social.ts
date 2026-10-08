@@ -33,19 +33,6 @@ export function validateUsername(raw: string): UsernameResult {
   return { ok: true, value }
 }
 
-export type TermResult = { ok: true } | { ok: false; error: string }
-
-export function validateTerm(startISO: string, endISO: string): TermResult {
-  const start = new Date(startISO)
-  const end = new Date(endISO)
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return { ok: false, error: 'Invalid dates' }
-  if (end.getTime() <= start.getTime()) return { ok: false, error: 'Term end must be after start' }
-  const max = new Date(start)
-  max.setMonth(max.getMonth() + 4)
-  if (end.getTime() > max.getTime()) return { ok: false, error: 'Term cannot exceed 4 months' }
-  return { ok: true }
-}
-
 // ── Party rules (shared by the API routes and the Party panel) ──────
 export const PARTY_CAP = 5
 export const SEASON_MONTHS = 3
@@ -62,6 +49,16 @@ export function seasonDates(from: Date = new Date()): { term_start: string; term
 // UTC midnight, which archived parties a day early.
 export function seasonOverAt(termEnd: string): number {
   return Date.parse(`${termEnd}T00:00:00Z`) + 36 * 3600 * 1000
+}
+
+// What a player pastes into "invite code" -> the 8-char code: a full
+// .../join/<CODE> link, " wxyz2345 ", "WXYZ-2345" or "code: WXYZ2345" all work.
+export function parseInviteCode(raw: string): string {
+  const v = (raw ?? '').trim()
+  const link = v.match(/\/join\/([A-Za-z0-9]{8})(?![A-Za-z0-9])/)
+  if (link) return link[1].toUpperCase()
+  const clean = v.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+  return clean.length > 8 ? clean.slice(-8) : clean
 }
 
 // "#PULP-AB2C" / "pulp-ab2c" -> "PULP-AB2C"; null if it isn't a friend code.

@@ -180,6 +180,144 @@ test("a declined join request stops waiting and says so", async ({ page }) => {
   await expect.poll(() => page.evaluate(() => localStorage.getItem("pulp-party-declined"))).toBeNull() // shown once
 })
 
+test("a declined note shows once, even when the presence sync's check lands late", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("pulp-party-pending", JSON.stringify({ groupId: 9, code: "WXYZ2345" })))
+  await signedIn(page, { groups: [] })
+  // Slow down the first membership check (the panel's or the presence sync's),
+  // so the other load answers first and the slow one lands after the note.
+  let calls = 0
+  let slowDone = false
+  await page.route(/\/api\/groups\/membership\?/, async r => {
+    if (calls++ === 0) { await new Promise(res => setTimeout(res, 1500)); slowDone = true }
+    return r.fulfill({ json: { status: null } })
+  })
+  const panel = await openParty(page)
+  const note = panel.getByText("Your request to join WXYZ2345 wasn't accepted.")
+  await expect(note).toBeVisible()
+  await expect.poll(() => slowDone && calls >= 2).toBe(true)
+  await page.waitForTimeout(300)
+  expect(await page.evaluate(() => localStorage.getItem("pulp-party-declined"))).toBeNull()
+  await panel.getByRole("button", { name: "Dismiss" }).click()
+  await page.evaluate(() => window.dispatchEvent(new Event("pulp-party-change")))
+  await expect(panel.getByRole("heading", { name: /Start a new party|Grow together/ })).toBeVisible()
+  await page.waitForTimeout(500)
+  await expect(note).toHaveCount(0)
+})
+
+test("a failed membership check keeps the request waiting", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("pulp-party-pending", JSON.stringify({ groupId: 9, code: "WXYZ2345" })))
+  await signedIn(page, { groups: [] })
+  await page.route(/\/api\/groups\/membership\?/, r => r.fulfill({ status: 500, json: { error: "Couldn't check" } }))
+  const panel = await openParty(page)
+  await expect(panel.getByText("Waiting to be let in")).toBeVisible()
+  expect(await page.evaluate(() => localStorage.getItem("pulp-party-pending"))).not.toBeNull()
+  expect(await page.evaluate(() => localStorage.getItem("pulp-party-declined"))).toBeNull()
+})
+
+test("a failed load says so and can be retried (party and friends)", async ({ page }) => {
+  await signedIn(page)
+  let failParty = true
+  let failFriends = true
+  await page.route("**/api/groups", r => (r.request().method() === "GET" && failParty ? r.fulfill({ status: 500, json: { error: "Database hiccup" } }) : r.fallback()))
+  await page.route("**/api/friends", r => (r.request().method() === "GET" && failFriends ? r.abort() : r.fallback()))
+  const panel = await openParty(page)
+  await expect(panel.getByTestId("party-load-error")).toContainText("Couldn't load your party.")
+  await expect(panel.getByTestId("party-load-error")).toContainText("Database hiccup")
+  failParty = false
+  await panel.getByRole("button", { name: "Try again" }).click()
+  await expect(panel.getByRole("heading", { name: "Night Owls" })).toBeVisible()
+
+  await panel.getByRole("button", { name: "friends", exact: true }).click()
+  await expect(panel.getByTestId("party-load-error")).toContainText("Couldn't load your friends.")
+  failFriends = false
+  await panel.getByRole("button", { name: "Try again" }).click()
+  await expect(panel.getByRole("heading", { name: "Friends" })).toBeVisible()
+})
+
+test("a refresh error clears once a later refresh works", async ({ page }) => {
+  await signedIn(page)
+  let fail = false
+  await page.route("**/api/groups", r => (r.request().method() === "GET" && fail ? r.abort() : r.fallback()))
+  const panel = await openParty(page)
+  await expect(panel.getByTestId("party-standings")).toContainText("@mira")
+  fail = true
+  await page.evaluate(() => window.dispatchEvent(new Event("pulp-party-change")))
+  const note = panel.getByText(/Couldn't refresh/)
+  await expect(note).toBeVisible()
+  await expect(panel.getByTestId("party-standings")).toContainText("@mira") // stale standings stay up
+  fail = false
+  await page.evaluate(() => window.dispatchEvent(new Event("pulp-party-change")))
+  await expect(note).toHaveCount(0)
+})
+
+test("join takes a pasted invite link or a code with stray spaces", async ({ page }) => {
+  const posted = await signedIn(page, {
+    groups: [],
+    membership: b => (b.action === "join" ? { status: 200, json: { ok: true, groupId: 9, status: "pending" } } : { status: 200, json: { ok: true } }),
+  })
+  await page.route(/\/api\/groups\/membership\?/, r => r.fulfill({ json: { status: "pending" } }))
+  const panel = await openParty(page)
+  await panel.getByRole("button", { name: /Join a party/ }).click()
+  const box = panel.getByPlaceholder("invite code")
+  await box.fill(`${BASE}/join/wxyz2345`)
+  await expect(box).toHaveValue("WXYZ2345")
+  await panel.getByRole("button", { name: "Join", exact: true }).click()
+  await expect.poll(() => posted.find(p => p.body.action === "join")?.body).toEqual({ action: "join", invite_code: "WXYZ2345" })
+  await expect(panel.getByText("Waiting to be let in")).toBeVisible()
+
+  await page.evaluate(() => localStorage.removeItem("pulp-party-pending"))
+  await page.evaluate(() => window.dispatchEvent(new Event("pulp-party-change")))
+  await panel.getByRole("button", { name: /Join a party/ }).click()
+  await panel.getByPlaceholder("invite code").fill(" abcd-2345 ")
+  await panel.getByRole("button", { name: "Join", exact: true }).click()
+  await expect.poll(() => posted.filter(p => p.body.action === "join").map(p => p.body.invite_code)).toEqual(["WXYZ2345", "ABCD2345"])
+})
+
+// Five members with long names: each name stays in its own slot, inside the frame.
+const LONG = ["procrastination_king", "xx_studymaster_xx22", "the_real_slim_shady", "photosynthesis_fan"]
+async function fullParty(page: Page, others = LONG.length) {
+  const long = LONG.slice(0, others)
+  const ids = long.map((_, i) => `00000000-0000-0000-0000-00000000010${i}`)
+  await page.route(/\/api\/groups\?id=/, r => r.fulfill({ json: {
+    group: { id: GROUP, name: "Night Owls", owner_id: ME, invite_code: "ABCD2345", term_start: isoIn(-49), term_end: isoIn(41), status: "active", max_members: 5 },
+    members: [{ user_id: ME, role: "owner", status: "active", username: "you_owl" },
+      ...long.map((username, i) => ({ user_id: ids[i], role: "member", status: "active", username })),
+      ...["night_reader", "quiet_quill", "late_lark"].map((username, i) => ({ user_id: `00000000-0000-0000-0000-00000000020${i}`, role: "member", status: "pending", username }))],
+  } }))
+  await page.route(/\/api\/groups\/leaderboard/, r => r.fulfill({ json: {
+    weekly: [...long.map((username, i) => ({ user_id: ids[i], username, focus_minutes: 200 - i * 40, trees: 1 })), { user_id: ME, username: "you_owl", focus_minutes: 30, trees: 0 }],
+    allTime: [],
+  } }))
+}
+
+test("grove names with long usernames don't collide or spill out of the frame", async ({ page }) => {
+  await page.setViewportSize({ width: 800, height: 900 })
+  await signedIn(page)
+  await fullParty(page)
+  const panel = await openParty(page)
+  const names = panel.getByTestId("grove-name")
+  await expect(names).toHaveCount(5)
+  await page.waitForTimeout(1200) // grove rise animation
+  const frame = (await panel.getByTestId("party-grove").boundingBox())!
+  const boxes = (await Promise.all((await names.all()).map(n => n.boundingBox()))).map(b => b!).sort((a, b) => a.x - b.x)
+  for (const b of boxes) {
+    expect(b.x).toBeGreaterThanOrEqual(frame.x)
+    expect(b.x + b.width).toBeLessThanOrEqual(frame.x + frame.width)
+  }
+  for (let i = 1; i < boxes.length; i++) expect(boxes[i].x).toBeGreaterThanOrEqual(boxes[i - 1].x + boxes[i - 1].width)
+})
+
+test("an action's result shows in view, even with the modal scrolled to the top", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 760 })
+  await signedIn(page, {
+    membership: b => (b.action === "approve" ? { status: 409, json: { error: "They already joined another party." } } : { status: 200, json: { ok: true } }),
+  })
+  await fullParty(page, 2) // room for one more
+  const panel = await openParty(page)
+  await panel.getByRole("button", { name: "Let in" }).first().click()
+  await expect(panel.getByText("They already joined another party.")).toBeInViewport()
+})
+
 for (const theme of ["light", "dark"] as const) {
   test(`screenshot: party panel (${theme})`, async ({ page }) => {
     test.skip(!SHOTS, "set PARTY_SHOTS=<dir> to save screenshots")
@@ -215,3 +353,23 @@ test("screenshot: season recap + friends (light)", async ({ page }) => {
   await expect(panel.getByText("#PULP-AB2C")).toBeVisible()
   await page.screenshot({ path: `${SHOTS}/party-friends-light.png` })
 })
+
+for (const theme of ["light", "dark"] as const) {
+  test(`screenshot: long names, a pinned note, a failed load (${theme})`, async ({ page }) => {
+    test.skip(!SHOTS, "set PARTY_SHOTS=<dir> to save screenshots")
+    await page.setViewportSize({ width: 800, height: 760 })
+    await signedIn(page, { theme, membership: b => (b.action === "approve" ? { status: 409, json: { error: "They already joined another party." } } : { status: 200, json: { ok: true } }) })
+    await fullParty(page, 3)
+    const panel = await openParty(page)
+    await expect(panel.getByTestId("grove-name")).toHaveCount(4)
+    await page.waitForTimeout(1200) // grove rise animation
+    await panel.getByTestId("party-grove").screenshot({ path: `${SHOTS}/grove-long-${theme}.png` })
+    await panel.getByRole("button", { name: "Let in" }).first().click()
+    await expect(panel.getByText("They already joined another party.")).toBeVisible()
+    await page.screenshot({ path: `${SHOTS}/note-${theme}.png` })
+    await page.route("**/api/groups", r => (r.request().method() === "GET" ? r.fulfill({ status: 500, json: { error: "Couldn't load your party" } }) : r.fallback()))
+    await openParty(page)
+    await expect(page.getByTestId("party-load-error")).toBeVisible()
+    await page.screenshot({ path: `${SHOTS}/load-error-${theme}.png` })
+  })
+}

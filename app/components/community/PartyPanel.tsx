@@ -9,6 +9,7 @@ import { useGroveStore } from "@/app/store/useGroveStore"
 import { TREE_TYPES } from "@/app/constants"
 import { getWeekStart } from "@/lib/leagues"
 import { ACCENT, ACCENT_CONTRAST, accentAlpha } from "@/lib/accent"
+import { parseInviteCode } from "@/lib/social"
 import { SCENE_CSS, GroveBackdrop } from "@/app/components/GroveScene"
 
 const accent = ACCENT
@@ -50,23 +51,28 @@ const centerOut = (n: number) => {
 export { SCENE_CSS, GroveBackdrop }
 
 type GroveMember = { id: string; username: string; weeklyMinutes: number; rank: number; isYou?: boolean }
+const GROVE_PAD = 16 // keeps the end trees inside the frame
 // focusLeft: user id -> minutes left in their running focus session.
 function PartyGrove({ members, cap, isDark, focusLeft }: { members: GroveMember[]; cap: number; isDark: boolean; focusLeft: Record<string, number> }) {
   const H = 210
   const slots = centerOut(cap)
   const label = isDark ? '#e7e5e4' : '#3f3a33'
+  // Each member gets an equal-width slot (no transform: groveRise animates
+  // transform); names that don't fit end in "…" (full name in the tooltip).
+  const slotW = `((100% - ${2 * GROVE_PAD}px) / ${cap})`
+  const slotBox = (i: number) => ({ position: 'absolute', left: `calc(${GROVE_PAD}px + ${slotW} * ${slots[i]})`, width: `calc(${slotW})` } as const)
+  const fit = { maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as const
   return (
-    <div style={{ position: 'relative', height: H, borderRadius: 16, overflow: 'hidden', marginTop: 14,
+    <div data-testid="party-grove" style={{ position: 'relative', height: H, borderRadius: 16, overflow: 'hidden', marginTop: 14,
       border: `1px solid ${isDark ? 'rgba(167,243,208,0.10)' : 'rgba(120,140,90,0.25)'}`,
       boxShadow: isDark ? 'inset 0 -30px 60px rgba(0,0,0,0.35), 0 10px 30px -12px rgba(0,0,0,0.6)' : 'inset 0 -20px 40px rgba(60,90,40,0.12), 0 10px 30px -14px rgba(80,60,20,0.35)' }}>
       <style>{SCENE_CSS}</style>
       <GroveBackdrop isDark={isDark} height={H} />
       {Array.from({ length: cap }, (_, i) => {
         const m = members[i]
-        const left = `${((slots[i] + 0.5) / cap) * 100}%`
         if (!m) {
           return (
-            <div key={`empty-${i}`} title="open plot — share the invite code" style={{ position: 'absolute', left, bottom: 26, transform: 'translateX(-50%)', textAlign: 'center' }}>
+            <div key={`empty-${i}`} title="open plot — share the invite code" style={{ ...slotBox(i), bottom: 26, textAlign: 'center' }}>
               <div style={{ width: 30, height: 9, borderRadius: '50%', margin: '0 auto',
                 background: isDark ? 'rgba(120,83,48,0.55)' : 'rgba(120,83,48,0.35)', border: `1px dashed ${isDark ? 'rgba(253,230,138,0.25)' : 'rgba(120,83,48,0.45)'}` }} />
               <div style={{ fontSize: 10, color: isDark ? 'rgba(231,229,228,0.35)' : 'rgba(63,58,51,0.45)', marginTop: 4, letterSpacing: '0.06em' }}>open</div>
@@ -80,7 +86,7 @@ function PartyGrove({ members, cap, isDark, focusLeft }: { members: GroveMember[
         const focusing = minsLeft != null
         return (
           <div key={m.id} className="grove-anim" title={`@${m.username} · ${m.weeklyMinutes} min this week`}
-            style={{ position: 'absolute', left, bottom: 18, transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center',
+            style={{ ...slotBox(i), bottom: 18, display: 'flex', flexDirection: 'column', alignItems: 'center',
               animation: `groveRise .7s cubic-bezier(.2,.8,.2,1) ${i * 0.08}s both` }}>
             <div style={{ position: 'relative' }}>
               {focusing && <div className="grove-anim" style={{ position: 'absolute', inset: -12, borderRadius: '50%',
@@ -91,12 +97,12 @@ function PartyGrove({ members, cap, isDark, focusLeft }: { members: GroveMember[
               <PlantIcon type={speciesFor(m.username)} size={size} stage={stage} hideGround />
             </div>
             <div style={{ width: size * 0.55, height: 6, borderRadius: '50%', marginTop: -3, background: 'rgba(0,0,0,0.25)', filter: 'blur(2px)' }} />
-            <div style={{ marginTop: 3, fontSize: 11, color: m.isYou ? accent : label, fontWeight: m.isYou ? 600 : 400, whiteSpace: 'nowrap',
+            <div data-testid="grove-name" style={{ ...fit, marginTop: 3, padding: '0 2px', boxSizing: 'border-box', fontSize: 11, color: m.isYou ? accent : label, fontWeight: m.isYou ? 600 : 400,
               textShadow: isDark ? '0 1px 2px rgba(0,0,0,0.6)' : '0 1px 0 rgba(255,255,255,0.6)' }}>
               {lead ? '👑 ' : ''}{m.isYou ? 'you' : `@${m.username}`}
             </div>
             {focusing && (
-              <div style={{ fontSize: 10, color: '#34d399', whiteSpace: 'nowrap', marginTop: 1, letterSpacing: '0.02em' }}>
+              <div style={{ ...fit, fontSize: 10, color: '#34d399', marginTop: 1, letterSpacing: '0.02em' }}>
                 focusing{minsLeft > 0 ? ` · ${minsLeft}m` : ''}
               </div>
             )}
@@ -225,25 +231,49 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
   const [code, setCode] = useState("")
   const [friendInput, setFriendInput] = useState("")
   const [msg, setMsg] = useState<{ text: string; ok?: boolean } | null>(null)
+  // A failed load of either tab (kept apart from action messages; a good load clears it).
+  const [loadErr, setLoadErr] = useState<{ party?: string; friends?: string }>({})
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
 
-  // Loads can overlap (poll + action); only the newest one may set state.
-  const partySeq = useRef(0)
-  const friendsSeq = useRef(0)
+  // Loads can overlap (poll + action). A result shows unless a newer one already
+  // did; a failure shows only if it was the newest load, so an older good
+  // result is never thrown away for a newer failure.
+  const partySeq = useRef({ started: 0, shown: 0 })
+  const friendsSeq = useRef({ started: 0, shown: 0 })
+  const screen = useRef<string | null>(null) // which party screen is up ("in:7", "none", …)
+  const errText = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong')
   const refreshParty = useCallback(() => {
-    const seq = ++partySeq.current
+    const seq = ++partySeq.current.started
     loadParty().then(s => {
-      if (seq !== partySeq.current) return
+      if (seq < partySeq.current.shown) return
+      partySeq.current.shown = seq
       setParty(s)
+      setLoadErr(e => (e.party ? { ...e, party: undefined } : e))
+      // A different screen now (let in, removed, season over): an old error no longer applies.
+      const next = s.kind === 'in' ? `in:${s.party.id}` : s.kind
+      if (screen.current && screen.current !== next) setMsg(m => (m && !m.ok ? null : m))
+      screen.current = next
       if (s.kind === 'none' && s.declined) { setMsg({ text: `Your request to join ${s.declined} wasn't accepted.` }); clearDeclined() }
-    }).catch(e => setMsg({ text: e.message }))
+    }).catch(e => { if (seq === partySeq.current.started) setLoadErr(x => ({ ...x, party: errText(e) })) })
   }, [])
   const refreshFriends = useCallback(() => {
-    const seq = ++friendsSeq.current
-    loadFriends().then(s => { if (seq === friendsSeq.current) setFriends(s) }).catch(e => setMsg({ text: e.message }))
+    const seq = ++friendsSeq.current.started
+    loadFriends().then(s => {
+      if (seq < friendsSeq.current.shown) return
+      friendsSeq.current.shown = seq
+      setFriends(s)
+      setLoadErr(e => (e.friends ? { ...e, friends: undefined } : e))
+    }).catch(e => { if (seq === friendsSeq.current.started) setLoadErr(x => ({ ...x, friends: errText(e) })) })
   }, [])
+
+  // "Done" notes fade on their own; errors stay until dismissed or replaced.
+  useEffect(() => {
+    if (!msg?.ok) return
+    const t = setTimeout(() => setMsg(m => (m === msg ? null : m)), 4000)
+    return () => clearTimeout(t)
+  }, [msg])
 
   useEffect(() => {
     const first = setTimeout(() => { refreshParty(); refreshFriends() }, 0)
@@ -288,7 +318,22 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
       ))}
     </div>
   )
-  const Msg = msg && <p style={{ color: msg.ok ? '#22c55e' : '#ef4444', fontSize: 13, margin: '10px 2px 0' }}>{msg.text}</p>
+  // Action results (and a failed refresh) as a note pinned to the bottom of the
+  // scrolling modal, so it's in view whichever button was pressed.
+  const tabErr = loadErr[tab]
+  const retry = tab === 'party' ? refreshParty : refreshFriends
+  const note = msg ?? (tabErr ? { text: `Couldn't refresh: ${tabErr}`, ok: false } : null)
+  const Msg = note && (
+    <div role={note.ok ? 'status' : 'alert'} style={{ position: 'sticky', bottom: 12, zIndex: 3, marginTop: 14, display: 'flex', alignItems: 'center', gap: 10,
+      padding: '8px 10px 8px 12px', borderRadius: 10, fontSize: 13, color: note.ok ? '#22c55e' : '#ef4444',
+      background: isDark ? '#27272a' : '#fff', border: `1px solid ${note.ok ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)'}`,
+      boxShadow: isDark ? '0 8px 24px -8px rgba(0,0,0,0.7)' : '0 8px 24px -10px rgba(0,0,0,0.25)' }}>
+      <span style={{ flex: 1 }}>{note.text}</span>
+      {!msg && <button onClick={retry} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: accent, fontFamily: 'Crimson Pro, serif', fontSize: 13 }}>retry</button>}
+      <button aria-label="Dismiss" onClick={() => (msg ? setMsg(null) : setLoadErr(e => ({ ...e, [tab]: undefined })))}
+        style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: sub, fontSize: 15, lineHeight: 1 }}>×</button>
+    </div>
+  )
 
   const SignIn = (what: string) => (
     <div style={{ textAlign: 'center' }}>
@@ -300,7 +345,15 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
       <button onClick={() => { window.location.href = '/login' }} style={btn()}>Sign in</button>
     </div>
   )
-  const Loading = <p style={{ color: sub, fontSize: 14 }}>Loading…</p>
+  // First load of a tab: "Loading…", or what went wrong and a way to try again.
+  const failedWhat = tab === 'party' ? "Couldn't load your party" : "Couldn't load your friends"
+  const Loading = tabErr ? (
+    <div data-testid="party-load-error" style={{ textAlign: 'center', padding: '18px 0 6px' }}>
+      <p style={{ color: text, fontSize: 15, margin: '0 0 4px' }}>{failedWhat}.</p>
+      <p style={{ color: sub, fontSize: 13, margin: '0 0 14px' }}>{tabErr.replace(/\.$/, '') === failedWhat ? 'Check your connection, then try again.' : tabErr}</p>
+      <button onClick={() => { setLoadErr(e => ({ ...e, [tab]: undefined })); retry() }} style={btn()}>Try again</button>
+    </div>
+  ) : <p style={{ color: sub, fontSize: 14 }}>Loading…</p>
 
   // ── FRIENDS TAB ───────────────────────────────────────────────────
   if (tab === 'friends') {
@@ -334,7 +387,6 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
                 style={{ ...field, flex: 1 }} onKeyDown={e => { if (e.key === 'Enter' && friendInput.trim() && !busy) add() }} />
               <button onClick={add} disabled={!friendInput.trim() || busy} style={btn(!!friendInput.trim() && !busy)}>Add</button>
             </div>
-            {Msg}
 
             {friends.incoming.length > 0 && (
               <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -364,6 +416,7 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
                 </FriendRow>
               ))}
             </div>
+            {Msg}
           </>
         )}
       </div>
@@ -423,9 +476,10 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
             <style>{SCENE_CSS}</style>
             <GroveBackdrop isDark={isDark} height={110} />
             {([['sakura', 1, 30], ['oak', 3, 50], ['pine', 2, 70]] as const).map(([type, stage, x], i) => (
-              <div key={i} className="grove-anim" style={{ position: 'absolute', left: `${x}%`, bottom: 8, transform: 'translateX(-50%)',
-                animation: `groveRise .8s cubic-bezier(.2,.8,.2,1) ${i * 0.15}s both` }}>
-                <PlantIcon type={type} size={40 + stage * 10} stage={stage} hideGround />
+              <div key={i} style={{ position: 'absolute', left: `${x}%`, bottom: 8, transform: 'translateX(-50%)' }}>
+                <div className="grove-anim" style={{ animation: `groveRise .8s cubic-bezier(.2,.8,.2,1) ${i * 0.15}s both` }}>
+                  <PlantIcon type={type} size={40 + stage * 10} stage={stage} hideGround />
+                </div>
               </div>
             ))}
           </div>
@@ -451,7 +505,9 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
         )}
         {mode === 'join' && (
           <div style={{ display: 'flex', gap: 8 }}>
-            <input autoFocus value={code} onChange={e => setCode(e.target.value)} placeholder="invite code" maxLength={8}
+            {/* A pasted invite link becomes its code; joinParty also tidies spaces and dashes. */}
+            <input autoFocus value={code} placeholder="invite code or link"
+              onChange={e => setCode(e.target.value.includes('/join/') ? parseInviteCode(e.target.value) : e.target.value)}
               style={{ ...field, flex: 1, textTransform: 'uppercase', letterSpacing: '0.1em' }}
               onKeyDown={e => { if (e.key === 'Enter' && code.trim() && !busy) join(); if (e.key === 'Escape') setMode('choose') }} />
             <button onClick={join} disabled={!code.trim() || busy} style={btn(!!code.trim() && !busy)}>Join</button>
@@ -498,7 +554,7 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
         {p.isOwner && daysLeft <= RENEW_WINDOW && (
           <>
             <span>·</span>
-            <button disabled={busy} onClick={() => onConfirm('Start a new season?', 'Three more months, starting today. Weekly standings carry on.', () => run(() => renewParty(p.id), 'New season started.'), 'Renew')}
+            <button disabled={busy} onClick={() => onConfirm('Start a new season?', "Three more months, starting today. Season standings start over; this week's minutes still count.", () => run(() => renewParty(p.id), 'New season started.'), 'Renew')}
               style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: accent, fontFamily: 'Crimson Pro, serif', fontSize: 12.5 }}>renew season</button>
           </>
         )}
@@ -604,7 +660,6 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
           </div>
         </div>
       )}
-      {Msg}
 
       <button disabled={busy} onClick={() => onConfirm(
           p.isOwner ? 'End this party?' : 'Leave this party?',
@@ -613,6 +668,7 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
         style={{ marginTop: 18, color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
         {p.isOwner ? 'End party' : 'Leave party'}
       </button>
+      {Msg}
     </div>
   )
 })
