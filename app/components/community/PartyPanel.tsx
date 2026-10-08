@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback, useRef, memo } from "react"
-import { loadParty, createParty, joinParty, cancelJoin, answerRequest, removeMember, renewParty, leaveParty, standings, minutesIn, treesIn,
+import { loadParty, createParty, joinParty, cancelJoin, clearDeclined, answerRequest, removeMember, renewParty, leaveParty, standings, minutesIn, treesIn,
   seasonLabel, seasonDaysLeft, hasJoinedBefore, PARTY_CAP, type PartyState, type PartyRecap, type StandingsMode } from "@/lib/party"
 import { loadFriends, addFriend, answerFriend, removeFriend, type FriendsState, type Friend } from "@/lib/friends"
 import { PlantIcon } from "@/app/components/PlantIcon"
@@ -237,7 +237,7 @@ export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme
     loadParty().then(s => {
       if (seq !== partySeq.current) return
       setParty(s)
-      if (s.kind === 'none' && s.declined) setMsg({ text: `Your request to join ${s.declined} wasn't accepted.` })
+      if (s.kind === 'none' && s.declined) { setMsg({ text: `Your request to join ${s.declined} wasn't accepted.` }); clearDeclined() }
     }).catch(e => setMsg({ text: e.message }))
   }, [])
   const refreshFriends = useCallback(() => {

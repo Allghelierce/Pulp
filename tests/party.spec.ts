@@ -177,6 +177,7 @@ test("a declined join request stops waiting and says so", async ({ page }) => {
   await expect(panel.getByText("Your request to join WXYZ2345 wasn't accepted.")).toBeVisible()
   await expect(panel.getByText("Waiting to be let in")).toHaveCount(0)
   expect(await page.evaluate(() => localStorage.getItem("pulp-party-pending"))).toBeNull()
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("pulp-party-declined"))).toBeNull() // shown once
 })
 
 for (const theme of ["light", "dark"] as const) {

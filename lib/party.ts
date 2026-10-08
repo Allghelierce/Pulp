@@ -8,6 +8,7 @@ import { PARTY_CAP, seasonDates, seasonOverAt } from "./social"
 export { PARTY_CAP }
 const ID_KEY = "pulp-party-id"           // current party's group id (for focus reporting)
 const PENDING_KEY = "pulp-party-pending" // { groupId, code } while waiting for the owner
+const DECLINED_KEY = "pulp-party-declined" // code of a request that was turned down, until the panel says so
 const EVER_KEY = "pulp-party-ever"
 const RECAP_DAYS = 14                    // a finished season's final standings show this long
 
@@ -133,7 +134,6 @@ export async function loadParty(): Promise<PartyState> {
 
   if (active.length === 0) {
     write(ID_KEY, null)
-    let declined: string | undefined
     const pending = read<{ groupId: number; code: string }>(PENDING_KEY)
     if (pending) {
       // Still waiting (or can't tell)? Keep waiting. Otherwise the owner said no,
@@ -141,8 +141,10 @@ export async function loadParty(): Promise<PartyState> {
       const status = await membershipStatus(pending.groupId)
       if (status === "pending" || status === undefined) return { kind: "pending", code: pending.code }
       write(PENDING_KEY, null)
-      if (status === null) declined = pending.code
+      if (status === null) write(DECLINED_KEY, pending.code)
     }
+    // Kept until shown: the presence sync loads the party too, often first.
+    const declined = read<string>(DECLINED_KEY) ?? undefined
     return { kind: "none", recap: await loadRecap(groups, uid).catch(() => undefined), declined }
   }
 
@@ -150,6 +152,7 @@ export async function loadParty(): Promise<PartyState> {
   const id = active[0].id
   write(ID_KEY, id)
   write(PENDING_KEY, null)
+  write(DECLINED_KEY, null)
   markJoined()
 
   const [detailRes, boardRes, groveRes] = await Promise.all([
@@ -220,6 +223,9 @@ export async function joinParty(code: string): Promise<"pending" | "active"> {
   changed()
   return d.status === "active" ? "active" : "pending"
 }
+
+// The panel showed the "wasn't accepted" note.
+export function clearDeclined() { write(DECLINED_KEY, null) }
 
 export async function cancelJoin(): Promise<void> {
   const pending = read<{ groupId: number }>(PENDING_KEY)
