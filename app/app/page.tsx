@@ -48,7 +48,6 @@ import { sectionToHtml, pasteHtmlToEditor, type ImportDoc } from "@/lib/importNo
 import { paginateImport, PAGE_H, PAGE_FOOT } from "@/lib/importPaginate"
 import { insertPagesAfter } from "@/lib/notePages"
 import { saveDeck, hashNotes } from "@/lib/recallSchedule"
-import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
 import { PartyPresence } from "@/app/components/community/PartyPresence"
 import { PageLines } from "@/app/components/PageLines"
@@ -61,7 +60,6 @@ const _preloadOrchard = () => import("@/app/components/OrchardView")
 const _preloadBoutique = () => import("@/app/components/BoutiqueView")
 const _preloadStats = () => import("@/app/components/StatsView")
 const _preloadDashboard = () => import("@/app/components/DashboardView")
-const _preloadLeaderboard = () => import("@/app/components/LeaderboardView")
 
 const _preloadSettings = () => import("@/app/components/settings/SettingsView")
 const _preloadAiCmd = () => import("@/app/components/AiCommandBar")
@@ -1398,13 +1396,9 @@ export default function NoteApp() {
       const r = await apiFetch('/api/profile/ensure-username', { method: 'POST' })
       if (!r.ok) return undefined
       const j = await r.json()
-      if (j.friend_code) setFriendCode(j.friend_code)
       return j.username ?? undefined
     } catch { return undefined }
   }, [])
-  const [friendCode, setFriendCode] = useState<string | null>(null)
-  const [communityOpen, setCommunityOpen] = useState(false)
-  const [activeGroupId, setActiveGroupId] = useState<number | null>(null)
   const [grade, setGrade] = useState<string | null>(null)
   const handleTimerRunningChange = useCallback((r: boolean) => { timerRunningRef.current = r; setTimerRunning(r) }, [])
   const [allCompacted, setAllCompacted] = useState(false)
@@ -1449,8 +1443,8 @@ export default function NoteApp() {
   // "full" = study every card in the notebook (full review); "due" = spaced-repetition session.
   const [reviewMode, setReviewMode] = useState<"due" | "full">("due")
   const [reviewNoteId, setReviewNoteId] = useState<string | undefined>(undefined)
-  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen || topicsOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setReviewMode("due"); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
+  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || topicsOpen
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setReviewMode("due"); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false) }, [])
   const openParty = useCallback(() => { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) }, [closeAllPanels])
 
   useEffect(() => {
@@ -1458,7 +1452,7 @@ export default function NoteApp() {
     // Safari has no requestIdleCallback; without this fallback the app crashed on load there.
     const idle = typeof window.requestIdleCallback === 'function'
     const preload = () => {
-      _preloadBoutique(); _preloadLeaderboard()
+      _preloadBoutique()
       _preloadSettings()
       _preloadGrid()
       _preloadShelf(); _preloadImageUpload(); _preloadCover()
@@ -1627,7 +1621,6 @@ export default function NoteApp() {
           if (items.length) setInventory(items)
         }
         if (profile.unlocked_cosmetics?.length) setUnlockedCosmetics(profile.unlocked_cosmetics)
-        setFriendCode((profile as any).friend_code ?? null)
         const uname = (profile as any).username || await ensureUsername()
         setSuggestedUsername(uname)
         // The welcome pop-up also collects school + grade; it's done once a school is saved.
@@ -4894,18 +4887,6 @@ export default function NoteApp() {
           </AnimatePresence>
 
           <AnimatePresence>
-            {communityOpen && (
-              <m.div key="community-view"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
-                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}>
-                <CommunityView theme={theme} friendCode={friendCode} currentUserId={user?.id ?? ''}
-                  onClose={() => setCommunityOpen(false)} onActiveGroupChange={setActiveGroupId} />
-              </m.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
             {leaderboardOpen && (
               <m.div
                 key="party-view"
@@ -4966,7 +4947,7 @@ export default function NoteApp() {
 
           {/* Status bar (Settings → Interface) */}
           {/* Signed in, the count sits inside the zoom/undo bar instead (it owns the bottom-right). */}
-          {!user && wordCountVisible && !isNarrow && activeNote && !showSettings && !(orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen || topicsOpen) && (
+          {!user && wordCountVisible && !isNarrow && activeNote && !showSettings && !(orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || topicsOpen) && (
             <div style={{
               // above the "sign in to sync" button; the timer panel owns the bottom-left
               position: "fixed", bottom: 66, right: 18, zIndex: 60, pointerEvents: "none",
@@ -4980,7 +4961,7 @@ export default function NoteApp() {
           )}
 
           {/* Phones: no sidebar strip beside full-screen panels, so give them a way back. */}
-          {isNarrow && (orchardOpen || statsOpen || shopOpen || communityOpen) && (
+          {isNarrow && (orchardOpen || statsOpen || shopOpen) && (
             <button
               onClick={() => closeAllPanels()}
               aria-label="Back"
@@ -4996,7 +4977,7 @@ export default function NoteApp() {
           )}
 
           {/* Phones / no room for the hanging orange: it's hidden, so its "cards to recall" bubble becomes a small pill. */}
-          {hideOrange && allRecallDue > 0 && !timerRunning && !orchardOpen && !reviewOpen && !topicsOpen && !statsOpen && !shopOpen && !leaderboardOpen && !communityOpen && !showSettings && (
+          {hideOrange && allRecallDue > 0 && !timerRunning && !orchardOpen && !reviewOpen && !topicsOpen && !statsOpen && !shopOpen && !leaderboardOpen && !showSettings && (
             <button
               onClick={() => { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }}
               title={recallTopTopic ? `${allRecallDue} to recall · ${recallTopTopic}` : `${allRecallDue} to recall`}
@@ -5283,26 +5264,12 @@ export default function NoteApp() {
             <span className="text-[8px] font-normal tracking-wide transition-colors" style={{ fontFamily: 'Crimson Pro, serif', color: timerOpen ? ACCENT : accentAlpha(0.5) }}>focus</span>
           </button>
         )}
-        {notes.filter(n => !n.archived).length > 0 && !isNarrow && (
-          <button
-            onClick={() => { if (communityOpen) { setCommunityOpen(false) } else { startTransition(() => { closeAllPanels(); setCommunityOpen(true) }) } }}
-            title="Community"
-            className="fixed bottom-[76px] left-3 z-[60] flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer hover:scale-[1.04] active:scale-[0.97]"
-            style={{ width: 56, height: 56,
-              background: communityOpen ? `linear-gradient(135deg, ${accentAlpha(0.15)}, ${accentAlpha(0.08)})` : `linear-gradient(135deg, ${accentAlpha(0.06)}, ${accentAlpha(0.02)})`,
-              border: communityOpen ? `1px solid ${accentAlpha(0.2)}` : '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-0.5" style={{ stroke: ACCENT, opacity: communityOpen ? 1 : 0.6 }}>
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            <span className="text-[8px] font-normal tracking-wide" style={{ fontFamily: 'Crimson Pro, serif', color: ACCENT, opacity: communityOpen ? 1 : 0.5 }}>friends</span>
-          </button>
-        )}
         {!user && (
           <button
             onClick={() => window.location.href = "/login"}
             title="Sign in to sync"
             // Over the grove/market/party scenery (dark in both themes) use the dark-surface accent.
-            style={orchardOpen || shopOpen || leaderboardOpen || communityOpen ? ACCENT_DARK_SURFACE : undefined}
+            style={orchardOpen || shopOpen || leaderboardOpen ? ACCENT_DARK_SURFACE : undefined}
             className="fixed bottom-4 right-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[rgb(var(--accent-rgb)/0.1)] hover:bg-[rgb(var(--accent-rgb)/0.2)] border border-[rgb(var(--accent-rgb)/0.2)] text-[var(--accent)] shadow-lg hover:shadow-xl z-[100]"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
@@ -5312,7 +5279,7 @@ export default function NoteApp() {
         {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
         <PlantImagePreloader />
         {needsOnboarding && user && (
-          <OnboardingModal theme={theme} initialUsername={suggestedUsername} onDone={(r) => { setFriendCode(r.friend_code); if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
+          <OnboardingModal theme={theme} initialUsername={suggestedUsername} onDone={(r) => { if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
         )}
         {/* Selection bubble (text size + highlight-to-card) and the card toast */}
         <HighlightCard theme={theme} noteId={activeNote?.id ?? null} subject={activeNote?.subject ?? ""} signedIn={!!user} shortcut={shortcuts.makeCard} getNote={noteById} />
