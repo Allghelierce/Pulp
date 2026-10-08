@@ -73,3 +73,12 @@ test("browser Back out of Stripe Checkout lands on the site, ready to try again"
   expect(new URL(page.url()).pathname).toBe("/")
   expect(seen.some(u => new URL(u).pathname === "/app")).toBe(false)
 })
+
+test("the payment page's ← back link returns to the site's pricing, not the app", async ({ page }) => {
+  await fakeSession(page)
+  const seen = visitedApp(page)
+  await page.goto(`${BASE}/#pricing`, { referer: `${BASE}/checkout?plan=plus_yearly&from=site` })
+  await expect(page.getByRole("button", { name: "upgrade now" })).toBeVisible()
+  await page.waitForTimeout(1500)
+  expect(seen.some(u => new URL(u).pathname === "/app")).toBe(false)
+})

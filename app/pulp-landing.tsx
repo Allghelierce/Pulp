@@ -485,6 +485,8 @@ export default function PulpLanding() {
   const goCheckout = useCallback(async (plan: 'plus_monthly' | 'plus_yearly', how: 'button' | 'auto' = 'button') => {
     setCheckoutError('')
     setCheckoutBusy(how)
+    // A deliberate click starts a fresh upgrade: after sign-in it may auto-open checkout again.
+    if (how === 'button') try { sessionStorage.removeItem('pulp-auto-checkout') } catch {}
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { window.location.href = `/login?checkout=${plan}`; return }
@@ -509,6 +511,11 @@ export default function PulpLanding() {
     const plan = new URLSearchParams(window.location.search).get('checkout')
     if (plan !== 'plus_monthly' && plan !== 'plus_yearly') return
     window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+    // Only once: pressing Back out of Checkout can land on this URL again — stay on the site then.
+    const nav = performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined
+    let opened = false
+    try { opened = sessionStorage.getItem('pulp-auto-checkout') === plan; sessionStorage.setItem('pulp-auto-checkout', plan) } catch {}
+    if (nav?.type === 'back_forward' || opened) return
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot: resume an upgrade after sign-in
     goCheckout(plan, 'auto')
   }, [goCheckout])

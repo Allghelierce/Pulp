@@ -63,12 +63,14 @@ export const CheckoutView = memo(function CheckoutView() {
     ;(async () => {
       try {
         const { data: { session: auth } } = await supabase.auth.getSession()
-        if (!auth) { window.location.href = `/login?checkout=${plan}`; return }
+        // replace(), not href: this hop page leaves history, so Back from sign-in or from
+        // Stripe's hosted page returns to where the upgrade started instead of bouncing here.
+        if (!auth) { window.location.replace(`/login?checkout=${plan}`); return }
         // No publishable key configured: fall back to Stripe's hosted page.
         const res = await apiFetch("/api/stripe/checkout", { method: "POST", body: JSON.stringify({ plan, from: fromSite ? "site" : undefined, ui: PK ? "elements" : undefined }) })
-        if (res.status === 401) { window.location.href = `/login?checkout=${plan}`; return }
+        if (res.status === 401) { window.location.replace(`/login?checkout=${plan}`); return }
         const json = await res.json().catch(() => ({}))
-        if (json.url) { window.location.href = json.url; return }
+        if (json.url) { window.location.replace(json.url); return }
         if (!json.clientSecret || !PK) throw new Error(json.error || "no session")
         const stripe = await loadStripe(PK)
         if (!stripe || cancelled) return

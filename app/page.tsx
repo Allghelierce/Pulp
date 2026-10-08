@@ -5,9 +5,14 @@ import PulpLanding from "./pulp-landing"
 
 // Signed-in visitors normally go straight to the app — but not when they're on the site
 // for an upgrade: resuming one after sign-in (?checkout=plan), cancelling Stripe Checkout
-// (its back arrow → ?upgrade_cancelled=1), or pressing the browser's Back button out of it.
+// (its back arrow → ?upgrade_cancelled=1), the payment page's "← back" link, or pressing
+// the browser's Back button out of either.
 function stayOnSite(): boolean {
   if (/[?&](checkout=plus_(monthly|yearly)|upgrade_cancelled=1)\b/.test(window.location.search)) return true
+  try {
+    const ref = document.referrer ? new URL(document.referrer) : null
+    if (ref && ref.origin === window.location.origin && ref.pathname === "/checkout") return true
+  } catch {}
   const nav = performance.getEntriesByType?.("navigation")[0] as PerformanceNavigationTiming | undefined
   return nav?.type === "back_forward"
 }
