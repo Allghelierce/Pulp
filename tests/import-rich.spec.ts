@@ -99,6 +99,8 @@ test("rich paste: Google Docs, Word and Notion keep their structure", async ({ p
   const n = await importAndRead(page, await richPaste(page, NOTION, "History\nCaesar"))
   expect(n.rows).toEqual(["History", "Greece"])
   expect(n.html[0]).toContain("<ul><li>Caesar<ul><li>crossed the <b>Rubicon</b></li></ul></li><li>Augustus</li></ul>")
+  // Unstyled lists hug the paragraph above them (no blank row from default <ul> margins).
+  expect(n.html[0]).toMatch(/<\/div><ul><li>Caesar/)
   expect(n.html[0]).toContain("<li>☑ Read chapter 4</li><li>☐ Make flashcards</li>")
   expect(n.html.join("")).toMatch(/<table[^>]*>(<tbody>)?<tr><td[^>]*><b>Term<\/b><\/td><td[^>]*><b>Meaning<\/b><\/td><\/tr><tr><td[^>]*>Polis<\/td>/)
 })

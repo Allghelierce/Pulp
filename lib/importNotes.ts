@@ -901,6 +901,7 @@ const BLOCK_TAGS = new Set([
 const BLOCK_SELECTOR = Array.from(BLOCK_TAGS).filter(t => t !== "BODY" && t !== "HTML").map(t => t.toLowerCase()).join(",");
 const HTML_SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE", "SVG", "IFRAME", "OBJECT", "HEAD", "TITLE", "BUTTON", "SELECT", "CANVAS", "IMG", "INPUT", "META", "LINK", "VIDEO", "AUDIO", "MATH"]);
 const DEFAULT_GAP_TAGS = new Set(["P", "UL", "OL", "TABLE", "BLOCKQUOTE", "PRE", "DL", "FIGURE", "H4", "H5", "H6"]);
+const LIST_TAGS = new Set(["UL", "OL", "LI"]);
 
 function hasStructure(html: string): boolean {
   if (typeof DOMParser === "undefined") return false;
@@ -919,6 +920,8 @@ function htmlBlocks(src: string): Parsed {
   let pTitle: string | undefined;
   let pendingGap = false;
   let prevBottom = 0;   // margin-bottom (pt) of the previous block
+  let prevImplicit = false; // …taken from the tag's default, not the source's own styles
+  let prevList = false;
   let inline: Node[] = [];
   let wordItems: ListItem[] = [];
   let wordGap = false;
@@ -930,10 +933,16 @@ function htmlBlocks(src: string): Parsed {
   };
   const gapFor = (el: Element | null): boolean => {
     const m = el ? marginsPt(el) : null;
-    const defaultGap = !!el && DEFAULT_GAP_TAGS.has(el.tagName);
-    const top = m?.top ?? (defaultGap ? 12 : 0);
-    const g = out.length > 0 && (pendingGap || top >= 5 || prevBottom >= 5);
-    prevBottom = m?.bottom ?? (defaultGap ? 12 : 0);
+    const def = el && DEFAULT_GAP_TAGS.has(el.tagName) ? 12 : 0;
+    const list = !!el && LIST_TAGS.has(el.tagName);
+    // Unstyled HTML (Notion, plain web markup): a list hugs the line above and below it,
+    // like in the note apps it came from — tag-default margins don't add a blank row there.
+    const top = m ? m.top : list || prevList ? 0 : def;
+    const before = prevImplicit && (list || prevList) ? 0 : prevBottom;
+    const g = out.length > 0 && (pendingGap || top >= 5 || before >= 5);
+    prevBottom = m?.bottom ?? def;
+    prevImplicit = !m;
+    prevList = list;
     pendingGap = false;
     return g;
   };
@@ -961,7 +970,7 @@ function htmlBlocks(src: string): Parsed {
           flushWordList();
           out.push({ level: Number(tag[1]), text: t, html: "" });
           pendingGap = false;
-          prevBottom = 0;
+          prevBottom = 0; prevImplicit = false; prevList = false;
         }
         return;
       }

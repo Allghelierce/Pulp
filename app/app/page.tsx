@@ -277,7 +277,7 @@ const ScrollModePage = memo(function ScrollModePage({
       onClick={isActive ? undefined : onClick}
       style={{
         position: "relative",
-        minHeight: 1100,
+        minHeight: 1250,
         backgroundColor: paperBg,
         backgroundImage: paperImg,
         backgroundSize: paperSize,
@@ -308,10 +308,13 @@ const ScrollModePage = memo(function ScrollModePage({
         <div
           key={box.id}
           style={{
-            position: "absolute", left: box.x, top: box.y, width: box.w,
+            // Same text metrics as the editable box (BoxItem), so pages look the same here.
+            position: "absolute", left: box.x, top: box.y, width: box.w, boxSizing: "border-box", padding: "9px 13px",
             minHeight: box.h, pointerEvents: "none", userSelect: "none",
-            fontFamily: box.boxFontFamily || `"${editorFont}", Crimson Pro, serif`,
-            fontSize: box.boxFontSize || (baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18),
+            fontFamily: box.boxFontFamily || (/^h[123]$/.test(box.boxHeadingStyle || "") ? "var(--pulp-heading-font, Georgia, serif)" : "var(--pulp-body-font, Georgia, serif)"),
+            fontSize: box.boxFontSize || `calc(${BOX_HEADING_SIZES[box.boxHeadingStyle || "default"] ?? 20}px * var(--pulp-font-scale, 1))`,
+            lineHeight: (box.boxHeadingStyle || "default") === "default" ? "var(--pulp-rule, var(--pulp-line-height, 1.8))" : "var(--pulp-line-height, 1.8)",
+            wordWrap: "break-word",
             color: box.boxTextColor || inkColor,
             backgroundColor: box.boxHighlightColor || undefined,
             transform: box.boxRotation ? `rotate(${box.boxRotation}deg)` : undefined,
