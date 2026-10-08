@@ -1,6 +1,7 @@
 "use client"
 import { memo, useMemo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { ACCENT } from "@/lib/accent"
 
 const font = 'Crimson Pro, serif'
 
@@ -28,7 +29,7 @@ const AchievementProgressWidget = memo(function AchievementProgressWidget({ isDa
         <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font }}>
           Achievements
         </span>
-        <span style={{ fontSize: 9, fontWeight: 400, color: '#d97706' }}>
+        <span style={{ fontSize: 9, fontWeight: 400, color: ACCENT }}>
           {completed}/{achievements.length}
         </span>
       </div>
@@ -44,7 +45,7 @@ const AchievementProgressWidget = memo(function AchievementProgressWidget({ isDa
                 <span style={{ fontSize: 8, color: textSecondary }}>{pct}%</span>
               </div>
               <div style={{ height: 4, borderRadius: 2, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-                <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: '#d97706', transition: 'width 500ms ease' }} />
+                <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: ACCENT, transition: 'width 500ms ease' }} />
               </div>
             </div>
           )

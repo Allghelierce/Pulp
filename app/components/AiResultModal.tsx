@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { X } from "lucide-react"
 import { apiFetch } from "@/lib/apiFetch"
+import { ACCENT, ACCENT_CONTRAST } from "@/lib/accent"
 
 interface AiResultModalProps {
   title: string
@@ -69,7 +70,7 @@ export function AiResultModal({ title, result, loading, prompt, onClose, onInser
           {loading ? (
             <div className="flex items-center justify-center h-40">
               <div className="flex flex-col items-center gap-3">
-                <div className="w-8 h-8 border-3 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+                <div className="w-8 h-8 border-3 border-[rgb(var(--accent-rgb)/0.2)] border-t-[var(--accent)] rounded-full animate-spin" />
                 <span className="text-xs" style={{ color: mutedColor }}>Generating...</span>
               </div>
             </div>
@@ -85,7 +86,7 @@ export function AiResultModal({ title, result, loading, prompt, onClose, onInser
                 onClick={() => rate(1)}
                 style={{
                   background: "none", border: "none", cursor: "pointer", padding: "4px 6px", borderRadius: 4,
-                  color: rating === 1 ? "#d97706" : mutedColor, opacity: rating === 1 ? 1 : 0.5,
+                  color: rating === 1 ? ACCENT : mutedColor, opacity: rating === 1 ? 1 : 0.5,
                   transition: "all 0.15s",
                 }}
                 title="Helpful"
@@ -120,8 +121,8 @@ export function AiResultModal({ title, result, loading, prompt, onClose, onInser
             {onInsert && !loading && result && (
               <button
                 onClick={() => onInsert(result)}
-                className="rounded-lg px-5 py-2 text-sm font-normal text-white transition-all"
-                style={{ background: "linear-gradient(135deg, #d97706, #b45309)" }}
+                className="rounded-lg px-5 py-2 text-sm font-normal transition-all"
+                style={{ background: "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 82%, #000))", color: ACCENT_CONTRAST }}
               >
                 Insert into note
               </button>

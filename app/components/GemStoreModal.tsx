@@ -2,6 +2,7 @@
 import { memo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { GemIcon } from '@/app/components/CurrencyIcons'
+import { ACCENT, ACCENT_CONTRAST, accentAlpha, ACCENT_DARK_SURFACE } from '@/lib/accent'
 
 interface GemStoreModalProps {
   isOpen: boolean
@@ -16,7 +17,7 @@ const GEM_PACKS = [
 ]
 
 const font = 'Crimson Pro, serif'
-const accent = '#d97706'
+const accent = ACCENT
 
 function GemShape({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   const id = `gs-${x}-${y}`
@@ -132,6 +133,7 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
             onMouseDown={e => e.stopPropagation()}
             className="relative w-full overflow-hidden"
             style={{
+              ...ACCENT_DARK_SURFACE, // panel is near-black in both themes
               maxWidth: 440,
               marginTop: 48,
               borderRadius: 16,
@@ -169,23 +171,23 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
                   className="flex-1 flex flex-col items-center gap-2 rounded-lg transition-all relative overflow-hidden"
                   style={{
                     padding: '24px 12px 18px',
-                    background: pack.popular ? `${accent}0a` : 'rgba(255,255,255,0.02)',
-                    border: pack.popular ? `1px solid ${accent}25` : '1px solid rgba(255,255,255,0.05)',
+                    background: pack.popular ? accentAlpha(0.04) : 'rgba(255,255,255,0.02)',
+                    border: pack.popular ? `1px solid ${accentAlpha(0.15)}` : '1px solid rgba(255,255,255,0.05)',
                     cursor: 'pointer',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = pack.popular ? `${accent}15` : 'rgba(255,255,255,0.05)'
+                    e.currentTarget.style.background = pack.popular ? accentAlpha(0.08) : 'rgba(255,255,255,0.05)'
                     e.currentTarget.style.transform = 'translateY(-2px)'
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = pack.popular ? `${accent}0a` : 'rgba(255,255,255,0.02)'
+                    e.currentTarget.style.background = pack.popular ? accentAlpha(0.04) : 'rgba(255,255,255,0.02)'
                     e.currentTarget.style.transform = 'translateY(0)'
                   }}
                 >
                   {pack.popular && (
                     <div style={{
                       position: 'absolute', top: 0, left: 0, right: 0,
-                      fontSize: 8, fontWeight: 400, color: '#fff', background: accent,
+                      fontSize: 8, fontWeight: 400, color: ACCENT_CONTRAST, background: accent,
                       padding: '2px 0', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.08em',
                     }}>
                       Popular
@@ -198,7 +200,7 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
                   <span style={{ fontSize: 10, color: '#5a5650', fontFamily: font }}>{pack.label}</span>
                   <span style={{
                     fontSize: 12, fontWeight: 400, color: accent,
-                    background: `${accent}10`, borderRadius: 8, padding: '4px 12px',
+                    background: accentAlpha(0.06), borderRadius: 8, padding: '4px 12px',
                     width: '100%', textAlign: 'center', fontFamily: font,
                   }}>
                     {pack.price}

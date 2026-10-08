@@ -1,11 +1,11 @@
 "use client"
 import { memo, useEffect, useRef, useState } from "react"
+import { ACCENT, accentAlpha } from "@/lib/accent"
 
 // Toolbar "insert" dropdown. Opens instantly on mousedown (keeps the editor
 // selection), full keyboard support, Docs-style table size grid, and a
 // "click to place" hint while a placement tool is armed (Esc cancels).
 
-const ACCENT = "#d97706"
 const STICKY_COLORS = ["#fef08a", "#fce7f3", "#fed7aa", "#bfdbfe"]
 const GRID = 8
 const PLACE_TOOLS: Record<string, string> = {
@@ -107,7 +107,7 @@ export const InsertMenu = memo(function InsertMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         className={`text-[12px] font-normal border border-zinc-200 rounded-[5px] ${compact ? "p-1.5" : "px-3 py-1"} bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97] flex items-center gap-1.5 ${open || armed ? "" : "text-zinc-700 hover:bg-zinc-100"}`}
-        style={{ fontFamily: "Crimson Pro, serif", letterSpacing: "0.01em", ...(open || armed ? { color: ACCENT, textShadow: "0 0 6px rgba(217,119,6,0.3)" } : {}) }}
+        style={{ fontFamily: "Crimson Pro, serif", letterSpacing: "0.01em", ...(open || armed ? { color: ACCENT, textShadow: `0 0 6px ${accentAlpha(0.3)}` } : {}) }}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
         {!compact && <><span>insert</span><svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg></>}
@@ -138,7 +138,7 @@ export const InsertMenu = memo(function InsertMenu({
                   }}
                 >
                   <span style={{ width: 26, height: 26, borderRadius: 7, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                    background: active ? "rgba(217,119,6,0.14)" : c.tile, color: active ? ACCENT : (dark ? "#a1a1aa" : "#52525b") }}>{it.icon}</span>
+                    background: active ? accentAlpha(0.14) : c.tile, color: active ? ACCENT : (dark ? "#a1a1aa" : "#52525b") }}>{it.icon}</span>
                   <span style={{ flex: 1 }}>{it.label}</span>
                   {it.key === "sticky" ? (
                     <span style={{ display: "flex", gap: 4 }}>
@@ -177,8 +177,8 @@ export const InsertMenu = memo(function InsertMenu({
                             onMouseEnter={() => setHover([r, col])}
                             onMouseDown={e => { e.preventDefault(); insertTable(r, col); close() }}
                             style={{ width: 16, height: 16, borderRadius: 3, cursor: "pointer",
-                              background: on ? "rgba(217,119,6,0.45)" : (dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.035)"),
-                              border: `1px solid ${on ? "rgba(217,119,6,0.85)" : c.border}` }}
+                              background: on ? accentAlpha(0.45) : (dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.035)"),
+                              border: `1px solid ${on ? accentAlpha(0.85) : c.border}` }}
                           />
                         )
                       })}

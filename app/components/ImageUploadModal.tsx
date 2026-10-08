@@ -5,6 +5,7 @@ import { useImageUpload } from "@/app/hooks/use-image-upload"
 import { ImagePlus, Upload, Trash2, X, Link as LinkIcon, Globe } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
+import { ACCENT, accentAlpha } from "@/lib/accent"
 
 interface ImageUploadModalProps {
   onConfirm: (htmlOrUrl: string, isHtml: boolean) => void
@@ -31,7 +32,6 @@ export function ImageUploadModal({ onConfirm, onClose, theme = "dark" }: ImageUp
   const [linkUrl, setLinkUrl] = useState("")
   const [isDragging, setIsDragging] = useState(false)
 
-  const pulpOrange = "#d97706"
 
   // Esc closes; pasting an image or video file uploads it, pasting a URL embeds it
   useEffect(() => {
@@ -113,7 +113,7 @@ export function ImageUploadModal({ onConfirm, onClose, theme = "dark" }: ImageUp
         transition={{ duration: 0.1 }}
         className={cn("relative rounded-2xl w-full max-w-sm overflow-hidden border", dark ? "bg-zinc-800 border-zinc-700/50 shadow-[0_24px_64px_rgba(0,0,0,0.6)]" : "bg-white border-zinc-200 shadow-[0_24px_64px_rgba(0,0,0,0.18)]")}
       >
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-500/40 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[rgb(var(--accent-rgb)/0.4)] to-transparent" />
 
         <div className="px-8 pt-8 pb-4 flex items-center justify-between">
           <div className="flex gap-6">
@@ -121,14 +121,14 @@ export function ImageUploadModal({ onConfirm, onClose, theme = "dark" }: ImageUp
               onClick={() => setTab("upload")}
               className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "upload" ? (dark ? "text-white" : "text-zinc-900") : (dark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-600"))}
             >
-              {tab === "upload" && <motion.div layoutId="mediaTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
+              {tab === "upload" && <motion.div layoutId="mediaTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)]" />}
               Upload
             </button>
             <button
               onClick={() => setTab("link")}
               className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "link" ? (dark ? "text-white" : "text-zinc-900") : (dark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-600"))}
             >
-              {tab === "link" && <motion.div layoutId="mediaTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
+              {tab === "link" && <motion.div layoutId="mediaTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)]" />}
               Embed
             </button>
           </div>
@@ -155,7 +155,7 @@ export function ImageUploadModal({ onConfirm, onClose, theme = "dark" }: ImageUp
                   className={cn(
                     "flex h-48 cursor-pointer flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed transition-all",
                     isDragging
-                      ? "border-orange-500 bg-orange-500/5 shadow-[0_0_40px_rgba(245,160,48,0.1)]"
+                      ? "border-[var(--accent)] bg-[rgb(var(--accent-rgb)/0.05)] shadow-[0_0_40px_rgb(var(--accent-rgb)/0.1)]"
                       : dark ? "border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-600" : "border-zinc-300 bg-zinc-50 hover:bg-zinc-100 hover:border-zinc-400"
                   )}
                 >
@@ -213,7 +213,7 @@ export function ImageUploadModal({ onConfirm, onClose, theme = "dark" }: ImageUp
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="Paste URL here..."
-                  className={cn("w-full border rounded-lg pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all", dark ? "bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600" : "bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400")}
+                  className={cn("w-full border rounded-lg pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-[rgb(var(--accent-rgb)/0.5)] focus:ring-4 focus:ring-[color:rgb(var(--accent-rgb)/0.1)] transition-all", dark ? "bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600" : "bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400")}
                   onKeyDown={e => e.key === "Enter" && triggerLinkEmbed()}
                 />
               </div>
@@ -237,8 +237,8 @@ export function ImageUploadModal({ onConfirm, onClose, theme = "dark" }: ImageUp
                 triggerLinkEmbed()
               }
             }}
-            className="w-full py-4 rounded-lg text-white text-[10px] font-normal uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
-            style={{ backgroundColor: pulpOrange, boxShadow: `0 8px 24px -6px ${pulpOrange}44` }}
+            className="w-full py-4 rounded-lg text-[var(--accent-contrast)] text-[10px] font-normal uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+            style={{ backgroundColor: ACCENT, boxShadow: `0 8px 24px -6px ${accentAlpha(0.27)}` }}
           >
             Insert Selection
           </button>

@@ -4,6 +4,7 @@ import { memo, useState, useMemo } from "react"
 import { TREE_TYPES, DEMO_COMPETITORS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
+import { ACCENT, ACCENT_CONTRAST } from '@/lib/accent'
 
 interface RightSidebarProps {
   isOpen: boolean
@@ -28,7 +29,7 @@ export const RightSidebar = memo(function RightSidebar({
 
   const leaderboard = useMemo(() => {
     const sapAtStart = Math.max(0, sap - Math.floor(180 + (sap % 47)))
-    const you = { name: userName || "you", sapDelta: sap - sapAtStart, avatarColor: '#d97706', isYou: true }
+    const you = { name: userName || "you", sapDelta: sap - sapAtStart, avatarColor: ACCENT, isYou: true }
     const others = DEMO_COMPETITORS.map(b => ({ name: b.name, sapDelta: b.sapDelta, avatarColor: b.avatarColor, isYou: false }))
     return [...others, you].sort((a, b) => b.sapDelta - a.sapDelta)
   }, [sap, userName])
@@ -119,10 +120,10 @@ export const RightSidebar = memo(function RightSidebar({
             <section className="space-y-3">
               <div className="text-center mb-2">
                 <span className={`text-[11px] font-normal ${isDark ? 'text-zinc-300' : 'text-zinc-600'}`}>
-                  You are ranked <span className="text-amber-500 font-normal">#{yourRank}</span> of {leaderboard.length}
+                  You are ranked <span className="text-[var(--accent)] font-normal">#{yourRank}</span> of {leaderboard.length}
                 </span>
                 <div className="mt-1">
-                  <span className="text-[7px] font-normal uppercase tracking-widest text-amber-500/60 bg-amber-500/8 px-1.5 py-0.5 rounded">demo</span>
+                  <span className="text-[7px] font-normal uppercase tracking-widest text-[rgb(var(--accent-rgb)/0.6)] bg-[rgb(var(--accent-rgb)/0.08)] px-1.5 py-0.5 rounded">demo</span>
                 </div>
               </div>
 
@@ -135,7 +136,7 @@ export const RightSidebar = memo(function RightSidebar({
                       key={entry.name}
                       className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors ${
                         entry.isYou
-                          ? (isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200/50')
+                          ? (isDark ? 'bg-[rgb(var(--accent-rgb)/0.1)] border border-[rgb(var(--accent-rgb)/0.2)]' : 'bg-[rgb(var(--accent-rgb)/0.07)] border border-[rgb(var(--accent-rgb)/0.25)]')
                           : (isDark ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50')
                       }`}
                     >
@@ -145,19 +146,19 @@ export const RightSidebar = memo(function RightSidebar({
                         {medal || rank}
                       </span>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-normal" style={{ background: entry.avatarColor, color: '#fff' }}>
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-normal" style={{ background: entry.avatarColor, color: entry.isYou ? ACCENT_CONTRAST : '#fff' }}>
                           {entry.name[0].toUpperCase()}
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className={`text-[11px] font-normal truncate ${
-                            entry.isYou ? (isDark ? 'text-amber-400' : 'text-amber-700') : (isDark ? 'text-zinc-200' : 'text-zinc-700')
+                            entry.isYou ? 'text-[var(--accent)]' : (isDark ? 'text-zinc-200' : 'text-zinc-700')
                           }`}>
                             {entry.isYou ? (userName || "you") : entry.name}
                           </span>
                           {entry.isYou && (
-                            <span className="text-[7px] font-normal uppercase tracking-widest text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">you</span>
+                            <span className="text-[7px] font-normal uppercase tracking-widest text-[var(--accent)] bg-[rgb(var(--accent-rgb)/0.1)] px-1.5 py-0.5 rounded">you</span>
                           )}
                         </div>
                       </div>

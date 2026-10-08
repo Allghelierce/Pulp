@@ -48,7 +48,7 @@ test("parser: docx / md / html / txt through the modal", async ({ page }) => {
   expect(await box.evaluate(el => getComputedStyle(el).color)).not.toBe("rgb(255, 255, 255)")
   await expect(box.locator("h2", { hasText: "Cells" })).toBeVisible()
 
-  // .md — "#" headings; H1 is the title, markdown stripped, bullets kept.
+  // .md — "#" headings; H1 is the title; bold, links and bullet lists kept as real formatting.
   const md = [
     "# Chem Notes", "",
     "## Atoms", "", `**Atoms** are tiny. See [the textbook](https://example.com). ${filler("Atoms")}`, "", "- protons", "- neutrons", "",
@@ -59,8 +59,9 @@ test("parser: docx / md / html / txt through the modal", async ({ page }) => {
   expect(m.title).toBe("Chem Notes")
   expect(m.summary).toMatch(/^3 sections ·/)
   expect(m.rows).toEqual(["Atoms", "Bonds", "Ionic"])
-  expect(pageHtml(m.note)[0]).toContain("Atoms are tiny. See the textbook.")
-  expect(pageHtml(m.note)[0]).toContain("• protons<br>• neutrons")
+  expect(pageHtml(m.note)[0]).toContain('<b>Atoms</b> are tiny. See <a href="https://example.com"')
+  expect(pageHtml(m.note)[0]).toContain(">the textbook</a>.")
+  expect(pageHtml(m.note)[0]).toContain("<ul><li>protons</li><li>neutrons</li></ul>")
   expect(pageHtml(m.note).join("")).not.toMatch(/\*\*|\]\(/)
 
   // .html — h1/h2, scripts dropped, literal "<script>" text escaped.
@@ -72,7 +73,7 @@ test("parser: docx / md / html / txt through the modal", async ({ page }) => {
   expect(h.summary).toMatch(/^2 sections ·/)
   expect(h.rows).toEqual(["Rome", "Greece"])
   expect(pageHtml(h.note)[0]).toContain("Watch for &lt;script&gt; tags.")
-  expect(pageHtml(h.note)[1]).toContain("• Athens")
+  expect(pageHtml(h.note)[1]).toContain("<ul><li>Athens</li><li>Sparta</li></ul>")
   expect(pageHtml(h.note).join("")).not.toContain("__pwned")
   expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined()
 

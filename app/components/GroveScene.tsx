@@ -6,7 +6,7 @@
 
 export const SCENE_CSS = `
 @keyframes groveFirefly { 0%,100% { transform: translate(0,0); opacity: 0 } 20% { opacity: .9 } 50% { transform: translate(var(--dx), var(--dy)); opacity: .6 } 80% { opacity: .9 } }
-@keyframes groveTwinkle { 0%,100% { opacity: .25 } 50% { opacity: .9 } }
+@keyframes groveTwinkle { 0%,100% { opacity: .55 } 50% { opacity: .9 } }
 @keyframes groveMist { 0% { transform: translateX(-6%) } 100% { transform: translateX(6%) } }
 @keyframes groveRise { from { transform: translateY(10px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
 @keyframes groveGlow { 0%,100% { opacity: .55 } 50% { opacity: .9 } }
@@ -29,7 +29,14 @@ export function GroveBackdrop({ isDark, height }: { isDark: boolean; height: num
         boxShadow: isDark ? '0 0 24px 6px rgba(253,230,138,0.18)' : '0 0 36px 12px rgba(251,191,36,0.35)' }} />
       {isDark && [[12, 18], [30, 10], [48, 24], [64, 12], [80, 30], [22, 34], [56, 6], [90, 16]].map(([x, y], i) => (
         <span key={i} className="grove-anim" style={{ position: 'absolute', left: `${x}%`, top: y, width: 2, height: 2, borderRadius: 1,
-          background: '#fef3c7', animation: `groveTwinkle ${2.4 + (i % 3)}s ease-in-out ${i * 0.4}s infinite` }} />
+          background: '#fef3c7', animation: `groveTwinkle ${3.6 + (i % 4) * 0.9}s ease-in-out ${i * 0.7}s infinite` }} />
+      ))}
+      {/* Fireflies drift in the sky, behind the hills (the hills cover any that dip low). */}
+      {isDark && Array.from({ length: 7 }, (_, i) => (
+        <span key={i} className="grove-anim" style={{ position: 'absolute', left: `${8 + i * 13}%`, bottom: height * 0.5 + (i * 11) % Math.max(8, height * 0.22), width: 3, height: 3, borderRadius: '50%',
+          background: '#fde68a', boxShadow: '0 0 6px 2px rgba(253,230,138,0.6)',
+          ['--dx' as string]: `${(i % 2 ? 1 : -1) * (8 + i * 2)}px`, ['--dy' as string]: `${-10 - (i % 3) * 6}px`,
+          animation: `groveFirefly ${5 + (i % 3)}s ease-in-out ${i * 0.7}s infinite` } as React.CSSProperties} />
       ))}
       <svg viewBox="0 0 400 120" preserveAspectRatio="none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, width: '100%', height: height * 0.62 }}>
         <path d="M0 60 Q60 20 130 48 T260 40 T400 52 V120 H0Z" fill={hills[0]} />
@@ -43,12 +50,7 @@ export function GroveBackdrop({ isDark, height }: { isDark: boolean; height: num
       <div className="grove-anim" style={{ position: 'absolute', left: '-10%', right: '-10%', bottom: height * 0.22, height: 34,
         background: isDark ? 'linear-gradient(90deg, transparent, rgba(167,243,208,0.07), transparent)' : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)',
         filter: 'blur(6px)', animation: 'groveMist 9s ease-in-out infinite alternate' }} />
-      {isDark && Array.from({ length: 7 }, (_, i) => (
-        <span key={i} className="grove-anim" style={{ position: 'absolute', left: `${8 + i * 13}%`, bottom: 26 + (i * 17) % 60, width: 3, height: 3, borderRadius: '50%',
-          background: '#fde68a', boxShadow: '0 0 6px 2px rgba(253,230,138,0.6)',
-          ['--dx' as string]: `${(i % 2 ? 1 : -1) * (8 + i * 2)}px`, ['--dy' as string]: `${-10 - (i % 3) * 6}px`,
-          animation: `groveFirefly ${5 + (i % 3)}s ease-in-out ${i * 0.7}s infinite` } as React.CSSProperties} />
-      ))}
+
     </>
   )
 }

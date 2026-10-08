@@ -49,7 +49,7 @@ export const DrawingToolbar = memo(function DrawingToolbar({
             title={tool.label}
             className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md transition-all cursor-pointer ${
               activeTool === tool.id
-                ? "bg-orange-500/20 text-orange-600"
+                ? "bg-[rgb(var(--accent-rgb)/0.2)] text-[var(--accent)]"
                 : "text-zinc-600 hover:bg-zinc-100"
             }`}
           >

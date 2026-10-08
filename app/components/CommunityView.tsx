@@ -3,8 +3,9 @@ import { useState, useEffect, memo } from "react"
 import { FriendsPanel } from "./community/FriendsPanel"
 import { GroupsPanel } from "./community/GroupsPanel"
 import { GroupPage } from "./community/GroupPage"
+import { ACCENT, ACCENT_CONTRAST } from "@/lib/accent"
 
-const accent = '#d97706'
+const accent = ACCENT
 
 export const CommunityView = memo(function CommunityView({
   theme, friendCode, currentUserId, onClose, onActiveGroupChange,
@@ -40,7 +41,7 @@ export const CommunityView = memo(function CommunityView({
         {(['friends', 'groups'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             style={{ padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', textTransform: 'capitalize',
-              background: tab === t ? accent : 'transparent', color: tab === t ? '#fff' : (isDark ? '#a1a1aa' : '#6b6864') }}>
+              background: tab === t ? accent : 'transparent', color: tab === t ? ACCENT_CONTRAST : (isDark ? '#a1a1aa' : '#6b6864') }}>
             {t}
           </button>
         ))}

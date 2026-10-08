@@ -10,6 +10,7 @@ import { ContestBanner } from "./leaderboard/ContestBanner"
 import { PastWinnersStrip } from "./leaderboard/PastWinnersStrip"
 import { getPalette, getType, chipButton } from "@/app/theme/palette"
 import { themePalette } from "@/lib/orchardSky"
+import { ACCENT, ACCENT_STRONG, BRAND_ORANGE, accentAlpha } from "@/lib/accent"
 
 // Deterministic tree species per student so a name always grows the same tree.
 const FOREST_SPECIES = ['oak', 'pine', 'sakura', 'tangerine', 'plum', 'bamboo', 'cedarwood', 'birch', 'bonsai', 'pear']
@@ -129,11 +130,13 @@ export const LeaderboardView = memo(function LeaderboardView({
   const [timeframe, setTimeframe] = useState<'weekly' | 'season'>('weekly')
 
   const palette = getPalette(isDark)
-  const { bg: paper, cardBorder, textPrimary, textSecondary, textMuted, accent, accentDeep } = palette
+  const { bg: paper, cardBorder, textPrimary, textSecondary, textMuted } = palette
+  const accent = ACCENT
+  const accentDeep = ACCENT_STRONG
   const type = getType(palette)
-  const hoverBg = isDark ? 'rgba(217,119,6,0.06)' : 'rgba(120,90,40,0.05)'
+  const hoverBg = isDark ? accentAlpha(0.06) : 'rgba(120,90,40,0.05)'
   const inputBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(120,90,40,0.04)'
-  const youBg = isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.07)'
+  const youBg = accentAlpha(isDark ? 0.1 : 0.07)
   const ruled = isDark ? 'rgba(217,119,6,0.045)' : 'rgba(180,120,40,0.06)'
 
   const applyData = useCallback((data: { school: string; members: LiveMember[]; user_rank: number | null }) => {
@@ -260,7 +263,7 @@ export const LeaderboardView = memo(function LeaderboardView({
   const renderSchoolPicker = () => (
     <div className="flex-1 flex flex-col px-6 pt-5 pb-4 overflow-hidden relative z-10">
       <div className="flex items-center gap-2.5 mb-1">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: accent }}>
           <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
         </svg>
         <p style={{ fontFamily: font, fontSize: 18, color: textPrimary, margin: 0 }}>
@@ -288,7 +291,7 @@ export const LeaderboardView = memo(function LeaderboardView({
               className="w-full rounded-xl mb-1.5 flex items-start gap-2"
               style={{ fontFamily: font, fontSize: 12.5, color: textSecondary, padding: '11px 13px', background: youBg, border: `1px solid ${cardBorder}` }}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 1, flexShrink: 0 }}><path d="M20 6 9 17l-5-5"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 1, flexShrink: 0, stroke: accent }}><path d="M20 6 9 17l-5-5"/></svg>
               <span>Application sent — we’ll review “{appliedName}” and add it soon.</span>
             </div>
           ) : (
@@ -296,7 +299,7 @@ export const LeaderboardView = memo(function LeaderboardView({
               disabled={applying}
               onClick={() => applyForSchool(schoolQuery.trim())}
               className="w-full text-left rounded-xl mb-1.5 transition-colors flex items-center gap-2"
-              style={{ fontFamily: font, fontSize: 13.5, color: accent, padding: '11px 13px', background: youBg, border: `1px dashed ${accent}55`, opacity: applying ? 0.6 : 1 }}
+              style={{ fontFamily: font, fontSize: 13.5, color: accent, padding: '11px 13px', background: youBg, border: `1px dashed ${accentAlpha(0.33)}`, opacity: applying ? 0.6 : 1 }}
             >
               <span style={{ fontSize: 15 }}>+</span> {applying ? 'Sending…' : `Apply to add “${schoolQuery.trim()}”`}
             </button>
@@ -330,7 +333,7 @@ export const LeaderboardView = memo(function LeaderboardView({
 
   const renderStickyYou = () => resolvedRank ? (
     <div className="px-4 py-3 shrink-0 relative z-10" style={{ borderTop: `1px solid ${cardBorder}` }}>
-      <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: youBg, border: `1px solid ${isDark ? 'rgba(217,119,6,0.16)' : 'rgba(217,119,6,0.14)'}` }}>
+      <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: youBg, border: `1px solid ${accentAlpha(isDark ? 0.16 : 0.14)}` }}>
         <span className="text-[12.5px] font-normal w-6 text-center tabular-nums" style={{ color: accent, fontFamily: font }}>#{resolvedRank}</span>
         <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-normal shrink-0" style={{ background: avatarColor, color: '#fff', fontFamily: font }}>
           {userName[0]?.toUpperCase()}
@@ -342,7 +345,7 @@ export const LeaderboardView = memo(function LeaderboardView({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: accent }}><path d="m18 15-6-6-6 6"/></svg>
           <span className="text-[12.5px] font-normal tabular-nums" style={{ color: accent, fontFamily: font }}>
             {(() => { const you = orderedEntries.find(e => e.isYou); return you ? metricText(you) : '+0' })()}
           </span>
@@ -353,7 +356,7 @@ export const LeaderboardView = memo(function LeaderboardView({
 
   const emptyState = (
     <div className="flex-1 flex items-center justify-center flex-col gap-2 px-8 text-center relative z-10">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5, stroke: accent }}>
         <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
       </svg>
       <div style={{ fontFamily: font, fontSize: 14, color: textSecondary }}>No one here yet</div>
@@ -380,7 +383,8 @@ export const LeaderboardView = memo(function LeaderboardView({
     // A planted tree: anchored by its BASE on the ground line (top% + translateY(-100%)),
     // so every tree actually sits on the field. Depth: front = bigger/brighter/on top.
     const tree = (p: Entry, xPct: number, groundY: number, size: number, rankIdx: number, featuredTree: boolean, dim: number) => {
-      const medal = rankIdx < 3 ? MEDAL_COLORS[rankIdx] : accent
+      const medalHex = rankIdx < 3 ? MEDAL_COLORS[rankIdx] : null
+      const medal = medalHex ?? accent
       const showPlate = featuredTree || p.isYou
       return (
         <div
@@ -403,7 +407,7 @@ export const LeaderboardView = memo(function LeaderboardView({
                 style={{
                   display: 'flex', alignItems: 'center', gap: 4, marginTop: 1,
                   background: isDark ? 'rgba(20,16,12,0.82)' : 'rgba(245,243,239,0.9)',
-                  border: `1px solid ${(p.isYou ? accent : medal)}55`, borderRadius: 8, padding: '1.5px 7px',
+                  border: `1px solid ${!p.isYou && medalHex ? `${medalHex}55` : accentAlpha(0.33)}`, borderRadius: 8, padding: '1.5px 7px',
                   backdropFilter: 'blur(2px)', whiteSpace: 'nowrap',
                 }}
               >
@@ -630,7 +634,7 @@ export const LeaderboardView = memo(function LeaderboardView({
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isUser ? accent : textSecondary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: isUser ? accent : textSecondary }}><path d="m18 15-6-6-6 6"/></svg>
                   <span className="text-[12.5px] font-normal tabular-nums" style={{ color: isUser ? accent : textSecondary, fontFamily: font }}>
                     {metricText(p)}
                   </span>
@@ -650,12 +654,15 @@ export const LeaderboardView = memo(function LeaderboardView({
     const entry = orderedEntries[selectedPlayer]
     if (!entry) return null
     const rank = selectedPlayer + 1
-    const medalColor = rank <= 3 ? MEDAL_COLORS[rank - 1] : accent
+    const medalHex = rank <= 3 ? MEDAL_COLORS[rank - 1] : null
+    const medalColor = medalHex ?? accent
+    // Medal hex + alpha suffix for the podium three; the user's accent otherwise.
+    const medalTint = (hexA: string, a: number) => medalHex ? `${medalHex}${hexA}` : accentAlpha(a)
 
     const statItems = [
-      { label: 'Pulp', value: `+${formatPulp(entry.pulpDelta)}`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg> },
-      { label: 'Trees', value: String(entry.treesGrown), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg> },
-      { label: 'Level', value: String(entry.level), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
+      { label: 'Pulp', value: `+${formatPulp(entry.pulpDelta)}`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: medalColor }}><path d="m18 15-6-6-6 6"/></svg> },
+      { label: 'Trees', value: String(entry.treesGrown), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: medalColor }}><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg> },
+      { label: 'Level', value: String(entry.level), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: medalColor }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
     ]
 
     return (
@@ -673,7 +680,7 @@ export const LeaderboardView = memo(function LeaderboardView({
           className="relative overflow-hidden"
           style={{ width: 320, borderRadius: 20, background: paper, boxShadow: isDark ? '0 30px 80px -15px rgba(0,0,0,0.8)' : '0 30px 80px -15px rgba(80,50,10,0.18)', border: `1px solid ${cardBorder}` }}
         >
-          <div className="relative h-20 flex items-end justify-center overflow-hidden" style={{ background: `linear-gradient(135deg, ${medalColor}30 0%, ${medalColor}10 100%)`, borderBottom: `1px solid ${cardBorder}` }}>
+          <div className="relative h-20 flex items-end justify-center overflow-hidden" style={{ background: `linear-gradient(135deg, ${medalTint('30', 0.19)} 0%, ${medalTint('10', 0.063)} 100%)`, borderBottom: `1px solid ${cardBorder}` }}>
             {rank <= 3 && (
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {Array.from({ length: 12 }).map((_, j) => (
@@ -686,8 +693,8 @@ export const LeaderboardView = memo(function LeaderboardView({
                 ))}
               </div>
             )}
-            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-lg text-[10px] font-normal" style={{ background: `${medalColor}20`, color: medalColor, fontFamily: font }}>#{rank}</div>
-            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[10px] font-normal truncate max-w-[180px]" style={{ background: `${accent}18`, color: accentDeep, fontFamily: font }}>{schoolLabel}</div>
+            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-lg text-[10px] font-normal" style={{ background: medalTint('20', 0.125), color: medalColor, fontFamily: font }}>#{rank}</div>
+            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[10px] font-normal truncate max-w-[180px]" style={{ background: accentAlpha(0.094), color: accentDeep, fontFamily: font }}>{schoolLabel}</div>
           </div>
 
           <div className="flex flex-col items-center -mt-8 relative z-10">
@@ -743,7 +750,7 @@ export const LeaderboardView = memo(function LeaderboardView({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill={accent} stroke="none"><path d="M4 2v20l8-5 8 5V2z" /></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" stroke="none" style={{ fill: accent }}><path d="M4 2v20l8-5 8 5V2z" /></svg>
                 <span style={{ ...type.eyebrow }}>
                   {isDemo ? 'sample league' : 'weekly standings'}
                 </span>
@@ -773,11 +780,11 @@ export const LeaderboardView = memo(function LeaderboardView({
                   className="flex items-center gap-1.5 rounded-full"
                   style={{
                     fontFamily: font, padding: '5px 11px',
-                    background: isDark ? 'rgba(217,119,6,0.16)' : 'rgba(217,119,6,0.1)',
-                    border: `1px solid ${isDark ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.22)'}`,
+                    background: accentAlpha(isDark ? 0.16 : 0.1),
+                    border: `1px solid ${accentAlpha(isDark ? 0.3 : 0.22)}`,
                   }}
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: accent }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   <span style={{ fontSize: 12.5, fontWeight: 600, color: accentDeep, letterSpacing: '0.01em' }}>
                     {daysLeftInWeek() === 0 ? 'last day' : `${daysLeftInWeek()}d left`}
                   </span>
@@ -835,7 +842,7 @@ export const LeaderboardView = memo(function LeaderboardView({
 
         {!loading && !showPicker && timeframe === 'weekly' && orderedEntries.length > 0 && (
           <>
-            <ContestBanner prizeSap={CONTEST_PRIZE_SAP} daysLeft={daysLeftInWeek()} accent={accent} isDark={isDark} />
+            <ContestBanner prizeSap={CONTEST_PRIZE_SAP} daysLeft={daysLeftInWeek()} accent={BRAND_ORANGE} isDark={isDark} />
             <PastWinnersStrip winners={pastWinners} isDark={isDark} />
           </>
         )}

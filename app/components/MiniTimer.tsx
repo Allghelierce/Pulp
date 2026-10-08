@@ -25,7 +25,7 @@ export function MiniTimer({ isRunning, remainingTime, progress, accent, isDark, 
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
       className={`fixed bottom-8 right-8 z-[100] cursor-pointer flex items-center gap-4 p-3 pr-6 rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] border ${
-        isDark ? "bg-[#09090b]/90 border-zinc-800" : "bg-white/95 border-orange-100"
+        isDark ? "bg-[#09090b]/90 border-zinc-800" : "bg-white/95 border-[rgb(var(--accent-rgb)/0.15)]"
       } backdrop-blur-3xl group transition-all`}
     >
       {/* Hand-drawn Mini Orange Liquid Fill */}
@@ -73,7 +73,7 @@ export function MiniTimer({ isRunning, remainingTime, progress, accent, isDark, 
           {remainingTime}
         </span>
         <span className={`text-[8px] font-normal uppercase tracking-[0.2em] transition-colors ${
-          isComplete ? "text-emerald-500" : isDark ? "text-zinc-600" : "text-orange-400"
+          isComplete ? "text-emerald-500" : isDark ? "text-zinc-600" : "text-[rgb(var(--accent-rgb)/0.8)]"
         }`}>
           {isComplete ? "Ready" : "Pulping"}
         </span>
@@ -82,8 +82,8 @@ export function MiniTimer({ isRunning, remainingTime, progress, accent, isDark, 
       {/* Pulsing indicator */}
       {!isComplete && (
         <div className="absolute top-1 right-1 flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#d97706] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#d97706]"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]"></span>
         </div>
       )}
     </motion.div>

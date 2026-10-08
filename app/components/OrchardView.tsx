@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES, getLevel } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
+import { getCacheKey, getPlantAlphaAt } from "@/app/hooks/usePlantBitmapCache"
 import { SummerTerrain } from "./SummerTerrain"
 import { useTerrainCache } from "@/app/hooks/useTerrainCache"
 import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
@@ -16,6 +17,10 @@ import { toPng } from "html-to-image"
 import { isTopicTree, isFullyGrown, topicFreshness, freshnessFilter, normalizeTopic } from "@/lib/topics"
 import { buildTopicIndex, bestNotebookFor, untaggedDueByNotebook } from "@/lib/topicIndex"
 import { SapCollectFX, type SapCollectRun } from "@/app/components/SapCollectFX"
+import { ACCENT, accentAlpha, ACCENT_DARK_SURFACE } from "@/lib/accent"
+
+/** Accent lightened toward white, for text on the orchard's always-dark glass chrome (was amber-200/400). */
+const accentTint = (accentPct: number) => `color-mix(in srgb, ${ACCENT} ${accentPct}%, #fff)`
 
 interface OrchardViewProps {
   isOpen: boolean
@@ -2701,6 +2706,7 @@ export const OrchardView = memo(function OrchardView({
   }, [isOpen, focusTopic])
   const hoveredElRef = useRef<HTMLElement | null>(null)
   const hoveredZRef = useRef<string>('')
+  const groveLayerRef = useRef<HTMLDivElement | null>(null)
   const collectBtnRef = useRef<HTMLButtonElement>(null)
   const sapCounterRef = useRef<HTMLDivElement>(null)
 
@@ -3046,6 +3052,74 @@ export const OrchardView = memo(function OrchardView({
   const selectedNotebookRef = useRef(selectedNotebook)
   selectedNotebookRef.current = selectedNotebook
 
+  // ── Grove hover / click: which tree is actually drawn under the pointer ──
+  // Trees sit in boxes ~1.3× their height, mostly transparent and overlapping
+  // neighbours, so box hover picked the wrong tree. Live SVG trees are tested
+  // by the browser against their painted shapes (CSS above); trees shown as a
+  // cached bitmap are tested against its opacity mask, front-most first.
+  const groveHitTest = useCallback((clientX: number, clientY: number): HTMLElement | null => {
+    const layer = groveLayerRef.current
+    if (!layer) return null
+    const painted = document.elementFromPoint(clientX, clientY)?.closest<HTMLElement>('[data-grove-tree]')
+    if (painted && layer.contains(painted)) return painted
+    const trees = layer.querySelectorAll<HTMLElement>('[data-grove-tree]')
+    for (let i = trees.length - 1; i >= 0; i--) { // placed is sorted back→front
+      const el = trees[i]
+      const art = el.querySelector<HTMLElement>('[data-mask-key]')
+      const img = art?.querySelector('img')
+      if (!art || !img) continue
+      const r = img.getBoundingClientRect()
+      if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) continue
+      const a = getPlantAlphaAt(art.dataset.maskKey || '', (clientX - r.left) / r.width, (clientY - r.top) / r.height, 2)
+      if (a !== null && a > 40) return el
+    }
+    return null
+  }, [])
+
+  const setGroveHover = useCallback((el: HTMLElement | null) => {
+    const prev = hoveredElRef.current
+    if (prev === el) return
+    if (prev) { prev.classList.remove('is-hovered'); prev.style.zIndex = hoveredZRef.current }
+    hoveredElRef.current = el
+    if (el) { hoveredZRef.current = el.style.zIndex; el.style.zIndex = '998'; el.classList.add('is-hovered') }
+    if (groveLayerRef.current) groveLayerRef.current.style.cursor = el ? 'pointer' : ''
+  }, [])
+
+  const hoverRaf = useRef(0)
+  const onGrovePointerMove = useCallback((e: React.PointerEvent) => {
+    if (dragRef.current?.active || e.pointerType === 'touch') return
+    const { clientX, clientY } = e
+    if (hoverRaf.current) return
+    hoverRaf.current = requestAnimationFrame(() => {
+      hoverRaf.current = 0
+      setGroveHover(groveHitTest(clientX, clientY))
+    })
+  }, [groveHitTest, setGroveHover])
+
+  const onGrovePointerDownRef = useRef<(e: React.PointerEvent) => void>(() => {})
+  const onGrovePointerDown = useCallback((e: React.PointerEvent) => onGrovePointerDownRef.current(e), [])
+  // Click / drag / chop use the same hit test as hover (kept current every render;
+  // it reads state declared further down, so it's assigned after render).
+  useEffect(() => {
+    onGrovePointerDownRef.current = (e: React.PointerEvent) => {
+      if (e.button !== 0) return
+      const el = groveHitTest(e.clientX, e.clientY)
+      if (!el) return
+      const hit = placedRef.current.find(p => String(p.tree.id) === el.dataset.groveTree)
+      if (!hit) return
+      const { tree, slotIndex, x, y } = hit
+      if (editMode) {
+        e.preventDefault()
+        setGroveHover(null)
+        dragElRef.current = el
+        handleDragStart(tree.id, slotIndex, e.clientX, e.clientY)
+        return
+      }
+      if (activeTool === 'axe') { setChopTarget({ tree, sap: getSapYield(tree) }); return }
+      setFocusedTree({ tree, x, y })
+    }
+  })
+
   const handleDragStart = useCallback((treeId: string, slotIdx: number, clientX: number, clientY: number) => {
     if (activeTool !== 'none') return
     dragRef.current = { treeId, startX: clientX, startY: clientY, currentX: clientX, currentY: clientY, slotIdx, active: false }
@@ -3260,6 +3334,16 @@ export const OrchardView = memo(function OrchardView({
     >
       <style>{`
         @keyframes tree-pop { 0% { transform: scale(0.7); opacity:0 } 70% { transform: scale(1.03); opacity:1 } 100% { transform: scale(1); opacity:1 } }
+        /* Grove hover: the hit-tester marks the tree whose drawn pixels are under the cursor. The card fades and
+           rises in; it lingers briefly on the way out so moving between trees doesn't flicker. */
+        .grove-tree-card { opacity: 0; transform: translate(-50%, 4px); transition: opacity .16s ease .08s, transform .2s ease .08s; }
+        .grove-tree.is-hovered .grove-tree-card { opacity: 1; transform: translate(-50%, 0); transition-delay: 0s; }
+        .grove-tree-art { transition: transform .22s cubic-bezier(.2,.8,.2,1), filter .22s ease; transform-origin: center bottom; }
+        .grove-tree.is-hovered .grove-tree-art { transform: translateY(-2px) scale(1.035); filter: brightness(1.08); }
+        /* Only the painted parts of a tree's drawing respond to the pointer (not its box) */
+        .grove-tree-art svg { pointer-events: none; }
+        .grove-tree-art svg * { pointer-events: visiblePainted; }
+        @media (prefers-reduced-motion: reduce) { .grove-tree-card, .grove-tree-art { transition: none; } .grove-tree.is-hovered .grove-tree-art { transform: none; } }
         @keyframes sap-collect { 0% { transform: translateY(0); opacity:1 } 100% { transform: translateY(-30px); opacity:0 } }
         @keyframes sap-drop-burst { 0% { opacity:0; transform: scale(0) translateY(0) } 15% { opacity:1; transform: scale(1.3) translateY(-5px) } 40% { opacity:0.9; transform: scale(1) translateY(-15px) } 100% { opacity:0; transform: scale(0.5) translateY(-40px) } }
         @keyframes sap-funnel { 0% { opacity:0; transform: scale(0.3) translate(0,0) } 20% { opacity:1; transform: scale(1.2) translate(0,0) } 100% { opacity:0; transform: scale(0.4) translate(var(--funnel-tx), var(--funnel-ty)) } }
@@ -3310,10 +3394,10 @@ export const OrchardView = memo(function OrchardView({
           <div data-orchard-ui className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 80, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.3)' : 'rgba(50,45,38,0.12)'} 0%, transparent 100%)` }} />
           <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} onOpenShop={onOpenShop} />
 
-          {/* Mode indicator — edge glow: red for chop, amber for arrange */}
+          {/* Mode indicator — edge glow: red for chop, accent for arrange */}
           {(activeTool === 'axe' || editMode) && (
             <div data-orchard-ui className="absolute inset-0 pointer-events-none z-[55]" style={{
-              boxShadow: `inset 0 0 90px 6px ${activeTool === 'axe' ? 'rgba(239,68,68,0.5)' : 'rgba(217,119,6,0.5)'}`,
+              boxShadow: `inset 0 0 90px 6px ${activeTool === 'axe' ? 'rgba(239,68,68,0.5)' : accentAlpha(0.5)}`,
               animation: 'orchard-mode-glow 0.5s ease both',
             }} />
           )}
@@ -3329,15 +3413,16 @@ export const OrchardView = memo(function OrchardView({
               <div data-orchard-ui className="absolute left-0 right-0 z-30 flex justify-center pointer-events-none" style={{ bottom: windowWidth < 640 ? 64 : 22, padding: '0 16px' }}>
                 <style>{`@keyframes recall-bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }`}</style>
                 <div className="pointer-events-auto flex items-center gap-2 flex-wrap justify-center" style={{
+                  ...ACCENT_DARK_SURFACE, // dark glass in both themes
                   maxWidth: 720, padding: '8px 10px 8px 14px', borderRadius: 14,
-                  background: 'rgba(12,12,14,0.78)', border: '1px solid rgba(217,119,6,0.4)',
+                  background: 'rgba(12,12,14,0.78)', border: `1px solid ${accentAlpha(0.4)}`,
                   boxShadow: '0 10px 30px rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', fontFamily: 'Crimson Pro, serif',
                 }}>
-                  <span style={{ fontSize: 13, color: '#fbbf24', letterSpacing: '0.04em', marginRight: 2 }}>Ready to recall</span>
+                  <span style={{ fontSize: 13, color: accentTint(70), letterSpacing: '0.04em', marginRight: 2 }}>Ready to recall</span>
                   {recallDue.topics.slice(0, 6).map(t => (
                     <button key={t.key} onClick={() => goToTopic(t.key, t.name, t.notebookId)}
-                      style={{ fontSize: 13.5, color: '#fff', background: 'rgba(217,119,6,0.22)', border: '1px solid rgba(217,119,6,0.45)', borderRadius: 999, padding: '3px 11px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                      {t.name} <span style={{ color: '#fbbf24' }}>· {t.due}</span>
+                      style={{ fontSize: 13.5, color: '#fff', background: accentAlpha(0.22), border: `1px solid ${accentAlpha(0.45)}`, borderRadius: 999, padding: '3px 11px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {t.name} <span style={{ color: accentTint(70) }}>· {t.due}</span>
                     </button>
                   ))}
                   {recallDue.topics.length > 6 && <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.6)' }}>+{recallDue.topics.length - 6} more</span>}
@@ -3384,8 +3469,8 @@ export const OrchardView = memo(function OrchardView({
                     <div className="fixed inset-0 z-30" onClick={() => setShowNbMenu(false)} />
                     <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 rounded-xl py-1.5 z-40" style={{ minWidth: 180, maxHeight: 280, overflowY: 'auto', backgroundColor: isDark ? 'rgba(20,18,16,0.96)' : 'rgba(255,255,255,0.98)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 12px 32px -8px rgba(0,0,0,0.4)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>
                       {filterOptions.map(o => (
-                        <button key={o.id} onClick={() => { setSelectedNotebook(o.id); setShowNbMenu(false) }} className="w-full flex items-center justify-between gap-3 px-3 py-1.5 text-left transition-colors" style={{ backgroundColor: o.id === selectedNotebook ? (isDark ? 'rgba(217,119,6,0.16)' : 'rgba(217,119,6,0.1)') : 'transparent' }}>
-                          <span style={{ fontSize: 12, fontWeight: 400, color: o.id === selectedNotebook ? '#d97706' : (isDark ? '#e4e4e7' : '#27272a'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
+                        <button key={o.id} onClick={() => { setSelectedNotebook(o.id); setShowNbMenu(false) }} className="w-full flex items-center justify-between gap-3 px-3 py-1.5 text-left transition-colors" style={{ backgroundColor: o.id === selectedNotebook ? accentAlpha(isDark ? 0.16 : 0.1) : 'transparent' }}>
+                          <span style={{ fontSize: 12, fontWeight: 400, color: o.id === selectedNotebook ? ACCENT : (isDark ? '#e4e4e7' : '#27272a'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
                           <span style={{ fontSize: 10, color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)', flexShrink: 0 }}>{o.count}</span>
                         </button>
                       ))}
@@ -3408,11 +3493,11 @@ export const OrchardView = memo(function OrchardView({
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M11 6v16c0 0-.5-1-1.5-1.5" /><rect x="9.5" y="1" width="3" height="1.5" rx="0.3" /><path d="M9.5 2.5L9.5 8.5L20 8.5L18 2.5Z" /></svg>
                 </button>
                 {/* Edit */}
-                <button onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }} className="flex items-center justify-center rounded-md transition-all" style={{ width: 30, height: 30, backgroundColor: editMode ? 'rgba(217,119,6,0.32)' : (isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.22)'), backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: editMode ? '#fbbf24' : 'rgba(255,255,255,0.82)' }} title="Edit layout">
+                <button onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }} className="flex items-center justify-center rounded-md transition-all" style={{ ...ACCENT_DARK_SURFACE, width: 30, height: 30, backgroundColor: editMode ? accentAlpha(0.32) : (isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.22)'), boxShadow: editMode ? `inset 0 0 0 1.5px ${accentAlpha(0.85)}` : 'none', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: editMode ? '#fff' : 'rgba(255,255,255,0.82)' }} title="Edit layout">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
                 {/* Screenshot */}
-                <button onClick={captureOrchard} className="flex items-center justify-center rounded-md transition-all" style={{ width: 30, height: 30, backgroundColor: isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.22)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: screenshotBusy ? '#fbbf24' : 'rgba(255,255,255,0.82)', opacity: screenshotBusy ? 0.5 : 1 }} title="Screenshot">
+                <button onClick={captureOrchard} className="flex items-center justify-center rounded-md transition-all" style={{ ...ACCENT_DARK_SURFACE, width: 30, height: 30, backgroundColor: isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.22)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: screenshotBusy ? accentTint(70) : 'rgba(255,255,255,0.82)', opacity: screenshotBusy ? 0.5 : 1 }} title="Screenshot">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 </button>
               </div>
@@ -3433,7 +3518,7 @@ export const OrchardView = memo(function OrchardView({
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
                     </button>
                   ) : (!isAllView && nbUnlocked < MAX_PLOTS) ? (
-                    <button onClick={unlockNextPlot} disabled={(gems ?? 0) < (PLOT_COST[nbUnlocked] || 0)} className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all disabled:opacity-40" style={{ color: '#d97706' }} title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}>
+                    <button onClick={unlockNextPlot} disabled={(gems ?? 0) < (PLOT_COST[nbUnlocked] || 0)} className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all disabled:opacity-40" style={{ ...ACCENT_DARK_SURFACE, color: ACCENT }} title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}>
                       <GemIcon size={9} /> {PLOT_COST[nbUnlocked]}
                     </button>
                   ) : (
@@ -3451,12 +3536,16 @@ export const OrchardView = memo(function OrchardView({
             <AnimatePresence mode="wait">
               <motion.div
                 key={selectedNotebook ?? 'all'}
+                ref={groveLayerRef}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
                 className="absolute inset-0"
                 style={{ paddingLeft: 0 }}
+                onPointerMove={onGrovePointerMove}
+                onPointerLeave={() => setGroveHover(null)}
+                onPointerDown={onGrovePointerDown}
               >
                 {(() => { return (
                   <>
@@ -3604,32 +3693,7 @@ export const OrchardView = memo(function OrchardView({
                         <div
                           key={`${tree.id ?? 'tree'}-${renderIdx}`}
                           data-grove-tree={tree.id}
-                          className="absolute flex flex-col items-center group"
-                          onMouseEnter={(e) => {
-                            if (hoveredElRef.current) hoveredElRef.current.style.zIndex = hoveredZRef.current
-                            hoveredElRef.current = e.currentTarget
-                            hoveredZRef.current = e.currentTarget.style.zIndex
-                            e.currentTarget.style.zIndex = '998'
-                          }}
-                          onMouseLeave={(e) => {
-                            if (hoveredElRef.current === e.currentTarget) {
-                              e.currentTarget.style.zIndex = hoveredZRef.current
-                              hoveredElRef.current = null
-                            }
-                          }}
-                          onPointerDown={(e) => {
-                            if (editMode) {
-                              e.preventDefault()
-                              dragElRef.current = e.currentTarget as HTMLElement
-                              handleDragStart(tree.id, slotIndex, e.clientX, e.clientY)
-                              return
-                            }
-                            if (activeTool === 'axe') {
-                              setChopTarget({ tree, sap: getSapYield(tree) })
-                              return
-                            }
-                            setFocusedTree({ tree, x, y })
-                          }}
+                          className="absolute flex flex-col items-center grove-tree"
                           style={{
                             left: `${x}%`,
                             top: `${y}%`,
@@ -3638,6 +3702,9 @@ export const OrchardView = memo(function OrchardView({
                             zIndex: Math.round(y),
                             cursor: editMode ? 'grab' : activeTool === 'axe' ? 'crosshair' : undefined,
                             opacity: 1,
+                            // The image box is mostly transparent and overlaps neighbours; the grove
+                            // layer hit-tests drawn pixels instead (see groveHitTest).
+                            pointerEvents: 'none',
                           }}
                         >
                           <div style={{
@@ -3646,17 +3713,17 @@ export const OrchardView = memo(function OrchardView({
                             transformOrigin: 'center bottom',
                             animation: reduceMotion ? undefined : `tree-pop 0.3s ease-out ${renderIdx * 12}ms backwards`,
                           }}>
-                            <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
+                            <div data-mask-key={getCacheKey(tree.type, treeSize, tree.stage, isDark)} className={`grove-tree-art ${tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''}`} style={{
                               filter: [dimAmount > 0 ? `brightness(${100 - dimAmount}%)` : '', tree.topic ? freshnessFilter(freshnessOf(tree)) : ''].filter(Boolean).join(' ') || undefined,
                               transition: tree.topic ? 'filter 0.8s ease' : undefined,
                               position: 'relative',
                             }}>
                               <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} disableSway={reduceMotion || placed.length > 30} />
                             </div>
-                            {/* Ready to recall: a bobbing amber marker over the tree */}
+                            {/* Ready to recall: a bobbing accent marker over the tree */}
                             {dueOf(tree) > 0 && (
                               <div style={{ position: 'absolute', left: '50%', top: -14, transform: 'translateX(-50%)', pointerEvents: 'none', zIndex: 2 }}>
-                                <div style={{ width: 11, height: 11, borderRadius: '50%', background: '#d97706', boxShadow: '0 0 10px 2px rgba(217,119,6,0.75)', border: '1.5px solid #fff7ed', animation: reduceMotion ? undefined : 'recall-bob 1.4s ease-in-out infinite' }} />
+                                <div style={{ ...ACCENT_DARK_SURFACE, width: 11, height: 11, borderRadius: '50%', background: ACCENT, boxShadow: `0 0 10px 2px ${accentAlpha(0.75)}`, border: '1.5px solid #fff7ed', animation: reduceMotion ? undefined : 'recall-bob 1.4s ease-in-out infinite' }} />
                               </div>
                             )}
                             {/* Dirt mound */}
@@ -3690,9 +3757,9 @@ export const OrchardView = memo(function OrchardView({
                             const ageHrs = Math.floor(ageMs / 3600000)
                             const ageStr = ageDays > 0 ? `${ageDays}d ago` : ageHrs > 0 ? `${ageHrs}h ago` : 'Just now'
                             return (
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{
+                            <div className="grove-tree-card pointer-events-none" style={{
                               zIndex: 300, position: 'absolute',
-                              top: '100%', left: '50%', transform: 'translateX(-50%)',
+                              top: '100%', left: '50%',
                               marginTop: 4,
                             }}>
                               <div className="px-3 py-2 rounded-lg" style={{
@@ -3711,7 +3778,7 @@ export const OrchardView = memo(function OrchardView({
                                   <div className="mt-1 text-[10px] whitespace-nowrap" style={{ color: isDark ? '#e8e4dc' : '#2a2620', fontFamily: 'EB Garamond, serif' }}>
                                     {tree.topic}
                                     {isTopicTree(tree) && !isFullyGrown(tree) && (
-                                      <span style={{ color: '#d97706' }}> · {Math.min(tree.recallDone || 0, tree.recallNeeded || 0)}/{tree.recallNeeded} recalled</span>
+                                      <span style={{ color: ACCENT }}> · {Math.min(tree.recallDone || 0, tree.recallNeeded || 0)}/{tree.recallNeeded} recalled</span>
                                     )}
                                   </div>
                                 )}
@@ -3753,7 +3820,7 @@ export const OrchardView = memo(function OrchardView({
                 </span>
               )}
               {editMode && (
-                <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#d97706', backgroundColor: isDark ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.1)' }}>
+                <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: ACCENT, backgroundColor: accentAlpha(isDark ? 0.15 : 0.1) }}>
                   Drag to move
                 </span>
               )}
@@ -3810,8 +3877,8 @@ export const OrchardView = memo(function OrchardView({
                       onClick={confirmChop}
                       className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-colors"
                       style={{
-                        backgroundColor: 'rgba(217,119,6,0.15)',
-                        color: '#d97706',
+                        backgroundColor: accentAlpha(0.15),
+                        color: ACCENT,
                       }}
                     >
                       Chop
@@ -3906,7 +3973,7 @@ export const OrchardView = memo(function OrchardView({
                           {isTopicTree(ft) && !ftFull && (
                             <div className="flex justify-between">
                               <span>Recalled</span>
-                              <span style={{ color: '#d97706', fontWeight: 400 }}>{Math.min(ft.recallDone || 0, ft.recallNeeded || 0)}/{ft.recallNeeded}</span>
+                              <span style={{ color: ACCENT, fontWeight: 400 }}>{Math.min(ft.recallDone || 0, ft.recallNeeded || 0)}/{ft.recallNeeded}</span>
                             </div>
                           )}
                           <div className="flex justify-between">
@@ -3926,8 +3993,8 @@ export const OrchardView = memo(function OrchardView({
                               onClick={() => { setFocusedTree(null); onReviewTopic(ft.topic, ft.notebookId) }}
                               className="w-full py-1.5 rounded-lg text-[12px] font-normal tracking-wide truncate"
                               style={{
-                                backgroundColor: isDark ? 'rgba(217,119,6,0.18)' : 'rgba(217,119,6,0.12)',
-                                color: '#d97706',
+                                backgroundColor: accentAlpha(isDark ? 0.18 : 0.12),
+                                color: ACCENT,
                                 fontFamily: 'EB Garamond, serif',
                               }}
                             >
@@ -3999,8 +4066,8 @@ export const OrchardView = memo(function OrchardView({
                       onClick={shareScreenshot}
                       className="flex-1 py-2 rounded-lg text-[11px] font-normal uppercase tracking-wider flex items-center justify-center gap-1.5"
                       style={{
-                        backgroundColor: 'rgba(217,119,6,0.15)',
-                        color: '#d97706',
+                        backgroundColor: accentAlpha(0.15),
+                        color: ACCENT,
                       }}
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
