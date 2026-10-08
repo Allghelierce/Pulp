@@ -4,7 +4,9 @@ import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { getWeekStart } from "@/lib/leagues"
 import { TREE_TYPES } from "@/app/constants"
-import { seasonOver } from "@/lib/partyServer"
+import { seasonOver, must, guarded } from "@/lib/partyServer"
+import { parseId, parseReportMinutes, weekCapAt } from "@/lib/social"
+import { creditFocus } from "@/lib/partyCredit"
 
 // Only a known species at a real stage goes into the communal grove.
 function cleanTree(raw: unknown): { type: string; stage: number } | null {
@@ -15,6 +17,9 @@ function cleanTree(raw: unknown): { type: string; stage: number } | null {
   return { type, stage }
 }
 
+// A finished focus session, credited to your party. The client says how long
+// it was, so the minutes are bounded here: one session per report at most, and
+// about 16h a day (see parseReportMinutes / weekCapAt).
 export async function POST(req: Request) {
   const ip = getRateLimitKey(req)
   if (!checkRateLimit(`group-report:${ip}`, { maxRequests: 30, windowMs: 60000 })) {
@@ -26,32 +31,21 @@ export async function POST(req: Request) {
   let body: any
   try { body = await req.json() } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }) }
 
-  const groupId = Number(body.groupId)
-  const minutes = Math.max(0, Math.min(600, Math.floor(Number(body.minutes) || 0)))
-  if (!groupId || minutes <= 0) return NextResponse.json({ error: "Bad input" }, { status: 400 })
+  const groupId = parseId(body?.groupId)
+  const minutes = parseReportMinutes(body?.minutes)
+  if (!groupId || minutes == null) return NextResponse.json({ error: "Bad input" }, { status: 400 })
 
-  const { data: group } = await supabaseAdmin.from('study_groups').select('status, term_end').eq('id', groupId).single()
-  if (!group || group.status !== 'active' || seasonOver(group)) return NextResponse.json({ error: "Inactive group" }, { status: 400 })
+  return guarded("record your focus", async () => {
+    const group = must(await supabaseAdmin.from('study_groups').select('status, term_end').eq('id', groupId).maybeSingle(), 'group')
+    if (!group || group.status !== 'active' || seasonOver(group)) return NextResponse.json({ error: "Inactive group" }, { status: 400 })
 
-  const { data: membership } = await supabaseAdmin.from('group_members')
-    .select('focus_minutes_total, status').eq('group_id', groupId).eq('user_id', user.id).maybeSingle()
-  if (!membership || membership.status !== 'active') return NextResponse.json({ error: "Not a member" }, { status: 403 })
+    const week = getWeekStart()
+    const credited = await creditFocus(supabaseAdmin, { groupId, userId: user.id, week, minutes, cap: weekCapAt(week) })
+    if (credited == null) return NextResponse.json({ error: "Not a member" }, { status: 403 })
 
-  const weekStart = getWeekStart()
-  const { data: weekly } = await supabaseAdmin.from('group_weekly')
-    .select('focus_minutes').eq('group_id', groupId).eq('user_id', user.id).eq('week_start', weekStart).maybeSingle()
-  await supabaseAdmin.from('group_weekly').upsert({
-    group_id: groupId, user_id: user.id, week_start: weekStart,
-    focus_minutes: (weekly?.focus_minutes || 0) + minutes,
-  }, { onConflict: 'group_id,user_id,week_start' })
-
-  await supabaseAdmin.from('group_members')
-    .update({ focus_minutes_total: (membership.focus_minutes_total || 0) + minutes })
-    .eq('group_id', groupId).eq('user_id', user.id)
-
-  const tree = cleanTree(body.tree)
-  if (tree) {
-    await supabaseAdmin.from('group_trees').insert({ group_id: groupId, user_id: user.id, tree })
-  }
-  return NextResponse.json({ ok: true })
+    // A capped-out report plants nothing either, so the grove can't be farmed.
+    const tree = credited > 0 ? cleanTree(body.tree) : null
+    if (tree) must(await supabaseAdmin.from('group_trees').insert({ group_id: groupId, user_id: user.id, tree }), 'group_trees')
+    return NextResponse.json({ ok: true, credited })
+  })
 }

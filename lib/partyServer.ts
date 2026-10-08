@@ -1,14 +1,45 @@
 // Server-only Party rules (study_groups): seasons end on time, and a player
 // is in at most one active party.
+import { NextResponse } from "next/server"
 import { supabaseAdmin } from "./supabase-server"
-import { seasonOverAt } from "./social"
+import { seasonOverAt, PARTY_CAP } from "./social"
 
 export const seasonOver = (group: { term_end: string }) => seasonOverAt(group.term_end) <= Date.now()
 
-// Archive a party whose season is over. Mutates and returns the row.
+// The cap is PARTY_CAP even if a row's max_members says more.
+export const capOf = (group: { max_members: number | null }) => Math.min(group.max_members ?? PARTY_CAP, PARTY_CAP)
+
+// A Supabase result's data; a DB error throws, and guarded() answers 500.
+export function must<T>(res: { data: T; error: { message: string } | null }, what: string): T {
+  if (res.error) throw new Error(`${what}: ${res.error.message}`)
+  return res.data
+}
+
+// Runs a route's body so any DB error is a clean 500, never a crash or a false "ok".
+export async function guarded(what: string, body: () => Promise<Response>): Promise<Response> {
+  try {
+    return await body()
+  } catch (e) {
+    console.error(`${what}:`, e instanceof Error ? e.message : e)
+    return NextResponse.json({ error: `Couldn't ${what}. Try again.` }, { status: 500 })
+  }
+}
+
+// How many active members a party has. Throws on a DB error.
+export async function countActive(groupId: number): Promise<number> {
+  const { count, error } = await supabaseAdmin.from('group_members')
+    .select('id', { count: 'exact', head: true }).eq('group_id', groupId).eq('status', 'active')
+  if (error) throw new Error(`countActive: ${error.message}`)
+  return count ?? 0
+}
+
+// Archive a party whose season is over. Mutates and returns the row. A failed
+// archive is only logged: every rule also checks seasonOver(), and the next
+// load tries again.
 export async function archiveIfExpired<T extends { id: number; status: string; term_end: string }>(group: T): Promise<T> {
   if (group.status === 'active' && seasonOver(group)) {
-    await supabaseAdmin.from('study_groups').update({ status: 'archived' }).eq('id', group.id)
+    const { error } = await supabaseAdmin.from('study_groups').update({ status: 'archived' }).eq('id', group.id)
+    if (error) console.error('archiveIfExpired:', error.message)
     group.status = 'archived'
   }
   return group

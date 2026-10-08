@@ -58,6 +58,13 @@ function disconnect() {
   emit({ groupId: null, peers: {} })
 }
 
+// Accepted risk (for now): `party:<id>` is a public Realtime channel. Anyone
+// with the anon key can guess the numeric id, see who's online/focusing, and
+// post a status under a member's id. The panel only shows peers who are real
+// members and uses presence for nothing but those dots and "Nm left" (no
+// minutes, standings or rewards), so the worst case is a fake status. Fix
+// later: private channels with a realtime.messages policy on
+// is_active_group_member().
 function connect(groupId: number) {
   if (state.groupId === groupId && channel) return
   disconnect()

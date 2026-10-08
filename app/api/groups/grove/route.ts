@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
+import { parseId } from "@/lib/social"
+import { must, guarded } from "@/lib/partyServer"
 
 export async function GET(req: Request) {
   const ip = getRateLimitKey(req)
@@ -10,15 +12,17 @@ export async function GET(req: Request) {
   }
   const user = await getAuthUser(req)
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const id = new URL(req.url).searchParams.get('id')
+  const id = parseId(new URL(req.url).searchParams.get('id'))
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
 
-  const { data: membership } = await supabaseAdmin.from('group_members')
-    .select('status').eq('group_id', id).eq('user_id', user.id).maybeSingle()
-  if (!membership || membership.status !== 'active') return NextResponse.json({ error: "Not a member" }, { status: 403 })
+  return guarded("load the grove", async () => {
+    const membership = must(await supabaseAdmin.from('group_members')
+      .select('status').eq('group_id', id).eq('user_id', user.id).maybeSingle(), 'membership')
+    if (!membership || membership.status !== 'active') return NextResponse.json({ error: "Not a member" }, { status: 403 })
 
-  // The party's most recent trees, newest first (the Party panel's grove strip).
-  const { data } = await supabaseAdmin.from('group_trees')
-    .select('user_id, tree, planted_at').eq('group_id', id).order('planted_at', { ascending: false }).limit(12)
-  return NextResponse.json({ trees: (data ?? []).map(r => ({ ...r.tree, user_id: r.user_id, planted_at: r.planted_at })) })
+    // The party's most recent trees, newest first (the Party panel's grove strip).
+    const data = must(await supabaseAdmin.from('group_trees')
+      .select('user_id, tree, planted_at').eq('group_id', id).order('planted_at', { ascending: false }).limit(12), 'group_trees')
+    return NextResponse.json({ trees: (data ?? []).map(r => ({ ...r.tree, user_id: r.user_id, planted_at: r.planted_at })) })
+  })
 }
