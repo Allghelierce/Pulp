@@ -1266,6 +1266,7 @@ export default function NoteApp() {
   const activeTabIdRef = useRef(activeTabId)
   useEffect(() => { notesRef.current = notes }, [notes])
   useEffect(() => { activeTabIdRef.current = activeTabId }, [activeTabId])
+  const noteById = useCallback((id: string) => notesRef.current.find(n => n.id === id) ?? null, [])
 
   // UI state
   const [zoom, setZoom] = useState("0.85")
@@ -5315,7 +5316,7 @@ export default function NoteApp() {
           <OnboardingModal theme={theme} initialUsername={suggestedUsername} onDone={(r) => { setFriendCode(r.friend_code); if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
         )}
         {/* Selection bubble (text size + highlight-to-card) and the card toast */}
-        <HighlightCard theme={theme} noteId={activeNote ? activeTabId : null} subject={activeNote?.subject ?? ""} signedIn={!!user} shortcut={shortcuts.makeCard} />
+        <HighlightCard theme={theme} noteId={activeNote?.id ?? null} subject={activeNote?.subject ?? ""} signedIn={!!user} shortcut={shortcuts.makeCard} getNote={noteById} />
         {upgradeReason && <UpgradeDialog theme={theme} reason={upgradeReason} onClose={() => setUpgradeReason(null)} />}
         {importOpen && (
           <ImportModal

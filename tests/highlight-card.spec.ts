@@ -127,6 +127,18 @@ test("a whole sentence, signed out -> local fallback card (no AI call), via the 
   expect(await queuedEvents(page)).toEqual([{ noteId: note.id, topic: note.subject, count: 1 }])
   expect(aiCalls).toEqual([])
   await expect(page.locator('#editor-paper [contenteditable="true"]').first()).toHaveText("Osmosis is the movement of water across a semipermeable membrane.")
+
+  // The new deck is in step with the notes: when the card comes due, no "notes changed" banner.
+  await page.evaluate(id => {
+    const d = JSON.parse(localStorage.getItem(`pulp-recall-${id}`)!)
+    d.cards[0].due = Date.now() - 60_000
+    localStorage.setItem(`pulp-recall-${id}`, JSON.stringify(d))
+  }, note.id)
+  await page.reload()
+  await page.getByText("recall", { exact: true }).click()
+  await page.getByRole("button", { name: /Start · 1/ }).click()
+  await expect(page.getByText("What is Osmosis?")).toBeVisible()
+  await expect(page.getByText("Your notes changed since this deck was built.")).toHaveCount(0)
 })
 
 test("selecting text still bolds with the keyboard and sizes from the bubble", async ({ page }) => {
@@ -139,4 +151,105 @@ test("selecting text still bolds with the keyboard and sizes from the bubble", a
   await page.getByRole("toolbar", { name: "Text size" }).getByRole("button", { name: "Bigger text" }).click()
   await expect.poll(() => boxHtml(page)).toMatch(/font-size: \d+px/)
   expect(await readDeck(page, note.id)).toBeNull() // no card unless asked
+})
+
+// Replace the first box's content (a table, headings…) as if it had been typed/pasted.
+async function setBox(page: Page, html: string) {
+  await page.evaluate(h => {
+    const el = document.querySelector<HTMLElement>('#editor-paper [contenteditable="true"]')!
+    el.innerHTML = h
+    el.dispatchEvent(new Event("input", { bubbles: true }))
+  }, html)
+}
+// Select exactly `text` (first occurrence) on the paper.
+async function selectText(page: Page, text: string) {
+  await page.evaluate(t => {
+    const root = document.getElementById("editor-paper")!
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const i = n.textContent!.indexOf(t)
+      if (i < 0) continue
+      const r = document.createRange()
+      r.setStart(n, i); r.setEnd(n, i + t.length)
+      const sel = window.getSelection()!
+      sel.removeAllRanges(); sel.addRange(r)
+      return
+    }
+    throw new Error(`"${t}" not on the page`)
+  }, text)
+  await expect(page.getByRole("button", { name: "Make card" })).toBeVisible()
+}
+const cardFor = async (page: Page, noteId: string, a: string) => (await readDeck(page, noteId))?.cards.find(c => c.a === a)
+
+test("table rows, lone terms, headings and vocab pairs make cards that don't answer themselves", async ({ page }) => {
+  await bootGuest(page)
+  const note = await write(page, "x")
+  // An import that got no cards leaves an empty deck: one highlight mustn't mark the notes as carded.
+  await page.evaluate(id => localStorage.setItem(`pulp-recall-${id}`, JSON.stringify({ noteId: id, cards: [], generatedAt: Date.now(), noteHash: "import" })), note.id)
+  const makeCard = async (text: string) => {
+    await selectText(page, text)
+    await page.getByRole("button", { name: "Make card" }).click()
+  }
+
+  // A table row: cells read as "term — meaning", not one run-on word.
+  await setBox(page, "<table><tbody><tr><td>Mitochondria</td><td>Powerhouse of the cell</td></tr></tbody></table>")
+  await makeCard("Powerhouse")
+  await expect.poll(() => cardFor(page, note.id, "Powerhouse")).toMatchObject({ q: "Mitochondria — _____ of the cell" })
+  expect(await readDeck(page, note.id)).toMatchObject({ covered: [], noteHash: "import" })
+
+  // A term on its own line: asked about, answered by the line under it.
+  await setBox(page, "<div>Mitosis</div><div>Cell division that makes two identical daughter cells.</div>")
+  await makeCard("Mitosis")
+  await expect.poll(() => cardFor(page, note.id, "Cell division that makes two identical daughter cells."))
+    .toMatchObject({ q: "What do your notes say about “Mitosis”?" })
+
+  // "term - meaning" on one line: front and back.
+  await setBox(page, "<div>la manzana - the apple</div>")
+  await makeCard("la manzana - the apple")
+  await expect.poll(() => cardFor(page, note.id, "the apple")).toMatchObject({ q: "What does “la manzana” mean?" })
+
+  // A heading with nothing under it: no card, and a hint about what would work.
+  const before = (await readDeck(page, note.id))!.cards.length
+  await setBox(page, "<h2>Krebs Cycle</h2>")
+  await makeCard("Krebs Cycle")
+  await expect(page.getByRole("status", { name: "No card made" })).toContainText("Highlight the sentence")
+  expect((await readDeck(page, note.id))!.cards).toHaveLength(before)
+  expect((await readDeck(page, note.id))!.cards.every(c => !c.q.includes(c.a))).toBe(true)
+})
+
+test("a double-click on Card makes one card and keeps Undo; a low highlight puts the toast up top, under the bubble", async ({ page }) => {
+  await bootGuest(page)
+  const lines = Array.from({ length: 15 }, (_, i) => `Line ${i + 1}: the vagus nerve slows the heart rate during rest.`)
+  const note = await write(page, lines.join("\n") + "\nThe sinoatrial node is the natural pacemaker of the heart and sets the rhythm.")
+  await selectWord(page, "pacemaker")
+  const sel = (await page.evaluate(() => { const r = window.getSelection()!.getRangeAt(0).getBoundingClientRect(); return { top: r.top, bottom: r.bottom } }))
+  expect(sel.top).toBeGreaterThan(900 * 0.55) // low on the screen
+
+  await page.getByRole("button", { name: "Make card" }).dblclick()
+  const toast = page.getByRole("status", { name: "Card added" })
+  await expect(toast).toContainText("Card added · due tomorrow")
+  await expect(toast.getByRole("button", { name: "Undo" })).toBeVisible()
+  await expect(page.getByRole("status", { name: "Already a card" })).toHaveCount(0)
+  expect((await readDeck(page, note.id))!.cards).toHaveLength(1)
+  // Up top, clear of the lines being worked on.
+  expect((await toast.boundingBox())!.y + (await toast.boundingBox())!.height).toBeLessThan(sel.top)
+
+  // The next highlight's bubble is reachable (nothing on top of it).
+  await selectWord(page, "sinoatrial")
+  const pill = page.getByRole("button", { name: "Make card" })
+  const pb = (await pill.boundingBox())!
+  expect(await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.closest('[aria-label="Make card"]') != null, [pb.x + pb.width / 2, pb.y + pb.height / 2])).toBe(true)
+})
+
+test("no bubble and no card while a full-screen view covers the selection", async ({ page }) => {
+  await bootGuest(page)
+  const note = await write(page, "Ribosomes translate messenger RNA into proteins in the cytoplasm.")
+  await selectWord(page, "messenger")
+  await expect(page.getByRole("button", { name: "Make card" })).toBeVisible()
+  await page.getByText("recall", { exact: true }).click()
+  await expect(page.getByRole("button", { name: "Make card" })).toHaveCount(0, { timeout: 3000 })
+  expect(await page.evaluate(() => window.getSelection()?.toString())).toBe("messenger") // still selected underneath
+  await page.keyboard.press("ControlOrMeta+Shift+KeyC")
+  await page.waitForTimeout(300)
+  expect(await readDeck(page, note.id)).toBeNull()
 })

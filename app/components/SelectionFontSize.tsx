@@ -12,7 +12,9 @@ const CARD_W = 74
 
 type Pos = { top: number; left: number; size: number } | null
 
-// The contenteditable on the paper that holds the whole selection, or null.
+// The contenteditable on the paper that holds the whole selection, or null —
+// also null while something covers it (the Recall hub, grove, a dialog): the
+// selection lives on under full-screen views, but its bubble and card shouldn't.
 export function selectionHost(): { host: HTMLElement; range: Range } | null {
   const sel = window.getSelection()
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null
@@ -23,6 +25,9 @@ export function selectionHost(): { host: HTMLElement; range: Range } | null {
   const host = el?.closest<HTMLElement>('[contenteditable="true"]') ?? null
   if (!host || !host.closest("#editor-paper")) return null
   if (el?.closest(".pulp-code-block, pre, code")) return null
+  const r = range.getBoundingClientRect()
+  const hit = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height / 2, 8))
+  if (hit && !hit.closest("#editor-paper, [data-pulp-float]")) return null
   return { host, range }
 }
 
@@ -79,7 +84,8 @@ export const SelectionFontSize = memo(function SelectionFontSize({ theme, onMake
       const above = r.top - 44
       const top = above > 8 ? above : r.bottom + 8
       const left = Math.min(window.innerWidth - W - 8, Math.max(8, r.left + r.width / 2 - W / 2))
-      setPos({ top, left, size: sizeAt(found.range) })
+      const size = sizeAt(found.range)
+      setPos(p => (p && p.top === top && p.left === left && p.size === size ? p : { top, left, size }))
     })
   }, [W])
 
@@ -95,6 +101,15 @@ export const SelectionFontSize = memo(function SelectionFontSize({ theme, onMake
     }
   }, [update])
 
+  // A full-screen view or dialog can open over the selection without any of the
+  // events above; look again now and then while the bubble is up.
+  const shown = !!pos
+  useEffect(() => {
+    if (!shown) return
+    const iv = setInterval(update, 400)
+    return () => clearInterval(iv)
+  }, [shown, update])
+
   if (!pos) return null
   const set = (px: number) => { applySize(px); setListOpen(false); update() }
   const smaller = [...SIZES].reverse().find(s => s < pos.size) ?? SIZES[0]
@@ -104,7 +119,7 @@ export const SelectionFontSize = memo(function SelectionFontSize({ theme, onMake
   const btn: React.CSSProperties = { background: "none", border: "none", cursor: "pointer", color: fg, padding: "4px 8px", borderRadius: 6, fontFamily: "Crimson Pro, serif", lineHeight: 1 }
 
   return (
-    <div onMouseDown={e => e.preventDefault()}
+    <div data-pulp-float onMouseDown={e => e.preventDefault()}
       style={{ position: "fixed", top: pos.top, left: pos.left, width: W, zIndex: 9990, display: "flex", alignItems: "center",
         padding: 3, borderRadius: 10, background: isDark ? "rgba(24,24,27,0.96)" : "rgba(255,255,255,0.98)",
         border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, boxShadow: "0 8px 24px -8px rgba(0,0,0,0.35)", backdropFilter: "blur(12px)" }}>

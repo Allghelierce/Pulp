@@ -36,6 +36,24 @@ export function notebookLines(note: NoteData): string[] {
   return note.pages.flatMap((_, i) => pageLines(note, i))
 }
 
+// The notebook text a deck's noteHash fingerprints (ReviewView's drift check):
+// "[Page n]" bodies, then "[Page n - Text Box]" boxes.
+export function notebookReviewText(note: NoteData): string {
+  const pageTexts = (note.pages || []).map((html, i) => {
+    const text = extractTextFromHTML(html)
+    return text ? `[Page ${i + 1}]\n${text}` : ""
+  }).filter(Boolean)
+  const boxTexts: string[] = []
+  for (const [pageIdx, boxes] of Object.entries(note.boxes || {})) {
+    for (const box of boxes || []) {
+      if (!box?.content?.trim()) continue
+      const text = extractTextFromHTML(box.content)
+      if (text) boxTexts.push(`[Page ${Number(pageIdx) + 1} - Text Box]\n${text}`)
+    }
+  }
+  return [...pageTexts, ...boxTexts].join("\n\n")
+}
+
 // Pages with enough text that no cards were made from yet. `text` is only the
 // new lines, so the AI cards what's missing instead of re-carding the page.
 export function uncoveredPages(note: NoteData, deck: Deck | null): { i: number; text: string }[] {
