@@ -1,5 +1,5 @@
 // Rich paste: the clipboard's text/html from Google Docs / Word / Notion keeps
-// headings (→ pages), lists, bold, links, tables and the source's spacing.
+// headings (→ sections), lists, bold, links, tables and the source's spacing.
 // Guest = signed out, so no AI calls; we inspect the stored notebook.
 import { test, expect, type Page } from "@playwright/test"
 import { bootGuest, openImport, readNotes, pageHtml, filler } from "./import-helpers"
@@ -72,7 +72,7 @@ test("rich paste: Google Docs, Word and Notion keep their structure", async ({ p
   await page.route("**/api/import", r => r.fulfill({ status: 401, json: { error: "Unauthorized" } }))
   await bootGuest(page)
 
-  // Google Docs: big first line is the title; H1s split pages; bold, nested list,
+  // Google Docs: big first line is the title; H1s start sections; bold, nested list,
   // numbered list, link; tight lines stay tight, the blank line becomes one spacer.
   const g = await importAndRead(page, await richPaste(page, GDOCS, GDOCS_PLAIN))
   expect(g.title).toBe("Biology Unit 3")
@@ -81,9 +81,9 @@ test("rich paste: Google Docs, Word and Notion keep their structure", async ({ p
   expect(g.html[0]).toContain("The <b>nucleus</b> holds DNA.")
   expect(g.html[0]).toMatch(/<\/div><div>Second line, right below\.<\/div><div><br><\/div><ul>/)
   expect(g.html[0]).toContain("<ul><li>Mitochondria<ul><li><i>the powerhouse</i></li></ul></li><li>Ribosomes</li></ul>")
-  expect(g.html[1]).toContain("<ol><li>Light reactions</li><li>Calvin cycle</li></ol>")
-  expect(g.html[1]).toContain('<a href="https://khanacademy.org"')
-  expect(g.html[1]).toContain("&lt;b&gt;literal&lt;/b&gt;")
+  expect(g.html.join("")).toContain("<ol><li>Light reactions</li><li>Calvin cycle</li></ol>")
+  expect(g.html.join("")).toContain('<a href="https://khanacademy.org"')
+  expect(g.html.join("")).toContain("&lt;b&gt;literal&lt;/b&gt;")
   expect(g.html.join("")).not.toContain("__pwned")
   expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined()
   // The list renders as a real list in the page's text box.
@@ -100,7 +100,7 @@ test("rich paste: Google Docs, Word and Notion keep their structure", async ({ p
   expect(n.rows).toEqual(["History", "Greece"])
   expect(n.html[0]).toContain("<ul><li>Caesar<ul><li>crossed the <b>Rubicon</b></li></ul></li><li>Augustus</li></ul>")
   expect(n.html[0]).toContain("<li>☑ Read chapter 4</li><li>☐ Make flashcards</li>")
-  expect(n.html[1]).toMatch(/<table[^>]*><tr><td[^>]*><b>Term<\/b><\/td><td[^>]*><b>Meaning<\/b><\/td><\/tr><tr><td[^>]*>Polis<\/td>/)
+  expect(n.html.join("")).toMatch(/<table[^>]*>(<tbody>)?<tr><td[^>]*><b>Term<\/b><\/td><td[^>]*><b>Meaning<\/b><\/td><\/tr><tr><td[^>]*>Polis<\/td>/)
 })
 
 test("rich paste: editing the text afterwards falls back to the edited plain text", async ({ page }) => {

@@ -277,7 +277,7 @@ export const ImportModal = memo(function ImportModal({ theme, signedIn, onClose,
                   <input ref={fileRef} type="file" accept={ACCEPTED_IMPORT_TYPES} hidden
                     onChange={e => { handleFile(e.target.files?.[0]); e.target.value = "" }} />
                   <p style={{ fontSize: 12, color: c.muted, margin: '10px 0 0', lineHeight: 1.5 }}>
-                    Or copy everything from Google Docs, Word, Notion, Apple Notes or OneNote (⌘A, ⌘C) and use Paste — headings become pages, formatting is kept.
+                    Or copy everything from Google Docs, Word, Notion, Apple Notes or OneNote (⌘A, ⌘C) and use Paste — headings become topics, formatting is kept.
                   </p>
                 </>
               ) : (

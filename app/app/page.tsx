@@ -15,7 +15,7 @@ import { applyRecall } from "@/app/lib/treeGrowth"
 import { isFullyGrown } from "@/lib/topics"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
-import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
+import { getPaperBg, getInkColor, isDarkPaper, rulePitch, type PaperStyle } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
 import { useNarrow, useWiderThan } from "@/app/hooks/useNarrow"
 import { UpgradeDialog } from "@/app/components/UpgradeDialog"
@@ -43,6 +43,7 @@ import { totalDueAll, buildTopicIndex } from "@/lib/topicIndex"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { ImportModal } from "@/app/components/ImportModal"
 import { sectionToHtml, type ImportDoc } from "@/lib/importNotes"
+import { paginateImport } from "@/lib/importPaginate"
 import { saveDeck, hashNotes } from "@/lib/recallSchedule"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
@@ -263,10 +264,10 @@ const MarginEngravings = memo(function MarginEngravings({ theme }: { theme: "lig
 
 
 const ScrollModePage = memo(function ScrollModePage({
-  pageIdx, html, boxes, isActive, onClick, paperBg, paperImg, paperSize, theme, editorFont, baseFontSize, paperStyle, inkColor
+  pageIdx, html, boxes, isActive, onClick, paperBg, paperImg, paperSize, paperPos, theme, editorFont, baseFontSize, paperStyle, inkColor
 }: {
   pageIdx: number; html: string; boxes: TextBoxType[]; isActive: boolean;
-  onClick: () => void; paperBg: string; paperImg?: string; paperSize?: string;
+  onClick: () => void; paperBg: string; paperImg?: string; paperSize?: string; paperPos?: string;
   theme: "light" | "dark"; editorFont: string; baseFontSize: string; paperStyle: string; inkColor: string
 }) {
   return (
@@ -279,6 +280,7 @@ const ScrollModePage = memo(function ScrollModePage({
         backgroundColor: paperBg,
         backgroundImage: paperImg,
         backgroundSize: paperSize,
+        backgroundPosition: paperPos,
         cursor: isActive ? undefined : "pointer",
         outline: isActive ? `2px solid ${ACCENT}` : "2px solid transparent",
         outlineOffset: 2,
@@ -1163,7 +1165,7 @@ const BoxTextarea = memo(function BoxTextarea({
         height: isSticky || sizeLocked ? "100%" : undefined,
         minHeight: isSticky || sizeLocked ? undefined : 32,
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: 400,
-        lineHeight: "var(--pulp-line-height, 1.8)", color: inkColor, cursor: "text", caretColor: isDarkPaper(paperStyle) ? "#e4e4e7" : "#18181b",
+        lineHeight: styleKey === "default" ? "var(--pulp-rule, var(--pulp-line-height, 1.8))" : "var(--pulp-line-height, 1.8)", color: inkColor, cursor: "text", caretColor: isDarkPaper(paperStyle) ? "#e4e4e7" : "#18181b",
         letterSpacing: "0.1px",
         fontStyle: isMarginStyle ? "italic" : "normal",
         transform: isMarginStyle ? "rotate(-0.5deg) skewX(-0.8deg)" : undefined,
@@ -2684,6 +2686,11 @@ export default function NoteApp() {
     root.setProperty("--pulp-heading-font", `"${headingFont}", "Crimson Pro", serif`)
     root.setProperty("--pulp-font-scale", baseFontSize === "small" ? "0.88" : baseFontSize === "large" ? "1.15" : "1")
     root.setProperty("--pulp-line-height", lineSpacing === "compact" ? "1.5" : lineSpacing === "relaxed" ? "2.1" : "1.8")
+    // Body text sits on the ruled lines: its line height is the ruling gap (two rows if the
+    // font is too big for one). Heading-style boxes keep --pulp-line-height.
+    const pitch = rulePitch(lineSpacing)
+    const bodyPx = BOX_HEADING_SIZES.default * (baseFontSize === "small" ? 0.88 : baseFontSize === "large" ? 1.15 : 1)
+    root.setProperty("--pulp-rule", `${pitch * Math.max(1, Math.ceil((bodyPx * 1.2) / pitch))}px`)
   }, [editorFont, headingFont, baseFontSize, lineSpacing])
 
   const addNoteRef = useRef<(folderId?: number | null) => void>(() => {})
@@ -3293,14 +3300,15 @@ export default function NoteApp() {
   // The global key handler is registered once; always call the current addNote (it reads `user`).
   useEffect(() => { addNoteRef.current = addNote })
 
-  // Import: one page per parsed section. Mirrors addNote() so imports sync the same way.
-  // Each section lives in that page's text box (like typed notes): the legacy
+  // Import: sections flow onto pages, each page filled before the next starts (recall
+  // topics still follow sections). Mirrors addNote() so imports sync the same way.
+  // Each page's text lives in its text box (like typed notes): the legacy
   // page-HTML layer is a non-editable underlay with no ink color on paper.
   const createImportedNotebook = (doc: ImportDoc): string => {
     const id = uid()
-    const sections = doc.sections.length ? doc.sections : [{ text: "" }]
-    const pages = sections.map(() => "")
-    const boxes: NoteData["boxes"] = Object.fromEntries(sections.map((s, i) => [i, [{ id: uid(), x: 40, y: 40, w: 900, h: 32, content: s.text ? sectionToHtml(s) : "" }]]))
+    const filled = paginateImport(doc.sections.filter(s => s.text).map(sectionToHtml))
+    const pages = filled.map(() => "")
+    const boxes: NoteData["boxes"] = Object.fromEntries(filled.map((html, i) => [i, [{ id: uid(), x: 40, y: 40, w: 900, h: 32, content: html }]]))
     const subject = doc.title.trim() || "Imported notes"
     const newNote: NoteData = { id, subject, pages, folderId: null, boxes }
     // Stamp the deck with the notebook's real fingerprint (same text ReviewView
@@ -3694,7 +3702,7 @@ export default function NoteApp() {
     if (isAdmin) updateSettings({ isDevUnlocked: true })
   }
 
-  const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark")
+  const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, backgroundPosition: paperPos } = getPaperBg(lineSpacing, paperStyle, theme === "dark")
 
   return (
     <LazyMotion features={domAnimation}>
@@ -4192,6 +4200,7 @@ export default function NoteApp() {
                             paperBg={paperBg}
                             paperImg={paperImg}
                             paperSize={paperSize}
+                            paperPos={paperPos}
                             theme={theme}
                             editorFont={editorFont}
                             baseFontSize={baseFontSize}
@@ -4217,7 +4226,7 @@ export default function NoteApp() {
 
 
 
-                        <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1250px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'textbox' || activeTool === 'image' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
+                        <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1250px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'textbox' || activeTool === 'image' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, backgroundPosition: paperPos, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
                           onMouseDown={e => {
                             if (activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'image') {
                               return
@@ -4374,9 +4383,9 @@ export default function NoteApp() {
                                position: absolute;
                                top: 0.35em;
                              }
-                             #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
-                             #editor-paper ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
-                             #editor-paper li { margin-bottom: 0.15em !important; }
+                             #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0 !important; }
+                             #editor-paper ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0 !important; }
+                             #editor-paper li { margin-bottom: 0 !important; }
                              .pulp-table-wrap { position: relative; }
                              .pulp-table-wrap::before {
                                content: "⠿";
@@ -4554,6 +4563,7 @@ export default function NoteApp() {
                             paperBg={paperBg}
                             paperImg={paperImg}
                             paperSize={paperSize}
+                            paperPos={paperPos}
                             theme={theme}
                             editorFont={editorFont}
                             baseFontSize={baseFontSize}

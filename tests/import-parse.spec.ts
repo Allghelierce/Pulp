@@ -37,8 +37,9 @@ test("parser: docx / md / html / txt through the modal", async ({ page }) => {
   expect(docx.summary).toMatch(/^3 sections ·/)
   expect(docx.rows).toEqual(["Cells", "Mitochondria", "Photosynthesis"])
   expect(docx.note.subject).toBe("Biology Notes")
-  expect(docx.note.pages).toHaveLength(3)
-  expect(pageHtml(docx.note)[0]).toContain('<h2 style="font-size:1.75rem;font-weight:700;margin:1rem 0">Cells</h2>')
+  // Three short sections flow onto one page (pages fill before the next starts).
+  expect(docx.note.pages).toHaveLength(1)
+  expect(pageHtml(docx.note)[0]).toMatch(/^<h2 style="[^"]*">Cells<\/h2>/)
   expect(pageHtml(docx.note)[0]).toContain("Term\tDefinition<br>Line after break &lt;script&gt;alert(1)&lt;/script&gt;")
   expect(pageHtml(docx.note).join("")).not.toContain("<script>")
   // Rendered as text in the editor, not as a tag.
@@ -73,7 +74,7 @@ test("parser: docx / md / html / txt through the modal", async ({ page }) => {
   expect(h.summary).toMatch(/^2 sections ·/)
   expect(h.rows).toEqual(["Rome", "Greece"])
   expect(pageHtml(h.note)[0]).toContain("Watch for &lt;script&gt; tags.")
-  expect(pageHtml(h.note)[1]).toContain("<ul><li>Athens</li><li>Sparta</li></ul>")
+  expect(pageHtml(h.note).join("")).toContain("<ul><li>Athens</li><li>Sparta</li></ul>")
   expect(pageHtml(h.note).join("")).not.toContain("__pwned")
   expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined()
 
