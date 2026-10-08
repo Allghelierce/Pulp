@@ -11,5 +11,8 @@ export async function GET(req: NextRequest) {
     )
     await supabase.auth.exchangeCodeForSession(code)
   }
-  return NextResponse.redirect(new URL('/app', req.url))
+  // Only same-site relative paths (no "//host" or absolute URLs).
+  const next = req.nextUrl.searchParams.get('next')
+  const dest = next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : '/app'
+  return NextResponse.redirect(new URL(dest, req.url))
 }

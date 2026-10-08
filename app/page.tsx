@@ -12,9 +12,11 @@ export default function RootPage() {
         // Stale/invalid refresh token — purge local session so it stops recurring.
         supabase.auth.signOut({ scope: 'local' })
         setStatus('guest')
-      } else if (user) {
+      } else if (user && !/[?&]checkout=plus_(monthly|yearly)\b/.test(window.location.search)) {
         window.location.href = '/app'
       } else {
+        // Signed out, or finishing an upgrade (?checkout=plan): stay on the site,
+        // which opens Stripe Checkout directly instead of going through the app.
         setStatus('guest')
       }
     })

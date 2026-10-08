@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { supabase } from "@/lib/supabase"
+import { apiFetch } from "@/lib/apiFetch"
 import { motion } from "framer-motion"
 import { PlantIcon } from "./components/PlantIcon"
 import { LandingTerrain } from "./components/LandingTerrain"
@@ -477,6 +479,30 @@ export default function PulpLanding() {
   const [scrolled, setScrolled] = useState(false)
   const [pastHero, setPastHero] = useState(false)
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('annual')
+  // Upgrade stays on the site: signed in -> straight to Stripe Checkout; signed out ->
+  // sign in, then back here (?checkout=plan) which opens checkout. Never via the app.
+  const [checkoutBusy, setCheckoutBusy] = useState<'button' | 'auto' | null>(null)
+  const [checkoutError, setCheckoutError] = useState('')
+  const goCheckout = useCallback(async (plan: 'plus_monthly' | 'plus_yearly', how: 'button' | 'auto' = 'button') => {
+    setCheckoutError('')
+    setCheckoutBusy(how)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { window.location.href = `/login?checkout=${plan}`; return }
+      const res = await apiFetch('/api/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan, from: 'site' }) })
+      const json = await res.json().catch(() => ({}))
+      if (json.url) { window.location.href = json.url; return }
+      setCheckoutError(json.error || "couldn't open checkout — try again")
+    } catch { setCheckoutError("couldn't open checkout — try again") }
+    setCheckoutBusy(null)
+  }, [])
+  useEffect(() => {
+    const plan = new URLSearchParams(window.location.search).get('checkout')
+    if (plan !== 'plus_monthly' && plan !== 'plus_yearly') return
+    window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot: resume an upgrade after sign-in
+    goCheckout(plan, 'auto')
+  }, [goCheckout])
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -1315,6 +1341,11 @@ export default function PulpLanding() {
         </section>
 
         {/* Pricing */}
+        {checkoutBusy === 'auto' && (
+          <div role="status" aria-live="polite" style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(245,240,230,0.85)', backdropFilter: 'blur(4px)', fontFamily: 'var(--font-fraunces), serif', fontSize: '1.1rem', color: '#2a2620' }}>
+            opening secure checkout…
+          </div>
+        )}
         <section id="pricing" style={{ padding: '48px 80px 64px', scrollMarginTop: 80 }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <motion.h2
@@ -1420,14 +1451,15 @@ export default function PulpLanding() {
                     </li>
                   ))}
                 </ul>
-                <a href={`/app?checkout=${billingPeriod === 'annual' ? 'plus_yearly' : 'plus_monthly'}`} style={{
+                <button type="button" onClick={() => goCheckout(billingPeriod === 'annual' ? 'plus_yearly' : 'plus_monthly')} disabled={!!checkoutBusy} style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
-                  padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
+                  padding: '10px 24px', borderRadius: 999, textDecoration: 'none', border: 'none', cursor: checkoutBusy ? 'default' : 'pointer',
                   background: 'linear-gradient(to bottom, #fff, #f0f0f0)', color: accent,
-                  display: 'block', textAlign: 'center',
-                  marginTop: 'auto',
+                  display: 'block', width: '100%', textAlign: 'center',
+                  marginTop: 'auto', opacity: checkoutBusy ? 0.75 : 1,
                   boxShadow: '0 2px 0 rgba(0,0,0,0.15), 0 4px 8px -2px rgba(0,0,0,0.1)',
-                }} className="btn-pop">upgrade now</a>
+                }} className="btn-pop">{checkoutBusy ? 'opening checkout…' : 'upgrade now'}</button>
+                {checkoutError && <p role="alert" style={{ fontFamily: serif, fontSize: '0.8rem', color: '#fff', margin: '8px 0 0', textAlign: 'center', opacity: 0.9 }}>{checkoutError}</p>}
               </motion.div>
 
             </div>

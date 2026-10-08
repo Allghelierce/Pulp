@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   const user = await getAuthUser(req)
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  let body: { plan?: unknown }
+  let body: { plan?: unknown; from?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }) }
 
   const plan = normalizePlan(String(body.plan ?? ''))
@@ -62,7 +62,8 @@ export async function POST(req: Request) {
     metadata: { user_id: user.id, plan },
     integration_identifier: 'pulp_plus_checkout_qzmwkrtd',
     success_url: `${origin}/app?upgraded=1`,
-    cancel_url: `${origin}/app?upgrade_cancelled=1`,
+    // Started from the website: a cancelled checkout returns to the site's pricing, not the app.
+    cancel_url: body.from === 'site' ? `${origin}/?upgrade_cancelled=1#pricing` : `${origin}/app?upgrade_cancelled=1`,
   })
 
   return NextResponse.json({ url: session.url })
