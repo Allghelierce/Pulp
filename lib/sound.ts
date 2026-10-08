@@ -35,6 +35,15 @@ function audio(): AudioContext | null {
   return ctx
 }
 
+// Creating the AudioContext costs ~100ms the first time; do it while the page
+// is idle (e.g. when the market opens) so the first reveal sound doesn't hitch.
+export function warmAudio() {
+  if (typeof window === "undefined" || ctx) return
+  const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback
+  const run = () => { try { audio() } catch {} }
+  if (ric) ric(run, { timeout: 1500 }); else setTimeout(run, 300)
+}
+
 type Note = { f: number; at?: number; dur?: number; type?: OscillatorType; gain?: number; slideTo?: number }
 
 // One enveloped oscillator per note, through a gentle lowpass for warmth.
