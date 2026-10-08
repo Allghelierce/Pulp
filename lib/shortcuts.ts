@@ -7,6 +7,8 @@ export const DEFAULT_SHORTCUTS = {
   ai: "ctrl+j", slash: "/", newNote: "ctrl+n", search: "ctrl+k", toggleSidebar: "ctrl+\\",
   aiCommand: "\\", timer: "ctrl+alt+t", prevPage: "alt+arrowleft", nextPage: "alt+arrowright",
   drawMode: "ctrl+d", cycleHeader: "alt+1",
+  // Highlight-to-card. ⌘⇧C / Ctrl+Shift+C, Anki's cloze key (free in the editor).
+  makeCard: "ctrl+shift+c",
 }
 export type Shortcuts = typeof DEFAULT_SHORTCUTS
 

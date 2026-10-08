@@ -1,0 +1,227 @@
+// Highlight-to-card: one recall card from text highlighted in a text box, made on
+// the spot with no AI. A few words inside a sentence become a cloze ("_____");
+// a whole sentence or passage gets the best local card we can find. Signed-in
+// users ask the AI first for those (/api/recall mode "highlight") and land here
+// if it can't help. Nothing here touches the note itself.
+import type { Card } from "@/lib/recallPrompt"
+
+export const CLOZE_MAX_WORDS = 8
+export const BLANK = "_____"
+const MAX_Q = 400
+const MAX_A = 1200
+
+// The paragraph around a highlight, split at it. `emphasized`: bold / underlined /
+// marked bits inside the highlight (the student's own "this matters").
+export interface Highlight { before: string; selected: string; after: string; emphasized?: string[] }
+
+const squash = (s: string) => s.replace(/\s+/g, " ").trim()
+const wordCount = (s: string) => squash(s).split(" ").filter(w => /[\p{L}\p{N}]/u.test(w)).length
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+// ── sentences ─────────────────────────────────────────────────────────
+// A sentence ends at a newline, or at . ! ? (plus closing quotes) before a space —
+// so "3.14" and "e.g.x" don't split.
+function lastSentenceStart(text: string): number {
+  let cut = 0
+  const re = /\n|[.!?]["'”’)\]]*(?=\s)/g
+  for (let m = re.exec(text); m; m = re.exec(text)) cut = m.index + m[0].length
+  return cut
+}
+function firstSentenceEnd(text: string): number {
+  const m = /\n|[.!?]["'”’)\]]*(?=\s|$)/.exec(text)
+  if (!m) return text.length
+  return m[0] === "\n" ? m.index : m.index + m[0].length
+}
+
+// Whole words only, and no stray spaces/punctuation on the answer's edges.
+function tidy(h: Highlight): { pre: string; sel: string; post: string } {
+  let pre = h.before, sel = h.selected, post = h.after
+  const head = /[\p{L}\p{N}'’-]+$/u.exec(pre)
+  if (head && /^[\p{L}\p{N}]/u.test(sel)) { sel = head[0] + sel; pre = pre.slice(0, head.index) }
+  const tail = /^[\p{L}\p{N}'’-]+/u.exec(post)
+  if (tail && /[\p{L}\p{N}]$/u.test(sel)) { sel += tail[0]; post = post.slice(tail[0].length) }
+  const lead = /^[\s"'“‘(\[]+/.exec(sel)?.[0] ?? ""
+  pre += lead; sel = sel.slice(lead.length)
+  const trail = /[\s.,;:!?"'”’)\]]+$/.exec(sel)?.[0] ?? ""
+  post = trail + post; sel = sel.slice(0, sel.length - trail.length)
+  return { pre, sel: squash(sel), post }
+}
+
+// Every whole-word copy of `term` blanked, so the question never gives it away.
+function blankAll(text: string, term: string): string {
+  const edge = (c: string) => (/[\p{L}\p{N}]/u.test(c) ? "(?<![\\p{L}\\p{N}])" : "")
+  const tail = (c: string) => (/[\p{L}\p{N}]/u.test(c) ? "(?![\\p{L}\\p{N}])" : "")
+  const re = new RegExp(edge(term[0]) + escapeRe(term).replace(/\s+/g, "\\s+") + tail(term[term.length - 1]), "giu")
+  return text.replace(re, BLANK)
+}
+
+// Long questions keep the part around the first blank.
+function clipQ(q: string): string {
+  if (q.length <= MAX_Q) return q
+  const i = q.indexOf(BLANK)
+  const from = Math.max(0, i - 180), to = Math.min(q.length, i + BLANK.length + 180)
+  return `${from > 0 ? "…" : ""}${q.slice(from, to).trim()}${to < q.length ? "…" : ""}`
+}
+const clipA = (a: string) => (a.length <= MAX_A ? a : a.slice(0, a.lastIndexOf(" ", MAX_A) || MAX_A) + "…")
+
+// ── cards ─────────────────────────────────────────────────────────────
+// A short highlight inside a longer sentence: Q = the sentence with it blanked.
+// null when the highlight is long, or is (nearly) the whole sentence.
+export function clozeCard(h: Highlight): Card | null {
+  const { pre, sel, post } = tidy(h)
+  if (!sel || wordCount(sel) > CLOZE_MAX_WORDS) return null
+  const sPre = pre.slice(lastSentenceStart(pre))
+  const sPost = post.slice(0, firstSentenceEnd(post))
+  if (wordCount(`${sPre} ${sPost}`) < 2) return null // nothing around it to ask with
+  const q = squash(blankAll(sPre, sel) + BLANK + blankAll(sPost, sel))
+  return { q: clipQ(q), a: sel, hint: "" }
+}
+
+// Cloze `term` inside a passage (all copies blanked); null if too little is left.
+function clozeIn(passage: string, term: string): Card | null {
+  const t = squash(term).replace(/^[\s"'“‘(\[]+|[\s.,;:!?"'”’)\]]+$/g, "")
+  if (!t || wordCount(t) > CLOZE_MAX_WORDS) return null
+  const q = blankAll(passage, t)
+  if (!q.includes(BLANK) || wordCount(q.split(BLANK).join(" ")) < 3) return null
+  return { q: clipQ(squash(q)), a: t, hint: "" }
+}
+
+// "Osmosis is the movement of water…" -> "What is osmosis?"
+const PRONOUN = /^(it|this|that|these|those|they|he|she|there|here|which|what|who|we|you|i|one|some|many|most|all)\b/i
+function definitionCard(passage: string): Card | null {
+  const first = passage.slice(0, firstSentenceEnd(passage))
+  const rest = squash(passage.slice(first.length))
+  const m = /^(.{2,60}?)\s+(is|are|was|were|means|refers to)\s+(.+?)[.!?]*$/i.exec(first)
+  if (!m) return null
+  const [, subjectRaw, verbRaw, predicate] = m
+  const subject = subjectRaw.replace(/^(The|A|An)\b/, w => w.toLowerCase()).replace(/[,:;]+$/, "")
+  const verb = verbRaw.toLowerCase()
+  if (wordCount(subject) > 5 || PRONOUN.test(subject) || /[,;]/.test(subject)) return null
+  // "X is a/the …" reads as a definition; "X is released when…" doesn't.
+  if (/^(is|are|was|were)$/.test(verb) && !/^(a|an|the|one of|any|each|called|known as|defined as)\b/i.test(predicate)) return null
+  const q = verb === "means" ? `What does ${subject} mean?` : verb === "refers to" ? `What does ${subject} refer to?` : `What ${verb} ${subject}?`
+  return { q, a: clipA(squash(`${predicate}${rest ? `. ${rest}` : ""}`)), hint: "" }
+}
+
+const DULL = new Set(("important different something everything anything because therefore however although " +
+  "including especially actually basically probably remember understand following example examples between " +
+  "through without another several usually generally particular specific certain information describes described " +
+  "question questions answer answers lecture chapter section definition definitions sometimes otherwise whatever " +
+  "according together whenever wherever").split(" "))
+
+// The term that looks most like the point: an acronym, a capitalised name mid-
+// sentence, a number or year, else the longest uncommon word.
+function keyTerm(passage: string): string | null {
+  let best: { term: string; score: number; at: number } | null = null
+  const consider = (term: string, score: number, at: number) => {
+    if (!best || score > best.score || (score === best.score && at < best.at)) best = { term, score, at }
+  }
+  const sentenceStart = (at: number) => at === 0 || /(?:[.!?]["'”’)\]]*\s+|\n\s*)$/.test(passage.slice(0, at))
+  for (const m of passage.matchAll(/\b[A-Z]{2,6}s?\b/g)) consider(m[0], 3.5, m.index ?? 0)
+  for (const m of passage.matchAll(/\b[A-Z][\p{L}\p{N}'’-]*(?:\s+[A-Z][\p{L}\p{N}'’-]*){0,2}/gu)) {
+    const at = m.index ?? 0
+    if (!sentenceStart(at)) consider(m[0], 3 + m[0].split(/\s+/).length * 0.2, at)
+  }
+  for (const m of passage.matchAll(/\b\d{3,4}\b|\b\d+(?:\.\d+)?%/g)) consider(m[0], 2.5, m.index ?? 0)
+  for (const m of passage.matchAll(/[\p{L}][\p{L}'’-]{7,}/gu)) {
+    if (!DULL.has(m[0].toLowerCase())) consider(m[0], 1 + m[0].length / 10, m.index ?? 0)
+  }
+  const found = best as { term: string } | null
+  return found && squash(found.term) !== squash(passage) ? found.term : null
+}
+
+// A whole sentence or passage, no AI: cloze an emphasized term, else a definition,
+// else the key term, else ask what the notes say about it.
+export function localCard(h: Highlight): Card {
+  const t0 = tidy(h)
+  const passage = squash(t0.sel ? t0.sel + (/^[.!?]+/.exec(t0.post)?.[0] ?? "") : h.selected) // keep its full stop
+  for (const t of h.emphasized ?? []) { const c = clozeIn(passage, t); if (c) return c }
+  const d = definitionCard(passage)
+  if (d) return d
+  const t = keyTerm(passage)
+  const c = t ? clozeIn(passage, t) : null
+  if (c) return c
+  const head = passage.split(" ").slice(0, 6).join(" ").replace(/[.,;:!?]+$/, "")
+  return { q: `What do your notes say about “${head}${wordCount(passage) > 6 ? "…" : ""}”?`, a: clipA(passage), hint: "" }
+}
+
+// The highlight's paragraph as plain text (AI context, topic matching).
+export function paragraphOf(h: Highlight, max = 1500): string {
+  const side = Math.floor((max - Math.min(h.selected.length, max)) / 2)
+  return squash(`${h.before.slice(-side)}${h.selected.slice(0, max)}${h.after.slice(0, side)}`)
+}
+
+// ── topic ─────────────────────────────────────────────────────────────
+export interface TopicCandidate { name: string; text: string; growing: boolean; last: number }
+
+const STOP = new Set(("the and for are was were with that this from into have has had not but you your they them " +
+  "their its our can will would could should about which what when where why how who than then also very more most " +
+  "some such only each other these those there here been being does did just like").split(" "))
+const stem = (w: string) => (w.length > 4 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w)
+function keywords(s: string): Set<string> {
+  return new Set((s.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []).filter(w => !STOP.has(w)).map(stem))
+}
+
+// The notebook topic this highlight belongs to: the one whose name (most) and cards
+// share words with it; ties go to a tree still growing, then the latest studied.
+// No topics yet -> the notebook's own name.
+export function pickTopic(cands: TopicCandidate[], context: string, fallback: string): string {
+  const ctx = keywords(context)
+  const overlap = (s: string) => { let n = 0; for (const w of keywords(s)) if (ctx.has(w)) n++; return n }
+  const ranked = cands.filter(c => c.name.trim())
+    .map(c => ({ c, score: 3 * overlap(c.name) + Math.min(5, overlap(c.text)) }))
+    .sort((x, y) => (y.score - x.score) || (Number(y.c.growing) - Number(x.c.growing)) || (y.c.last - x.c.last))
+  return ranked[0]?.c.name.trim() || fallback.trim() || "Notes"
+}
+
+// "due tomorrow" / "due Friday" for the toast.
+export function dueLabel(due: number, now: number): string {
+  const day = (t: number) => { const d = new Date(t); d.setHours(12, 0, 0, 0); return d.getTime() }
+  const days = Math.round((day(due) - day(now)) / 86_400_000)
+  if (days <= 0) return "due today"
+  if (days === 1) return "due tomorrow"
+  return `due ${new Date(due).toLocaleDateString(undefined, { weekday: "long" })}`
+}
+
+// ── reading the highlight from the page (browser only) ────────────────
+const BLOCK = /^(P|DIV|LI|H[1-6]|BLOCKQUOTE|PRE|TR|UL|OL|TABLE)$/
+
+// Plain text of a node: <br> and block edges become newlines.
+function nodeText(root: Node): string {
+  let out = ""
+  const walk = (n: Node) => {
+    if (n.nodeType === Node.TEXT_NODE) { out += n.nodeValue ?? ""; return }
+    const el = n as HTMLElement
+    if (el.tagName === "BR") { out += "\n"; return }
+    const block = !!el.tagName && BLOCK.test(el.tagName)
+    if (block) out += "\n"
+    n.childNodes.forEach(walk)
+    if (block) out += "\n"
+  }
+  walk(root)
+  return out.replace(/ /g, " ")
+}
+
+// The highlight in `host` (a text box) with the rest of its paragraph. Reads only.
+export function readHighlight(range: Range, host: HTMLElement): Highlight {
+  const anc = range.commonAncestorContainer
+  const start = anc.nodeType === Node.ELEMENT_NODE ? anc as HTMLElement : anc.parentElement
+  let block: HTMLElement = host
+  for (let el = start; el && el !== host && host.contains(el); el = el.parentElement) {
+    if (BLOCK.test(el.tagName)) { block = el; break }
+  }
+  const side = (from: [Node, number], to: [Node, number]) => {
+    const r = document.createRange()
+    r.setStart(...from); r.setEnd(...to)
+    return nodeText(r.cloneContents())
+  }
+  const before = side([block, 0], [range.startContainer, range.startOffset])
+  const after = side([range.endContainer, range.endOffset], [block, block.childNodes.length])
+  const frag = range.cloneContents()
+  const emphasized: string[] = []
+  frag.querySelectorAll?.("b, strong, u, mark, [style*='background']").forEach(el => {
+    const t = squash(el.textContent || "")
+    if (t.length >= 2 && !emphasized.includes(t)) emphasized.push(t)
+  })
+  return { before, selected: nodeText(frag), after, emphasized }
+}

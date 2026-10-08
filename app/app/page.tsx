@@ -20,7 +20,7 @@ import { getPaperBg, getInkColor, isDarkPaper, rulePitch, type PaperStyle } from
 import { useEditor } from "@/app/hooks/useEditor"
 import { useNarrow, useWiderThan } from "@/app/hooks/useNarrow"
 import { UpgradeDialog } from "@/app/components/UpgradeDialog"
-import { SelectionFontSize } from "@/app/components/SelectionFontSize"
+import { HighlightCard } from "@/app/components/HighlightCard"
 import { UPGRADE_EVENT, fetchPlan, type UpgradeDetail } from "@/lib/billing"
 import { getPageText, captureRange, isLive, type CapturedSelection } from "@/lib/pageContext"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
@@ -5314,7 +5314,8 @@ export default function NoteApp() {
         {needsOnboarding && user && (
           <OnboardingModal theme={theme} initialUsername={suggestedUsername} onDone={(r) => { setFriendCode(r.friend_code); if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
         )}
-        <SelectionFontSize theme={theme} />
+        {/* Selection bubble (text size + highlight-to-card) and the card toast */}
+        <HighlightCard theme={theme} noteId={activeNote ? activeTabId : null} subject={activeNote?.subject ?? ""} signedIn={!!user} shortcut={shortcuts.makeCard} />
         {upgradeReason && <UpgradeDialog theme={theme} reason={upgradeReason} onClose={() => setUpgradeReason(null)} />}
         {importOpen && (
           <ImportModal

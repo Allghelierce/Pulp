@@ -107,8 +107,11 @@ export async function refundImportTopic(userId: string): Promise<void> {
 export const FREE_CARD_SESSIONS_PER_DAY = Number(process.env.FREE_CARD_SESSIONS_PER_DAY) || 2
 export const FREE_GRADES_PER_DAY = Number(process.env.FREE_GRADES_PER_DAY) || 15
 export const FREE_REPHRASE_PER_DAY = Number(process.env.FREE_REPHRASE_PER_DAY) || 3
-export type AllowanceKind = "cards" | "grades" | "rephrase"
-const DAILY_FREE: Record<AllowanceKind, number> = { cards: FREE_CARD_SESSIONS_PER_DAY, grades: FREE_GRADES_PER_DAY, rephrase: FREE_REPHRASE_PER_DAY }
+// Highlight-to-card: one small AI card each; its own pool so highlighting never
+// uses up the focus-session cards (past it, the client makes the card locally).
+export const FREE_HIGHLIGHT_CARDS_PER_DAY = Number(process.env.FREE_HIGHLIGHT_CARDS_PER_DAY) || 10
+export type AllowanceKind = "cards" | "grades" | "rephrase" | "highlight"
+const DAILY_FREE: Record<AllowanceKind, number> = { cards: FREE_CARD_SESSIONS_PER_DAY, grades: FREE_GRADES_PER_DAY, rephrase: FREE_REPHRASE_PER_DAY, highlight: FREE_HIGHLIGHT_CARDS_PER_DAY }
 
 // Spend one of today's free uses. true = allowed. Plus/dev always allowed.
 // Fails OPEN if the migration is missing: recall is the core study loop.

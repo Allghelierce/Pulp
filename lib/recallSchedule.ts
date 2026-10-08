@@ -294,3 +294,27 @@ export function addTopicCards(noteId: string, cards: Card[], topic: string, now:
   saveDeck({ ...deck, cards: next, noteHash: noteHash ?? deck.noteHash })
   return added
 }
+
+// ── single-card edits (highlight-to-card toast: undo / tweak wording) ──
+export function removeCard(noteId: string, id: string): boolean {
+  const deck = loadDeck(noteId)
+  if (!deck || !deck.cards.some(c => c.id === id)) return false
+  saveDeck({ ...deck, cards: deck.cards.filter(c => c.id !== id) })
+  return true
+}
+
+// Rewrites a card's question/answer, keeping its schedule. The id follows the new
+// question (like every card) unless another card already has that id. Returns the
+// card's id afterwards, or null if it's gone.
+export function editCard(noteId: string, id: string, q: string, a: string): string | null {
+  const deck = loadDeck(noteId)
+  const i = deck?.cards.findIndex(c => c.id === id) ?? -1
+  if (!deck || i < 0) return null
+  const nextId = cardId(q)
+  const newId = nextId === id || !deck.cards.some(c => c.id === nextId) ? nextId : id
+  const cards = [...deck.cards]
+  // Rephrasings were written for the old question.
+  cards[i] = { ...cards[i], id: newId, q, a, alts: q === cards[i].q ? cards[i].alts : undefined }
+  saveDeck({ ...deck, cards })
+  return newId
+}
