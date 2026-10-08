@@ -134,9 +134,10 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     const editor = editorRef.current
     if (!editor || !savedRange.current) return
     const headingStyles: Record<string, { fontSize: string; fontWeight: string; margin: string }> = {
-      h1: { fontSize: "2.75rem", fontWeight: "800", margin: "1.25rem 0" },
-      h2: { fontSize: "1.75rem", fontWeight: "700", margin: "1rem 0" },
-      h3: { fontSize: "1.35rem", fontWeight: "700", margin: "0.75rem 0" },
+      // Same proportions as text-box headings (H1 1.65×, H2 1.35×, H3 1.18× body).
+      h1: { fontSize: "1.65em", fontWeight: "700", margin: "0.75rem 0" },
+      h2: { fontSize: "1.35em", fontWeight: "700", margin: "0.6rem 0" },
+      h3: { fontSize: "1.18em", fontWeight: "700", margin: "0.5rem 0" },
     }
     restoreSelection()
     document.execCommand("formatBlock", false, tag === "default" ? "p" : tag)

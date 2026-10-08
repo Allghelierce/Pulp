@@ -642,7 +642,8 @@ const BoxItem = memo(function BoxItem({
   )
 })
 
-const BOX_HEADING_SIZES: Record<string, number> = { h1: 42, h2: 28, h3: 20, default: 17, margin: 26 }
+// Heading scale vs 17px body ≈ Google Docs: H1 1.65×, H2 1.35×, H3 1.18× (import uses the same 1.35em for its headings).
+const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 23, h3: 20, default: 17, margin: 26 }
 const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400, margin: 400 }
 const BOX_FONTS = [
   { value: "cursive", label: "Handwritten" },
