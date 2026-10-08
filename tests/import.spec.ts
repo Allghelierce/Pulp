@@ -55,7 +55,8 @@ test("signed out: notes import, no cards, sign-in message", async ({ page }) => 
   await expect(dialog.getByText("saved — no cards (sign in for cards)")).toHaveCount(5)
   await expect(dialog.getByRole("button", { name: "Start recalling" })).toHaveCount(0)
   await dialog.getByRole("button", { name: "Done" }).click()
-  await expect.poll(async () => (await readNotes(page)).find(n => n.subject === "Guest Chem")?.pages.length).toBe(5)
+  // Five short sections share one page (pages fill before the next starts).
+  await expect.poll(async () => (await readNotes(page)).find(n => n.subject === "Guest Chem")?.pages.length).toBe(1)
   const note = (await readNotes(page)).find(n => n.subject === "Guest Chem")!
   expect((await readDeck(page, note.id))?.cards ?? []).toHaveLength(0)
   expect(posts).toBe(0)
@@ -87,9 +88,9 @@ test("paste 5 sections: first 3 carded, rest saved, recall opens", async ({ page
   expect(posts.map(p => p.topics)).toEqual([[], ["Topic 1"], ["Topic 1", "Topic 2"]])
   expect(posts[0].text).toContain("Atoms is an important idea")
 
-  await expect.poll(async () => (await readNotes(page)).find(n => n.subject === "Chem Unit")?.pages.length).toBe(5)
+  await expect.poll(async () => (await readNotes(page)).find(n => n.subject === "Chem Unit")?.pages.length).toBe(1)
   const note = (await readNotes(page)).find(n => n.subject === "Chem Unit")!
-  expect(pageHtml(note)[3]).toContain(">Gases</h2>")
+  expect(pageHtml(note).join("")).toContain(">Gases</h2>")
   const deck = (await readDeck(page, note.id))!
   expect(deck.cards).toHaveLength(8)
   expect(new Set(deck.cards.map(c => c.topic))).toEqual(new Set(["Topic 1", "Topic 2", "Topic 3"]))
@@ -117,7 +118,7 @@ test("402 on the first POST stops carding with an upgrade message", async ({ pag
   expect(posts).toHaveLength(1)
   await expect(dialog.getByText("saved — upgrade for cards")).toHaveCount(5)
   await expect(dialog.getByRole("button", { name: "Start recalling" })).toHaveCount(0)
-  await expect.poll(async () => (await readNotes(page)).find(n => n.subject === "Chem Limit")?.pages.length).toBe(5)
+  await expect.poll(async () => (await readNotes(page)).find(n => n.subject === "Chem Limit")?.pages.length).toBe(1)
   const note = (await readNotes(page)).find(n => n.subject === "Chem Limit")!
   expect((await readDeck(page, note.id))?.cards ?? []).toHaveLength(0)
 })
@@ -135,5 +136,5 @@ test("upload a .docx: sections from its headings, carded", async ({ page }) => {
   await expect(dialog.getByText("8 cards ready across 3 topics")).toBeVisible({ timeout: 20_000 })
   expect(posts.map(p => p.heading)).toEqual(["Cells", "Mitochondria", "Photosynthesis"])
   expect(posts[0].text).toContain("Term\tDefinition\nLine after break <script>alert(1)</script>")
-  await expect.poll(async () => (await readNotes(page)).find(n => n.subject === "Biology Notes")?.pages.length).toBe(3)
+  await expect.poll(async () => (await readNotes(page)).find(n => n.subject === "Biology Notes")?.pages.length).toBe(1)
 })
