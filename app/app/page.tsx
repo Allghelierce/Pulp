@@ -20,6 +20,7 @@ import { getPaperBg, getInkColor, isDarkPaper, rulePitch, type PaperStyle } from
 import { useEditor } from "@/app/hooks/useEditor"
 import { useNarrow, useWiderThan } from "@/app/hooks/useNarrow"
 import { UpgradeDialog } from "@/app/components/UpgradeDialog"
+import { SelectionFontSize } from "@/app/components/SelectionFontSize"
 import { UPGRADE_EVENT, fetchPlan, type UpgradeDetail } from "@/lib/billing"
 import { getPageText, captureRange, isLive, type CapturedSelection } from "@/lib/pageContext"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
@@ -5227,6 +5228,7 @@ export default function NoteApp() {
             theme={theme}
             signedIn={!!user}
             onClose={() => setImportOpen(false)}
+        <SelectionFontSize theme={theme} />
             onCreateNotebook={createImportedNotebook}
             onStartRecall={(noteId: string) => { setImportOpen(false); startTransition(() => { closeAllPanels(); setReviewNoteId(noteId); setReviewOpen(true) }) }}
           />
