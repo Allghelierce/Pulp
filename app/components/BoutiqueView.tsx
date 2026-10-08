@@ -1,6 +1,6 @@
 "use client"
-import { memo, useState, useEffect, useRef, useCallback } from "react"
-import { playSound } from "@/lib/sound"
+import { memo, useState, useEffect, useRef, useCallback, useMemo, useSyncExternalStore } from "react"
+import { playSound, warmAudio } from "@/lib/sound"
 import { TREE_TYPES } from "@/app/constants"
 import { useWindowWidth } from "@/app/hooks/useNarrow"
 import { getPalette, getType, chipButton } from "@/app/theme/palette"
@@ -8,6 +8,7 @@ import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
+import { ACCENT, ACCENT_CONTRAST } from '@/lib/accent'
 
 
 // How long a seed card cracks before its face shows, by rarity (ms).
@@ -441,10 +442,10 @@ function Sparkles({ rarity, count }: { rarity: string; count: number }) {
           key={i}
           className={`sparkle ${cls}`}
           style={{
-            width: 3 + Math.random() * 4,
-            height: 3 + Math.random() * 4,
-            left: `${10 + Math.random() * 80}%`,
-            top: `${10 + Math.random() * 80}%`,
+            width: 3 + jitter(i * 4 + 1) * 4,
+            height: 3 + jitter(i * 4 + 2) * 4,
+            left: `${10 + jitter(i * 4 + 3) * 80}%`,
+            top: `${10 + jitter(i * 4 + 4) * 80}%`,
             animationDelay: `${i * (3 / count)}s`,
           }}
         />
@@ -615,6 +616,1262 @@ function seedRng(seed: number) {
   }
 }
 
+// ── Reveal burst ────────────────────────────────────────────────
+// The pop of light and particles when a market card is turned over.
+// Every element animates only transform/opacity. Motion and fade run on
+// separate elements so each follows one unbroken curve, and the burst's
+// lifetime is derived from the same delays/durations that build it, so
+// nothing is cut off mid-flight.
+
+type BurstLayer = {
+  size: number
+  border?: string
+  background?: string
+  blur?: number
+  from: number // starting scale
+  to: number // ending scale
+  peak: number // peak opacity
+  fade: 'fast' | 'slow' // how quickly it reaches peak
+  delay: number // s
+  dur: number // s
+}
+type BurstDot = {
+  x: number; y: number // travel (px)
+  d: number // element diameter incl. glow (px)
+  background: string
+  delay: number; dur: number // s
+}
+type BurstSpec = { layers: BurstLayer[]; particles: BurstDot[]; stars: BurstDot[]; endMs: number }
+
+// Deterministic 0..1 jitter, so a re-render never moves anything.
+const jitter = (n: number) => { const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x) }
+
+// Small bright core, soft coloured halo; rasterised once, scales cleanly.
+const dotGradient = (core: string, glow: string, halo?: string) =>
+  `radial-gradient(circle closest-side, ${core} 0%, ${core} 24%, ${glow} 36%, ${halo ?? hexA(glow, 0.25)} 62%, transparent 100%)`
+
+const BURST_EASE_MOVE = 'cubic-bezier(0.2, 0.8, 0.3, 1)'
+const BURST_EASE_STAR = 'cubic-bezier(0.3, 0.6, 0.35, 1)'
+const BURST_EASE_GROW = 'cubic-bezier(0.2, 0.75, 0.3, 1)'
+
+function buildBurst(r: string, reduced: boolean): BurstSpec {
+  const col = r === 'sacred' ? '#c4b5fd' : r === 'true rare' ? '#a78bfa' : r === 'rare' ? '#60a5fa' : r === 'uncommon' ? '#4ade80' : '#d97706'
+  const ringSize = r === 'sacred' ? 240 : r === 'true rare' ? 200 : r === 'rare' ? 120 : 80
+  const layers: BurstLayer[] = []
+  const particles: BurstDot[] = []
+  const stars: BurstDot[] = []
+
+  if (reduced) {
+    // No motion: a single soft glow that fades in and out in place.
+    layers.push({ size: ringSize, background: `radial-gradient(circle closest-side, ${hexA(col, 0.35)} 0%, ${hexA(col, 0.12)} 55%, transparent 100%)`, from: 1, to: 1, peak: 1, fade: 'slow', delay: 0.05, dur: 0.9 })
+  } else {
+    const count = r === 'sacred' ? 24 : r === 'true rare' ? 16 : r === 'rare' ? 8 : r === 'uncommon' ? 5 : 3
+    const dur = r === 'sacred' ? 4 : r === 'true rare' ? 3 : r === 'rare' ? 1.2 : r === 'uncommon' ? 0.9 : 0.7
+    const baseDelay = r === 'sacred' ? 0.8 : r === 'true rare' ? 0.5 : 0.12
+
+    // Expanding ring
+    layers.push({ size: ringSize, border: `${r === 'sacred' ? 2.5 : 2}px solid ${col}`, from: 0.1, to: 1.8, peak: 0.8, fade: 'fast', delay: baseDelay, dur: dur * 0.6 })
+
+    // Particles — one burst per wave, lightly jittered rather than trickled out
+    for (let pi = 0; pi < count; pi++) {
+      const angle = (pi / count) * Math.PI * 2 + pi * 0.3
+      const wave = r === 'sacred' || r === 'true rare' ? Math.floor(pi / 8) : 0
+      const dist = 50 + Math.cos(pi * 1.7) * 30 + (r === 'sacred' ? 60 + wave * 20 : r === 'true rare' ? 40 + wave * 15 : 0)
+      const size = r === 'sacred' ? 3 + (pi % 3) : r === 'true rare' ? 2.5 + (pi % 3) * 0.8 : r === 'rare' ? 3 : 2.5
+      const core = pi % 4 === 0 ? '#ffffff' : pi % 4 === 2 && r === 'sacred' ? '#e0d0ff' : col
+      particles.push({
+        x: Math.cos(angle) * dist, y: Math.sin(angle) * dist,
+        d: size * 4, background: dotGradient(core, col),
+        delay: baseDelay + wave * 0.6 + jitter(pi) * 0.06,
+        dur: dur * 0.8,
+      })
+    }
+
+    if (r === 'true rare') {
+      // Aurora glow + slow outer ring
+      layers.push({ size: 180, background: 'radial-gradient(circle, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.1) 50%, transparent 70%)', from: 0, to: 2.5, peak: 0.5, fade: 'slow', delay: 0.3, dur: 2.5 })
+      layers.push({ size: 260, border: '1px solid rgba(167,139,250,0.2)', from: 0.1, to: 1.8, peak: 0.8, fade: 'fast', delay: 1, dur: 2.2 })
+    }
+
+    if (r === 'sacred') {
+      layers.push({ size: 160, border: '2px solid rgba(255,255,255,0.5)', from: 0.1, to: 1.8, peak: 0.8, fade: 'fast', delay: 0.1, dur: 1 }) // shockwave
+      layers.push({ size: 350, background: 'radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(196,181,253,0.2) 30%, rgba(139,92,246,0.1) 50%, transparent 70%)', from: 0, to: 2.5, peak: 0.5, fade: 'slow', delay: 0.3, dur: 3 }) // nova
+      layers.push({ size: 300, background: 'conic-gradient(from 0deg, rgba(196,181,253,0.2), rgba(139,92,246,0.08), rgba(99,102,241,0.15), rgba(196,181,253,0.05), rgba(167,139,250,0.2), rgba(255,255,255,0.1), rgba(196,181,253,0.15))', blur: 10, from: 1, to: 1, peak: 0.3, fade: 'slow', delay: 0.5, dur: 4 }) // nebula
+      layers.push({ size: 250, background: 'radial-gradient(circle, rgba(196,181,253,0.3) 0%, rgba(139,92,246,0.1) 40%, transparent 65%)', from: 0, to: 2.5, peak: 0.5, fade: 'slow', delay: 1.2, dur: 2.5 }) // second nova
+      layers.push({ size: 280, border: '1px solid rgba(196,181,253,0.25)', from: 0.1, to: 1.8, peak: 0.8, fade: 'fast', delay: 0.8, dur: 2 })
+      layers.push({ size: 340, border: '0.5px solid rgba(196,181,253,0.15)', from: 0.1, to: 1.8, peak: 0.8, fade: 'fast', delay: 1.5, dur: 2.5 })
+      // Trailing stars — three waves drifting outward
+      for (let si = 0; si < 18; si++) {
+        const a = (si / 18) * Math.PI * 2
+        const wave = Math.floor(si / 6)
+        const dist = 80 + si * 5 + wave * 20
+        const size = 2 + (si % 3)
+        const core = si % 3 === 0 ? '#ffffff' : si % 3 === 1 ? '#e0d0ff' : '#c4b5fd'
+        stars.push({
+          x: Math.cos(a) * dist, y: Math.sin(a) * dist,
+          d: size * 5, background: dotGradient(core, 'rgba(196,181,253,0.8)', 'rgba(139,92,246,0.3)'),
+          delay: 0.2 + wave * 0.8 + jitter(si + 100) * 0.12,
+          dur: 2.5 + si * 0.08,
+        })
+      }
+    }
+  }
+
+  const ends = [...layers, ...particles, ...stars].map(e => e.delay + e.dur)
+  return { layers, particles, stars, endMs: Math.ceil(Math.max(0, ...ends) * 1000) + 150 }
+}
+
+// One-shot entrance animations on a freshly turned card face. Built from one
+// table so the card knows exactly when the last of them has finished.
+type FaceAnim = { name: string; dur: number; delay: number } // s
+const REVEAL_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
+function revealFaceAnims(r: string) {
+  const bg: FaceAnim = r === 'sacred' ? { name: 'sacred-bg-ignite', dur: 2.8, delay: 0.15 }
+    : r === 'true rare' ? { name: 'rarity-color-cinematic', dur: 2, delay: 0.15 }
+    : { name: 'rarity-color-in', dur: r === 'rare' ? 1 : 0.6, delay: r === 'rare' ? 0.4 : 0.2 }
+  const flash: FaceAnim | null = r === 'sacred' ? { name: 'sacred-flash', dur: 1.8, delay: 0.1 }
+    : r === 'true rare' ? { name: 'sacred-flash', dur: 1.2, delay: 0.1 } : null
+  const textDur = r === 'sacred' ? 1.2 : r === 'true rare' ? 1 : 0.6
+  const name: FaceAnim = { name: 'rarity-color-in', dur: textDur, delay: r === 'sacred' ? 0.8 : r === 'true rare' ? 0.6 : 0.25 }
+  const label: FaceAnim = { name: 'rarity-color-in', dur: textDur, delay: r === 'sacred' ? 1 : r === 'true rare' ? 0.7 : 0.3 }
+  const pop: FaceAnim = {
+    name: `pop-${r === 'true rare' ? 'true-rare' : r}`,
+    dur: r === 'sacred' ? 2.2 : r === 'true rare' ? 1.6 : r === 'rare' ? 1 : r === 'uncommon' ? 0.8 : 0.6,
+    delay: r === 'sacred' ? 0.25 : r === 'true rare' ? 0.15 : 0.05,
+  }
+  const all = [bg, flash, name, label, pop].filter((a): a is FaceAnim => a !== null)
+  return { bg, flash, name, label, pop, endMs: Math.ceil(Math.max(...all.map(a => a.delay + a.dur)) * 1000) }
+}
+const faceAnimCss = (a: FaceAnim) => `${a.name} ${a.dur}s ${REVEAL_EASE} ${a.delay}s both`
+
+const subscribeReducedMotion = (cb: () => void) => {
+  if (typeof window === 'undefined' || !window.matchMedia) return () => {}
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+  mq.addEventListener('change', cb)
+  return () => mq.removeEventListener('change', cb)
+}
+const getReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+function useReducedMotion() {
+  return useSyncExternalStore(subscribeReducedMotion, getReducedMotion, () => false)
+}
+
+const RevealBurst = memo(function RevealBurst({ rarity, originY }: { rarity: string; originY: number }) {
+  const reduced = useReducedMotion()
+  const spec = useMemo(() => buildBurst(rarity, reduced), [rarity, reduced])
+  const [done, setDone] = useState(false)
+  // Unmount ourselves once the longest animation (delay + duration) is over —
+  // only this component re-renders, never the market.
+  useEffect(() => {
+    const id = window.setTimeout(() => setDone(true), spec.endMs)
+    return () => window.clearTimeout(id)
+  }, [spec.endMs])
+  if (done) return null
+  const dot = (p: BurstDot, key: string, ease: string) => (
+    <div key={key} style={{
+      position: 'absolute', left: -p.d / 2, top: -p.d / 2, width: p.d, height: p.d,
+      ['--rb-x' as string]: `${p.x.toFixed(1)}px`, ['--rb-y' as string]: `${p.y.toFixed(1)}px`,
+      animation: `rb-move ${p.dur}s ${ease} ${p.delay}s both`,
+      willChange: 'transform',
+    }}>
+      <div style={{
+        width: '100%', height: '100%', borderRadius: '50%', background: p.background,
+        animation: `rb-env ${p.dur}s linear ${p.delay}s both`,
+        willChange: 'transform, opacity',
+      }} />
+    </div>
+  )
+  return (
+    <div className="reveal-burst" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 20, overflow: 'visible', contain: 'layout style' }}>
+      {/* One shared origin: the plant's visual centre */}
+      <div style={{ position: 'absolute', left: '50%', top: originY, width: 0, height: 0 }}>
+        {spec.layers.map((l, k) => (
+          <div key={`l${k}`} style={{
+            position: 'absolute', left: -l.size / 2, top: -l.size / 2, width: l.size, height: l.size,
+            borderRadius: '50%', border: l.border, background: l.background,
+            filter: l.blur ? `blur(${l.blur}px)` : undefined,
+            ['--rb-from' as string]: l.from, ['--rb-to' as string]: l.to, ['--rb-peak' as string]: l.peak,
+            transform: l.from === l.to ? `scale(${l.from})` : undefined,
+            animation: [
+              l.from !== l.to ? `rb-grow ${l.dur}s ${BURST_EASE_GROW} ${l.delay}s both` : '',
+              `rb-fade-${l.fade} ${l.dur}s linear ${l.delay}s both`,
+            ].filter(Boolean).join(', '),
+            willChange: 'transform, opacity',
+          }} />
+        ))}
+        {spec.particles.map((p, k) => dot(p, `p${k}`, BURST_EASE_MOVE))}
+        {spec.stars.map((p, k) => dot(p, `s${k}`, BURST_EASE_STAR))}
+      </div>
+    </div>
+  )
+})
+
+// Seconds-to-refresh on the stall sign. Owns its own 1 s tick so the rest of
+// the market never re-renders for it.
+function formatMarketCountdown() {
+  const diff = getNextMarketRefresh() - Date.now()
+  if (diff <= 0) return 'Refreshing...'
+  const h = Math.floor(diff / 3600000)
+  const m = Math.floor((diff % 3600000) / 60000)
+  const s = Math.floor((diff % 60000) / 1000)
+  return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`
+}
+const MarketCountdown = memo(function MarketCountdown({ isDark }: { isDark: boolean }) {
+  const [label, setLabel] = useState(formatMarketCountdown)
+  useEffect(() => {
+    const id = window.setInterval(() => setLabel(formatMarketCountdown()), 1000)
+    return () => window.clearInterval(id)
+  }, [])
+  return <text x="200" y="241" textAnchor="middle" fill={isDark ? '#1a1410' : '#2a2218'} fontSize="6.5" fontFamily="'Inter', system-ui, sans-serif" fontWeight="600" opacity="0.85" letterSpacing="0.3">{label || 'Trade'}</text>
+})
+
+// Where a revealed card's plant stands, as a fraction of card height from the bottom.
+function plantBottomFrac(type: string): number {
+  const sh = TREE_TYPES[type]?.shape || ''
+  return ['coral', 'whirlpool', 'lotus', 'cattail', 'mushroom'].includes(sh) ? 0.10
+    : ['cactus', 'agave', 'sage'].includes(sh) ? 0.12
+    : ['palm', 'papaya', 'bamboo', 'mangrove'].includes(sh) ? 0.14
+    : 0.15
+}
+
+// The market's landscape + shopkeeper stall. Static apart from the theme and the seed jars.
+const MarketBackdrop = memo(function MarketBackdrop({ isDark, dailySeeds }: { isDark: boolean; dailySeeds: string[] }) {
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+      {/* Terrain background */}
+      {(() => {
+        const groundY = 165
+        const hillPts: string[] = []
+        for (let x = -10; x <= 410; x += 10) hillPts.push(`${x},${getMarketHillY(x).toFixed(1)}`)
+        const hillPath = `M${hillPts[0]} ${hillPts.slice(1).map(p => `L${p}`).join(' ')} L410,${groundY} L-10,${groundY} Z`
+        const hillRidge = `M${hillPts[0]} ${hillPts.slice(1).map(p => `L${p}`).join(' ')}`
+        return (
+      <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+        <defs>
+          <linearGradient id="m-sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#08060a' : '#c8b8a0'} />
+            <stop offset="50%" stopColor={isDark ? '#10100e' : '#d8c8b0'} />
+            <stop offset="100%" stopColor={isDark ? '#1e1a12' : '#e4d8c0'} />
+          </linearGradient>
+          <linearGradient id="m-hill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#162018' : '#6a8060'} />
+            <stop offset="40%" stopColor={isDark ? '#0e1610' : '#7a9070'} />
+            <stop offset="100%" stopColor={isDark ? '#0a0e0c' : '#7a8870'} />
+          </linearGradient>
+          <linearGradient id="m-ground" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#1a2014' : '#3e4e34'} />
+            <stop offset="100%" stopColor={isDark ? '#141810' : '#2e3e24'} />
+          </linearGradient>
+          <radialGradient id="m-star-g">
+            <stop offset="0%" stopColor="#ffeedd" stopOpacity="1" />
+            <stop offset="40%" stopColor="#ffeedd" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#ffeedd" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        <style>{`
+          @keyframes m-twinkle { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+          @keyframes m-firefly { 0% { transform: translate(0,0); opacity: 0; } 8% { opacity: 0.6; } 25% { transform: translate(4px,-6px); opacity: 0.7; } 50% { transform: translate(8px,-12px); opacity: 0.5; } 75% { transform: translate(2px,-3px); opacity: 0.7; } 92% { opacity: 0.6; } 100% { transform: translate(-4px,6px); opacity: 0; } }
+          @keyframes m-firefly2 { 0% { transform: translate(0,0); opacity: 0; } 10% { opacity: 0.5; } 30% { transform: translate(-5px,-4px); opacity: 0.6; } 55% { transform: translate(-10px,-8px); opacity: 0.4; } 75% { transform: translate(-3px,-2px); opacity: 0.6; } 90% { opacity: 0.5; } 100% { transform: translate(5px,10px); opacity: 0; } }
+          @keyframes m-cloud-drift { 0% { transform: translateX(0); } 100% { transform: translateX(400px); } }
+        `}</style>
+
+        {/* Sky */}
+        <rect width="400" height="300" fill="url(#m-sky)" />
+
+        {/* Stars */}
+        {isDark && <>
+          {[[32,18,1.2],[78,12,0.8],[125,28,1.0],[168,8,0.7],[210,22,1.1],[258,15,0.9],[305,25,0.7],[350,10,1.0],[55,40,0.6],[145,42,0.8],[240,38,0.7],[310,35,0.9],[380,42,0.6],[20,55,0.5],[95,50,0.7],[195,52,0.6],[280,48,0.8],[365,55,0.5],[12,8,0.9],[48,32,0.7],[110,5,1.0],[175,38,0.6],[225,8,0.8],[270,30,0.9],[340,42,0.7],[390,18,0.8],[65,22,0.5],[155,15,0.7],[295,12,0.6],[370,32,0.8],[42,48,0.6],[200,28,0.9],[330,8,0.7],[115,58,0.5],[250,55,0.6],[380,58,0.5]].map(([x,y,r], i) => (
+            <circle key={`st${i}`} cx={x} cy={y} r={r as number} fill="url(#m-star-g)" opacity={0.75 + (i % 3) * 0.08} style={{ animation: `m-twinkle ${3 + (i % 4) * 1.5}s ease-in-out ${(i * 0.7) % 4}s infinite` }} />
+          ))}
+        </>}
+
+        {/* Moon */}
+        {isDark && (() => {
+          const mx = 310, my = 55, sc = 4
+          return (
+            <g>
+              <defs>
+                <radialGradient id="bg-moon-glow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#c0cee0" stopOpacity="0.15" />
+                  <stop offset="30%" stopColor="#a0b0c8" stopOpacity="0.06" />
+                  <stop offset="70%" stopColor="#8090b0" stopOpacity="0.02" />
+                  <stop offset="100%" stopColor="#8090b0" stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="bg-moon-edge" cx="20%" cy="45%" r="80%">
+                  <stop offset="0%" stopColor="#f0f4ff" />
+                  <stop offset="40%" stopColor="#dde4f0" />
+                  <stop offset="100%" stopColor="#b8c4d8" />
+                </radialGradient>
+                <mask id="bg-moon-mask">
+                  <circle cx={mx} cy={my} r={1.2 * sc} fill="white" />
+                  <circle cx={mx + 0.9 * sc} cy={my - 0.1 * sc} r={1.1 * sc} fill="black" />
+                </mask>
+              </defs>
+              <ellipse cx={mx} cy={my} rx={5 * sc} ry={3.5 * sc} fill="url(#bg-moon-glow)" />
+              <circle cx={mx} cy={my} r={1.2 * sc} fill="url(#bg-moon-edge)" mask="url(#bg-moon-mask)" />
+              <circle cx={mx - 0.4 * sc} cy={my - 0.2 * sc} r={0.15 * sc} fill="rgba(160,170,190,0.35)" mask="url(#bg-moon-mask)" />
+              <circle cx={mx - 0.2 * sc} cy={my + 0.33 * sc} r={0.1 * sc} fill="rgba(155,165,185,0.3)" mask="url(#bg-moon-mask)" />
+              <ellipse cx={mx - 0.57 * sc} cy={my + 0.03 * sc} rx={0.07 * sc} ry={0.05 * sc} fill="rgba(150,162,182,0.28)" mask="url(#bg-moon-mask)" />
+            </g>
+          )
+        })()}
+
+        {/* Clouds */}
+        {[
+          { y: 50, rx: 30, ry: 5, opacity: 0.04, dur: 700, delay: 0 },
+          { y: 60, rx: 22, ry: 4, opacity: 0.035, dur: 560, delay: -200 },
+          { y: 45, rx: 25, ry: 4.5, opacity: 0.03, dur: 480, delay: -350 },
+        ].map((c, i) => (
+          <ellipse key={`cloud${i}`} cx={-60} cy={c.y} rx={c.rx} ry={c.ry} fill={isDark ? '#8090a0' : '#f0e8d8'} opacity={isDark ? c.opacity : c.opacity * 2} style={{ animation: `m-cloud-drift ${c.dur}s linear ${c.delay}s infinite` }} />
+        ))}
+
+        {/* Distant far hill — left side */}
+        <defs>
+          <linearGradient id="m-far-hill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#0a0e0c' : '#7a8870'} />
+            <stop offset="100%" stopColor={isDark ? '#080c0a' : '#6a7860'} />
+          </linearGradient>
+        </defs>
+        <path d="M-10,130 C10,118 40,100 80,92 C110,86 140,88 170,95 C190,100 210,108 230,118 L230,170 L-10,170 Z" fill="url(#m-far-hill)" opacity="0.8" />
+        <path d="M-10,130 C10,118 40,100 80,92 C110,86 140,88 170,95 C190,100 210,108 230,118" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+        <path d="M-10,133 C10,121 40,104 80,96 C110,90 140,92 170,99 C190,104 210,112 230,122" fill="none" stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'} strokeWidth="0.3" />
+        {/* Boulders on far hill */}
+        {(() => {
+          const rng = marketSeededRng(7712)
+          const farPts: [number,number][] = [[-10,130],[10,118],[40,100],[80,92],[110,86],[140,88],[170,95],[190,100],[210,108],[230,118]]
+          const getFarY = (x: number) => {
+            for (let j = 0; j < farPts.length - 1; j++) {
+              if (x >= farPts[j][0] && x <= farPts[j+1][0]) {
+                const t = (x - farPts[j][0]) / (farPts[j+1][0] - farPts[j][0])
+                return farPts[j][1] + t * (farPts[j+1][1] - farPts[j][1])
+              }
+            }
+            return 120
+          }
+          const rocks: string[] = []
+          const rockDark: string[] = []
+          const highlightsP: string[] = []
+          const cracksP: string[] = []
+          const baseC = isDark ? '#141816' : '#6a7462'
+          const darkC = isDark ? '#0e1210' : '#586858'
+          const lightC = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)'
+          const crackC = isDark ? '#0c0e0c' : '#4a5a44'
+          const sizes = [0.5, 0.15, 0.9, 0.25, 1.2, 0.2, 0.65, 0.35, 1.5, 0.3, 0.75, 0.18, 1.0, 0.4]
+          for (let i = 0; i < 14; i++) {
+            const rx = 5 + (i / 14) * 220 + (rng() - 0.5) * 25
+            const ry = getFarY(rx) + 2 + rng() * 18
+            const sizeMul = sizes[i]
+            const w = sizeMul * (2 + rng() * 3), h = sizeMul * (1.5 + rng() * 2.5)
+            const tilt = (rng() - 0.5) * 0.8
+            const jL = rng() * 0.3, jR = rng() * 0.3, jT = rng() * 0.2
+            rocks.push(`M${(rx - w).toFixed(1)},${ry.toFixed(1)}Q${(rx - w * (0.7 + jL)).toFixed(1)},${(ry - h * (0.5 + jL)).toFixed(1)} ${(rx - w * 0.3 + tilt).toFixed(1)},${(ry - h * (0.9 + jT)).toFixed(1)}Q${(rx + tilt).toFixed(1)},${(ry - h * (1.05 + jT)).toFixed(1)} ${(rx + w * 0.35 + tilt).toFixed(1)},${(ry - h * (0.8 + jR)).toFixed(1)}Q${(rx + w * (0.8 + jR)).toFixed(1)},${(ry - h * (0.4 + jR)).toFixed(1)} ${(rx + w).toFixed(1)},${ry.toFixed(1)}Z`)
+            rockDark.push(`M${(rx - w * 0.9).toFixed(1)},${(ry + 0.5).toFixed(1)}Q${rx.toFixed(1)},${(ry + h * 0.15 + 0.5).toFixed(1)} ${(rx + w * 0.9).toFixed(1)},${(ry + 0.5).toFixed(1)}`)
+            highlightsP.push(`M${(rx - w * 0.3 + tilt).toFixed(1)},${(ry - h * (0.9 + jT)).toFixed(1)}Q${(rx + tilt).toFixed(1)},${(ry - h * (1.05 + jT)).toFixed(1)} ${(rx + w * 0.35 + tilt).toFixed(1)},${(ry - h * (0.8 + jR)).toFixed(1)}`)
+            const cx1 = rx + (rng() - 0.5) * w * 0.5, cy1 = ry - h * (0.3 + rng() * 0.4)
+            cracksP.push(`M${cx1.toFixed(1)},${cy1.toFixed(1)}l${(rng() * 1.5 - 0.7).toFixed(1)},${(rng() * 1).toFixed(1)}`)
+            if (w > 4) {
+              const cx2 = rx + (rng() - 0.5) * w * 0.4, cy2 = ry - h * (0.2 + rng() * 0.3)
+              cracksP.push(`M${cx2.toFixed(1)},${cy2.toFixed(1)}l${(rng() - 0.5).toFixed(1)},${(rng() * 0.8).toFixed(1)}`)
+            }
+          }
+          return <g>
+            <path d={rocks.join('')} fill={baseC} />
+            <path d={rockDark.join('')} stroke={darkC} strokeWidth="0.5" fill="none" opacity="0.6" />
+            <path d={highlightsP.join('')} stroke={lightC} strokeWidth="0.5" fill="none" />
+            <path d={cracksP.join('')} stroke={crackC} strokeWidth="0.3" fill="none" opacity="0.5" />
+          </g>
+        })()}
+
+        {/* Background hill */}
+        <path d={hillPath} fill="url(#m-hill)" />
+        <path d={hillRidge} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.6" />
+        {/* Shadow band */}
+        {(() => {
+          const shadowPts: string[] = []
+          for (let x = -10; x <= 410; x += 10) shadowPts.push(`${x},${(getMarketHillY(x) + 8).toFixed(1)}`)
+          const shadowPath = `M${shadowPts[0]} ${shadowPts.slice(1).map(p => `L${p}`).join(' ')} L410,${groundY} L-10,${groundY} Z`
+          return <path d={shadowPath} fill="rgba(0,0,0,0.08)" />
+        })()}
+        {/* Contour lines */}
+        {[3, 6].map(offset => {
+          const cPts: string[] = []
+          for (let x = -10; x <= 410; x += 10) cPts.push(`${x},${(getMarketHillY(x) + offset).toFixed(1)}`)
+          return <path key={`c-${offset}`} d={`M${cPts[0]} ${cPts.slice(1).map(p => `L${p}`).join(' ')}`} fill="none" stroke={isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.03)'} strokeWidth={offset === 3 ? "0.4" : "0.3"} />
+        })}
+
+        <MarketHillPaths isDark={isDark} />
+        <MarketTangerineTrees isDark={isDark} />
+        <MarketHillGrass isDark={isDark} />
+
+        {/* Ground plane */}
+        <path d={`M-10,${groundY} L200,${groundY - 2} L410,${groundY} L410,300 L-10,300 Z`} fill="url(#m-ground)" />
+        <path d={`M-10,${groundY + 3} L200,${groundY + 1} L410,${groundY + 3}`} fill="none" stroke={isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.03)'} strokeWidth="0.4" />
+        <path d={`M-10,${groundY + 8} L200,${groundY + 6} L410,${groundY + 8}`} fill="none" stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.025)'} strokeWidth="0.3" />
+        <path d={`M-10,${groundY + 15} L200,${groundY + 13} L410,${groundY + 15}`} fill="none" stroke={isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.02)'} strokeWidth="0.25" />
+        <path d={`M-10,${groundY + 6} L200,${groundY + 4} L410,${groundY + 6} L410,300 L-10,300 Z`} fill="rgba(0,0,0,0.05)" />
+        <MarketGroundGrass isDark={isDark} groundY={groundY - 1} />
+
+        {/* Fence */}
+        {(() => {
+          const fenceColor = isDark ? '#4a3e28' : '#6a5a3a'
+          const fenceLight = isDark ? '#5a4e32' : '#7a6a4a'
+          const posts = [60, 200, 340]
+          const postH = 24
+          const postW = 4.5
+          const railYTop = (px: number) => groundY + Math.sin(px / 400 * Math.PI) * -2.5 - postH * 0.7
+          const railYBot = (px: number) => groundY + Math.sin(px / 400 * Math.PI) * -2.5 - postH * 0.25
+          return (
+            <g>
+              <line x1={0} y1={railYTop(0)} x2={400} y2={railYTop(400)} stroke={fenceColor} strokeWidth="1" />
+              <line x1={0} y1={railYBot(0)} x2={400} y2={railYBot(400)} stroke={fenceColor} strokeWidth="0.8" />
+              <line x1={0} y1={railYTop(0)} x2={400} y2={railYTop(400)} stroke={fenceLight} strokeWidth="0.3" opacity="0.3" />
+              {posts.map(px => {
+                const t = px / 400
+                const yOff = Math.sin(t * Math.PI) * -2.5
+                const py = groundY + yOff
+                return (
+                  <g key={`fp-${px}`}>
+                    <rect x={px - postW / 2} y={py - postH} width={postW} height={postH + 0.5} rx={0.3} fill={fenceColor} />
+                    <rect x={px - postW * 0.2} y={py - postH} width={postW * 0.35} height={postH + 0.5} fill={fenceLight} opacity="0.35" />
+                    <rect x={px - postW * 0.6} y={py - postH - 0.5} width={postW * 1.2} height={0.8} rx={0.15} fill={fenceColor} />
+                  </g>
+                )
+              })}
+            </g>
+          )
+        })()}
+
+        {/* Lamppost */}
+        {(() => {
+          const lx = 170, ly = groundY, sc = 6
+          const iron = isDark ? '#3a3a3a' : '#4a4a4a'
+          const ironD = isDark ? '#2a2a2a' : '#3a3a3a'
+          const isNight = isDark
+          const glass = isNight ? '#fbbf24' : '#8a8a82'
+          const glassL = isNight ? '#fcd34d' : '#9a9a92'
+          return (
+            <g>
+              <defs>
+                <radialGradient id="bg-lamp-glow" cx="50%" cy="45%" r="50%">
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.3" />
+                  <stop offset="50%" stopColor={glass} stopOpacity="0.1" />
+                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="bg-lamp-wash-a" cx="30%" cy="45%" r="55%">
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.09" />
+                  <stop offset="30%" stopColor={glass} stopOpacity="0.05" />
+                  <stop offset="65%" stopColor={glass} stopOpacity="0.02" />
+                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="bg-lamp-ground" cx="40%" cy="25%" r="55%">
+                  <stop offset="0%" stopColor="#d97706" stopOpacity="0.07" />
+                  <stop offset="40%" stopColor="#92400e" stopOpacity="0.03" />
+                  <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+                </radialGradient>
+                <linearGradient id="bg-lamp-cone" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.14" />
+                  <stop offset="35%" stopColor={glass} stopOpacity="0.04" />
+                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              {isNight && <>
+                <ellipse cx={lx + 15 * sc / 0.65} cy={ly + 2 * sc} rx={55 * sc} ry={18 * sc} fill="url(#bg-lamp-wash-a)" style={{ filter: 'blur(8px)' }} />
+                <ellipse cx={lx + 5 * sc / 0.65} cy={ly + 4 * sc} rx={30 * sc} ry={10 * sc} fill="url(#bg-lamp-ground)" style={{ filter: 'blur(12px)' }} />
+                <ellipse cx={lx - 8 * sc} cy={ly + 3 * sc} rx={18 * sc} ry={7 * sc} fill="url(#bg-lamp-ground)" style={{ filter: 'blur(10px)' }} opacity="0.5" />
+                <path d={`M${lx - 1.5 * sc},${ly - 7 * sc} Q${lx + 3 * sc},${ly - 1 * sc} ${lx + 10 * sc},${ly + 6 * sc} L${lx - 5 * sc},${ly + 6 * sc} Q${lx - 4 * sc},${ly - 1 * sc} ${lx - 1.5 * sc},${ly - 7 * sc}`} fill="url(#bg-lamp-cone)" opacity="0.4" style={{ filter: 'blur(3px)' }} />
+                <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#bg-lamp-glow)" style={{ filter: 'blur(4px)' }} />
+              </>}
+              <ellipse cx={lx - 4 * sc} cy={ly + 1.5 * sc} rx={6 * sc} ry={1 * sc} fill={isDark ? 'rgba(0,0,0,0.18)' : 'rgba(20,15,5,0.12)'} />
+              <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
+              <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
+              <path d={`M${lx},${ly - 7.5 * sc} Q${lx - 0.8 * sc},${ly - 8.5 * sc} ${lx - 1.5 * sc},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
+              <rect x={lx - 2.2 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
+              <rect x={lx - 2.05 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
+              <rect x={lx - 1.5 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
+              <polygon points={`${lx - 0.6 * sc},${ly - 8.5 * sc} ${lx - 1.5 * sc},${ly - 9.2 * sc} ${lx - 2.4 * sc},${ly - 8.5 * sc}`} fill={iron} />
+            </g>
+          )
+        })()}
+
+        {/* Fireflies */}
+        {isDark && [[50,140,6],[120,125,8],[180,135,7],[250,120,9],[320,130,6],[80,155,7],[200,150,8],[340,145,6],[150,160,7],[280,155,8],[60,170,6],[230,165,7]].map(([fx,fy,dur], i) => {
+          const ffColor = i % 5 === 0 ? '#6abf5e' : '#d97706'
+          return (
+          <g key={`ff${i}`}>
+            <circle cx={fx} cy={fy} r={0.7} fill={ffColor} opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${(dur as number) * 3}s ease-in-out ${(i * 2.5) % 12}s infinite` }} />
+            <circle cx={fx} cy={fy} r={1.8} fill={ffColor} opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${(dur as number) * 3}s ease-in-out ${(i * 2.5) % 12}s infinite`, filter: 'blur(1px)' }} />
+          </g>
+          )
+        })}
+      </svg>
+        )
+      })()}
+      {/* Shopkeeper stall SVG */}
+      <svg viewBox="0 0 400 265" preserveAspectRatio="xMidYMax meet" style={{ position: 'absolute', bottom: -8, left: 0, width: '100%', height: '65%' }}>
+        <defs>
+          <radialGradient id="o-body" cx="38%" cy="35%">
+            <stop offset="0%" stopColor="#e8a030" />
+            <stop offset="50%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#b06205" />
+          </radialGradient>
+          <radialGradient id="lantern-glow">
+            <stop offset="0%" stopColor="#d97706" stopOpacity="0.35" />
+            <stop offset="25%" stopColor="#d97706" stopOpacity="0.18" />
+            <stop offset="50%" stopColor="#d97706" stopOpacity="0.07" />
+            <stop offset="75%" stopColor="#d97706" stopOpacity="0.02" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        <style>{`
+          @keyframes root-sway-l { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-0.3px,-0.4px); } }
+          @keyframes root-sway-r { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(0.3px,-0.4px); } }
+          @keyframes blink-open { 0%, 90%, 95%, 100% { opacity: 1; } 92.5% { opacity: 0; } }
+          @keyframes blink-shut { 0%, 90%, 95%, 100% { opacity: 0; } 92.5% { opacity: 1; } }
+        `}</style>
+
+        {/* ============ CANOPY ============ */}
+        {/* Left pole */}
+        <rect x="113" y="103" width="7" height="114" rx="2.5" fill={isDark ? '#3e3018' : '#a89878'} />
+        <rect x="114" y="103" width="5" height="114" rx="2" fill={isDark ? '#5a4a32' : '#b8a888'} />
+        <path d="M115 110 L118 110 M115 125 L118 125 M115 145 L118 145 M115 170 L118 170 M115 195 L118 195" stroke={isDark ? '#6a5a42' : '#c8b898'} strokeWidth="0.3" fill="none" />
+        <path d="M113 132 L120 129 M113 148 L120 145 M113 162 L120 159 M113 178 L120 175" stroke={isDark ? '#7a6a4a' : '#b0a080'} strokeWidth="0.8" fill="none" />
+        <circle cx="117" cy="150" r="1.2" fill={isDark ? '#7a6a4a' : '#b0a080'} />
+
+        {/* Right pole */}
+        <rect x="279" y="103" width="7" height="114" rx="2.5" fill={isDark ? '#3e3018' : '#a89878'} />
+        <rect x="280" y="103" width="5" height="114" rx="2" fill={isDark ? '#5a4a32' : '#b8a888'} />
+        <path d="M281 110 L284 110 M281 125 L284 125 M281 145 L284 145 M281 170 L284 170 M281 195 L284 195" stroke={isDark ? '#6a5a42' : '#c8b898'} strokeWidth="0.3" fill="none" />
+        <path d="M279 132 L286 129 M279 148 L286 145 M279 162 L286 159 M279 178 L286 175" stroke={isDark ? '#7a6a4a' : '#b0a080'} strokeWidth="0.8" fill="none" />
+        <circle cx="283" cy="150" r="1.2" fill={isDark ? '#7a6a4a' : '#b0a080'} />
+
+        {/* Pole finials */}
+        <circle cx="117" cy="103" r="5" fill={isDark ? '#5a4a32' : '#b8a888'} />
+        <circle cx="117" cy="103" r="3.5" fill={isDark ? '#6a5a42' : '#c8b898'} />
+        <circle cx="117" cy="103" r="1.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+        <circle cx="117" cy="103" r="0.6" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
+        <circle cx="283" cy="103" r="5" fill={isDark ? '#5a4a32' : '#b8a888'} />
+        <circle cx="283" cy="103" r="3.5" fill={isDark ? '#6a5a42' : '#c8b898'} />
+        <circle cx="283" cy="103" r="1.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+        <circle cx="283" cy="103" r="0.6" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
+
+        {/* String lights between posts — behind canopy */}
+        <path d="M117 125 Q200 158 283 125" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.5" fill="none" />
+        {[130, 145, 160, 175, 190, 205, 220, 235, 250, 265].map((lx, li) => {
+          const t = (lx - 117) / (283 - 117)
+          const ly = 125 + 2 * t * (1 - t) * 33
+          return (
+            <g key={`sl-${li}`}>
+              <line x1={lx} y1={ly} x2={lx} y2={ly + 4} stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.3" />
+              <circle cx={lx} cy={ly + 4.5} r={1.4} fill="#d97706" opacity="0.8" />
+              <circle cx={lx} cy={ly + 4.5} r={0.6} fill="#f0c050" />
+              <circle cx={lx} cy={ly + 4} r={3} fill="#d97706" opacity="0.06" />
+            </g>
+          )
+        })}
+
+        {/* Canopy fabric */}
+        <path d="M103 105 Q200 84 297 105 L293 116 Q200 97 107 116 Z" fill="#d97706" />
+        <path d="M120 110 L130 107 M150 107 L160 105 M190 104 L200 103 M230 104 L240 105 M260 106 L270 108 M280 109 L290 112" stroke="#c06e05" strokeWidth="0.3" fill="none" strokeDasharray="2 3" />
+        <path d="M107 116 Q200 97 293 116 L290 125 Q200 108 110 125 Z" fill={isDark ? '#a06820' : '#c8a050'} />
+        <path d="M110 125 Q200 108 290 125 L287 132 Q200 116 113 132 Z" fill="#c48a18" />
+        <path d="M103 105 Q110 112 117 105 Q124 112 131 105 Q138 112 145 105 Q152 112 159 105 Q166 112 173 105 Q180 112 187 105 Q194 112 201 105 Q208 112 215 105 Q222 112 229 105 Q236 112 243 105 Q250 112 257 105 Q264 112 271 105 Q278 112 285 105 Q292 112 297 105" fill="none" stroke="#b07a10" strokeWidth="1.5" />
+        <path d="M110 108 L111 110 M124 108 L125 110 M138 108 L139 110 M152 108 L153 110 M166 108 L167 110 M180 108 L181 110 M194 108 L195 110 M222 108 L223 110 M250 108 L251 110 M278 108 L279 110" stroke="#9a6818" strokeWidth="0.4" fill="none" />
+
+        {/* ============ LANTERNS ============ */}
+        {/* Left lantern */}
+        <line x1="140" y1="126" x2="140" y2="147" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="1" />
+        <circle cx="140" cy="126" r="1" fill={isDark ? '#5a4a32' : '#b8a888'} />
+        <path d="M140 147 L142 147 L140 146 L138 147 Z" fill={isDark ? '#5a4a32' : '#a89878'} />
+        <rect x="131" y="147" width="18" height="22" rx="4.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
+        <rect x="133" y="149" width="14" height="18" rx="3.5" fill={isDark ? '#2a2418' : '#8a8070'} />
+        <line x1="133" y1="158" x2="147" y2="158" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+        <line x1="140" y1="149" x2="140" y2="167" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+        <line x1="134" y1="150" x2="139" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+        <line x1="141" y1="150" x2="146" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+        <line x1="134" y1="159" x2="139" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+        <line x1="141" y1="159" x2="146" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+        <circle cx="140" cy="158" r="4.5" fill="#d97706" />
+        <circle cx="140" cy="158" r="2.5" fill="#e8a030" />
+        <circle cx="140" cy="157" r="1" fill="#f0c050" />
+        <circle cx="140" cy="158" r="28" fill="url(#lantern-glow)" style={{ filter: 'blur(8px)' }} />
+        <ellipse cx="140" cy="168" rx="22" ry="10" fill="url(#lantern-glow)" style={{ filter: 'blur(12px)' }} opacity="0.5" />
+        <rect x="136" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
+        <circle cx="140" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
+
+        {/* Right lantern */}
+        <line x1="260" y1="126" x2="260" y2="147" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="1" />
+        <circle cx="260" cy="126" r="1" fill={isDark ? '#5a4a32' : '#b8a888'} />
+        <path d="M260 147 L262 147 L260 146 L258 147 Z" fill={isDark ? '#5a4a32' : '#a89878'} />
+        <rect x="251" y="147" width="18" height="22" rx="4.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
+        <rect x="253" y="149" width="14" height="18" rx="3.5" fill={isDark ? '#2a2418' : '#8a8070'} />
+        <line x1="253" y1="158" x2="267" y2="158" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+        <line x1="260" y1="149" x2="260" y2="167" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+        <line x1="254" y1="150" x2="259" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+        <line x1="261" y1="150" x2="266" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+        <line x1="254" y1="159" x2="259" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+        <line x1="261" y1="159" x2="266" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+        <circle cx="260" cy="158" r="4.5" fill="#d97706" />
+        <circle cx="260" cy="158" r="2.5" fill="#e8a030" />
+        <circle cx="260" cy="157" r="1" fill="#f0c050" />
+        <circle cx="260" cy="158" r="28" fill="url(#lantern-glow)" style={{ filter: 'blur(8px)' }} />
+        <ellipse cx="260" cy="168" rx="22" ry="10" fill="url(#lantern-glow)" style={{ filter: 'blur(12px)' }} opacity="0.5" />
+        <rect x="256" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
+        <circle cx="260" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
+
+        {/* ============ ROOT ARMS ============ */}
+        {/* Left root arm */}
+        <g style={{ animation: 'root-sway-l 6s ease-in-out infinite', transformOrigin: '186px 210px' }}>
+          <path d="M186 212 Q174 213 164 214 Q156 215 150 216" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.8" fill="none" strokeLinecap="round" />
+          <path d="M150 216 Q146 218 144 222 Q142 228 141 235 Q140 242 140 248" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <path d="M140 248 Q139 252 139 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+          <path d="M140 248 Q141 252 142 254" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.9" fill="none" strokeLinecap="round" />
+          <path d="M140 248 Q138 251 137 254" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+          <path d="M139 255 Q138 257 137 256" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+          <path d="M142 254 Q143 256 142 257" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+          <path d="M137 254 Q136 256 135 255" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" strokeLinecap="round" />
+          <path d="M168 214 Q164 211 160 208" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+          <path d="M160 208 Q158 206 156 205" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+          <path d="M160 208 Q157 208 155 209" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+          <path d="M156 205 Q155 203 154 204" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+          <path d="M144 226 Q140 224 137 223" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+          <path d="M137 223 Q135 222 134 223" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+          <path d="M137 223 Q136 221 135 222" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+          <path d="M141 238 Q138 236 136 235" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+          <path d="M136 235 Q134 234 133 235" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+          <path d="M178 213 Q176 210 174 209" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+          <path d="M174 209 Q173 208 172 209" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+          <circle cx="172" cy="213.5" r="0.5" fill={isDark ? '#4a3218' : '#7a6040'} />
+          <circle cx="158" cy="215" r="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
+          <circle cx="148" cy="218" r="0.4" fill={isDark ? '#4a3218' : '#7a6040'} />
+          <circle cx="143" cy="230" r="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
+          <circle cx="141" cy="242" r="0.4" fill={isDark ? '#4a3218' : '#7a6040'} />
+          <path d="M163 214 Q162 215 163 216" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
+          <path d="M145 224 Q144 225 145 226" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
+        </g>
+
+        {/* Right root arm */}
+        <g style={{ animation: 'root-sway-r 7s ease-in-out infinite', transformOrigin: '214px 210px' }}>
+          <path d="M214 212 Q226 213 236 214 Q244 215 250 216" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M250 216 Q254 218 256 222 Q258 228 259 235 Q260 242 260 248" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.6" fill="none" strokeLinecap="round" />
+          <path d="M260 248 Q261 252 261 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+          <path d="M260 248 Q259 252 258 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1" fill="none" strokeLinecap="round" />
+          <path d="M260 248 Q262 251 263 254" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+          <path d="M260 248 Q258 250 256 253" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+          <path d="M261 255 Q262 257 263 256" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+          <path d="M258 255 Q257 257 256 256" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+          <path d="M263 254 Q264 256 265 255" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" strokeLinecap="round" />
+          <path d="M256 253 Q255 255 254 254" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" strokeLinecap="round" />
+          <path d="M232 214 Q234 210 236 207" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+          <path d="M236 207 Q237 205 238 203" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+          <path d="M236 207 Q238 207 240 208" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+          <path d="M238 203 Q239 201 238 200" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+          <path d="M238 200 Q237 198 236 199" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+          <path d="M240 208 Q242 207 241 209" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+          <path d="M257 226 Q260 224 263 223" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+          <path d="M263 223 Q265 222 266 223" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+          <path d="M259 240 Q262 238 264 237" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+          <path d="M264 237 Q266 236 267 237" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+          <path d="M264 237 Q265 235 264 234" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+          <path d="M222 213 Q224 210 226 209" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+          <circle cx="230" cy="214" r="0.6" fill={isDark ? '#4a3218' : '#7a6040'} />
+          <circle cx="242" cy="215" r="0.7" fill={isDark ? '#3e2a14' : '#6a5030'} />
+          <circle cx="252" cy="219" r="0.5" fill={isDark ? '#4a3218' : '#7a6040'} />
+          <circle cx="258" cy="232" r="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
+          <circle cx="260" cy="244" r="0.4" fill={isDark ? '#4a3218' : '#7a6040'} />
+          <ellipse cx="248" cy="217" rx="0.8" ry="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
+          <path d="M238 214 Q237 215 238 216" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
+          <path d="M255 225 Q254 226 255 227" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
+        </g>
+
+        {/* ============ THE ORANGE ============ */}
+        <circle cx="200" cy="210" r="20" fill="url(#o-body)" stroke={isDark ? '#1a1410' : '#8a7050'} strokeWidth="0.15" />
+        <ellipse cx="194" cy="201" rx="5" ry="7" fill="#e0a830" opacity="0.35" transform="rotate(-15 194 201)" />
+        <rect x="199" y="188" width="2.5" height="4" rx="1" fill="#4a6a2a" stroke={isDark ? '#1a1410' : '#8a7050'} strokeWidth="0.12" />
+        <rect x="199.3" y="188.5" width="1.8" height="1.5" rx="0.5" fill="#5a7a3a" />
+        <path d="M201.5 190 Q206 184 210 186 Q206 189 201.5 190" fill="#4a7a2a" stroke={isDark ? '#1a1410' : '#8a7050'} strokeWidth="0.12" />
+        <path d="M201.5 190 Q206 185.5 209 186" stroke="#3a6a1a" strokeWidth="0.3" fill="none" />
+
+        {/* Tiny earrings */}
+        <line x1="181" y1="212" x2="179" y2="215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.4" />
+        <circle cx="179" cy="216" r="1.2" fill="#d97706" />
+        <circle cx="179" cy="216" r="0.5" fill="#e8a030" />
+        <line x1="219" y1="212" x2="221" y2="215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.4" />
+        <circle cx="221" cy="216" r="1.2" fill="#d97706" />
+        <circle cx="221" cy="216" r="0.5" fill="#e8a030" />
+
+        {/* Face */}
+        <g style={{ animation: 'blink-open 5s ease-in-out infinite' }}>
+          <circle cx="194" cy="207" r="2.5" fill={isDark ? '#1a1410' : '#3a3020'} />
+          <circle cx="206" cy="207" r="2.5" fill={isDark ? '#1a1410' : '#3a3020'} />
+          <circle cx="195" cy="205.8" r="1" fill="#fff" />
+          <circle cx="207" cy="205.8" r="1" fill="#fff" />
+          <circle cx="194.3" cy="206.8" r="0.5" fill="#fff" />
+          <circle cx="206.3" cy="206.8" r="0.5" fill="#fff" />
+        </g>
+        <g style={{ animation: 'blink-shut 5s ease-in-out infinite' }}>
+          <path d="M192 207 Q194 209 196 207" stroke={isDark ? '#1a1410' : '#3a3020'} strokeWidth="1.3" fill="none" strokeLinecap="round" />
+          <path d="M204 207 Q206 209 208 207" stroke={isDark ? '#1a1410' : '#3a3020'} strokeWidth="1.3" fill="none" strokeLinecap="round" />
+        </g>
+        <ellipse cx="200" cy="216" rx="2.2" ry="2.8" fill="#8a4a05" />
+        <ellipse cx="200" cy="216" rx="1.5" ry="2" fill="#6a3a04" />
+
+        {/* ============ CART ============ */}
+        {/* Cart body planks */}
+        <rect x="100" y="218" width="200" height="44" rx="3" fill={isDark ? '#3a2e20' : '#a09070'} />
+        <rect x="100" y="218" width="200" height="10" rx="2" fill={isDark ? '#4a3a28' : '#b0a080'} />
+        <path d="M110 220 Q130 221 150 220 Q170 219 190 220 Q210 221 230 220 Q260 219 290 220" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+        <path d="M115 224 Q135 225 155 224 Q180 223 200 224 Q230 225 260 224 Q280 223 295 224" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+        <circle cx="145" cy="222" r="1.5" fill={isDark ? '#3e3018' : '#a89878'} />
+        <circle cx="145" cy="222" r="0.8" fill={isDark ? '#342a1c' : '#988868'} />
+        <rect x="100" y="228" width="200" height="9" fill={isDark ? '#423626' : '#a89878'} />
+        <path d="M108 231 Q140 232 170 231 Q200 230 240 231 Q270 232 295 231" stroke={isDark ? '#3a2e1e' : '#988868'} strokeWidth="0.3" fill="none" />
+        <path d="M110 234 Q150 235 180 234 Q220 233 260 234 Q285 235 295 234" stroke={isDark ? '#3a2e1e' : '#988868'} strokeWidth="0.3" fill="none" />
+        <ellipse cx="230" cy="232" rx="2" ry="1.2" fill={isDark ? '#3a2e1e' : '#988868'} />
+        <rect x="100" y="237" width="200" height="9" fill={isDark ? '#4a3a28' : '#b0a080'} />
+        <path d="M105 240 Q140 241 175 240 Q210 239 250 240 Q280 241 298 240" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+        <circle cx="180" cy="241" r="1.2" fill={isDark ? '#3e3018' : '#a89878'} />
+        <circle cx="180" cy="241" r="0.5" fill={isDark ? '#342a1c' : '#988868'} />
+        <rect x="100" y="246" width="200" height="9" fill={isDark ? '#3e3222' : '#a09070'} />
+        <path d="M108 249 Q145 250 185 249 Q225 248 270 249 Q290 250 298 249" stroke={isDark ? '#342a1a' : '#988868'} strokeWidth="0.3" fill="none" />
+        <ellipse cx="270" cy="250" rx="1.5" ry="1" fill={isDark ? '#342a1a' : '#988868'} />
+        <rect x="100" y="255" width="200" height="7" fill={isDark ? '#4a3a28' : '#b0a080'} />
+        <path d="M110 258 Q150 259 200 258 Q250 257 290 258" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+
+        {/* Vertical plank seams */}
+        <line x1="148" y1="218" x2="147" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
+        <circle cx="148" cy="222" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+        <circle cx="147" cy="240" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+        <circle cx="147" cy="255" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+        <line x1="205" y1="218" x2="204" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
+        <circle cx="205" cy="225" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+        <circle cx="204" cy="248" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+        <line x1="260" y1="218" x2="261" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
+        <circle cx="260" cy="230" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+        <circle cx="261" cy="252" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+
+        {/* Top rail */}
+        <rect x="95" y="212" width="210" height="8" rx="3" fill={isDark ? '#4a3a28' : '#b0a080'} />
+        <rect x="95" y="212" width="210" height="4" rx="2" fill={isDark ? '#6a5a42' : '#c8b898'} />
+        <rect x="95" y="212" width="210" height="2" rx="1" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
+        <path d="M120 214 L125 214" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+        <path d="M180 215 L188 215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+        <path d="M250 214 L258 214" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+        <rect x="109" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+        <rect x="149" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+        <rect x="199" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+        <rect x="249" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+        <rect x="289" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+
+        {/* Iron corner brackets */}
+        <path d="M97 212 L97 230" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+        <path d="M97 212 L112 212" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+        <circle cx="97" cy="215" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+        <circle cx="97" cy="222" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+        <circle cx="97" cy="228" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+        <circle cx="105" cy="212.5" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+        <path d="M303 212 L303 230" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+        <path d="M288 212 L303 212" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+        <circle cx="303" cy="215" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+        <circle cx="303" cy="222" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+        <circle cx="303" cy="228" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+        <circle cx="295" cy="212.5" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+
+        {/* ============ CART GOODS ============ */}
+        {/* Potted plant */}
+        <ellipse cx="287" cy="211" rx="9" ry="2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.35" />
+        <path d="M278 200 L280 212 L294 212 L296 200 Z" fill="#7a4a2a" />
+        <path d="M278 200 L280 212 L287 212 L285 200 Z" fill="#8a5a3a" opacity="0.3" />
+        <path d="M287 200 L287 212 L294 212 L296 200 Z" fill="#5a3a1a" opacity="0.2" />
+        <rect x="277" y="198" width="20" height="3" rx="0.8" fill="#8a5a3a" />
+        <rect x="277" y="198" width="20" height="1.5" rx="0.5" fill="#9a6a4a" opacity="0.4" />
+        <path d="M278 200 L296 200" stroke="#6a3a1a" strokeWidth="0.5" />
+        <path d="M280 211 L294 211" stroke="#6a3a1a" strokeWidth="0.4" />
+        <path d="M282 210 L292 210" stroke="#6a3a1a" strokeWidth="0.3" opacity="0.5" />
+        <ellipse cx="287" cy="200" rx="7" ry="1.5" fill={isDark ? '#3a2a18' : '#6a5a40'} />
+        <ellipse cx="287" cy="199.5" rx="5" ry="0.8" fill={isDark ? '#4a3a22' : '#7a6a48'} opacity="0.4" />
+        <path d="M287 200 Q283 193 280 188" stroke={isDark ? '#2a4a1a' : '#5a8a4a'} strokeWidth="1.4" fill="none" strokeLinecap="round" opacity="0.3" />
+        <path d="M287 200 Q284 193 281 189" stroke={isDark ? '#3a6a2a' : '#6a9a5a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        <path d="M281 189 Q279 187 277 188" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+        <path d="M281 189 Q280 186 279 187" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
+        <path d="M287 200 Q287 192 287 187" stroke={isDark ? '#4a7a3a' : '#7aaa6a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        <path d="M287 187 Q286 185 285 186" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
+        <path d="M287 187 Q288 185 289 186" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+        <path d="M287 200 Q290 193 293 189" stroke={isDark ? '#3a6a2a' : '#6a9a5a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        <path d="M293 189 Q295 187 297 188" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+        <path d="M287 194 Q289 192 291 193" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
+        <path d="M284 192 Q282 193 281 192" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+        <path d="M289 200 Q290 197 291 196" stroke={isDark ? '#5a8a3a' : '#8aaa6a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+        <path d="M291 196 Q292 195 293 196" fill={isDark ? '#5a8a3a' : '#8aaa6a'} />
+
+        {/* Dynamic seed jars matching daily seeds */}
+        <g transform="translate(0,2)">
+          {dailySeeds.map((seedType, si) => {
+            const jx = [155, 170, 185, 240, 255][si]
+            const jh = [12, 14, 10, 13, 11][si]
+            const jw = [14, 12, 10, 12, 11][si]
+            const jy = 212 - jh
+            const sc = TREE_TYPES[seedType]?.color || '#8a7a5a'
+            const sdull = sc + '90'
+            return (
+              <g key={`jar-${si}`}>
+                <ellipse cx={jx} cy={211.5} rx={jw / 2 + 1} ry={1.2} fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                <rect x={jx - jw / 2} y={jy} width={jw} height={jh} rx={jw / 2 - 2} fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                <rect x={jx - jw / 2 + 1} y={jy + 1} width={jw - 2} height={jh - 2} rx={jw / 2 - 2.5} fill="#3a4a3a" opacity="0.4" />
+                <rect x={jx - 3} y={jy - 3} width={6} height={3.5} rx={1.8} fill="#4a5a4a" opacity="0.5" />
+                <rect x={jx - 2.5} y={jy - 4.5} width={5} height={2.5} rx={1.2} fill={isDark ? '#6a5a42' : '#c8b898'} />
+                <ellipse cx={jx} cy={jy + jh / 2} rx={1.8} ry={2.5} fill={sdull} opacity="0.7" />
+                <path d={`M${jx} ${jy + jh / 2 - 2.5} Q${jx} ${jy + jh / 2} ${jx} ${jy + jh / 2 + 2.5}`} stroke={sc} strokeWidth="0.4" fill="none" opacity="0.3" />
+                <path d={`M${jx} ${jy + jh / 2 - 2} Q${jx - 1} ${jy + jh / 2 - 3.5} ${jx} ${jy + jh / 2 - 4.5} Q${jx + 1} ${jy + jh / 2 - 3.5} ${jx} ${jy + jh / 2 - 2}`} fill="#4a6a2a" opacity="0.5" />
+              </g>
+            )
+          })}
+        </g>
+
+        {/* SEEDS sign */}
+        <line x1="200" y1="220" x2="200" y2="228" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="1" />
+        <rect x="170" y="228" width="60" height="18" rx="2.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
+        <path d="M174 232 Q200 231 226 232" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
+        <path d="M174 238 Q200 237 226 238" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
+        <MarketCountdown isDark={isDark} />
+        <circle cx="200" cy="229" r="0.8" fill={isDark ? '#4a3a28' : '#8a7a60'} />
+
+        {/* Cart base shadow */}
+        <ellipse cx="200" cy="262" rx="60" ry="3" fill={isDark ? '#0a0806' : '#b0a890'} opacity="0.3" />
+      </svg>
+    </div>
+  )
+})
+
+// Drifting pollen and leaves behind the cards (deterministic, so re-renders never move them).
+const MarketAmbient = memo(function MarketAmbient({ isDark }: { isDark: boolean }) {
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
+      {Array.from({ length: 8 }).map((_, pi) => {
+        const x1 = -20 + Math.sin(pi * 1.3) * 30
+        const y1 = -10 + Math.cos(pi * 0.9) * 20
+        const x2 = 40 + Math.sin(pi * 2.1) * 60
+        const y2 = -80 - jitter(pi + 200) * 60
+        return (
+          <div key={`p-${pi}`} style={{
+            position: 'absolute',
+            left: `${10 + (pi * 11) % 80}%`,
+            top: `${30 + (pi * 17) % 50}%`,
+            width: 3, height: 3, borderRadius: '50%',
+            backgroundColor: isDark ? '#d9770640' : '#d9770630',
+            ['--sp-x1' as string]: `${x1}px`, ['--sp-y1' as string]: `${y1}px`,
+            ['--sp-x2' as string]: `${x2}px`, ['--sp-y2' as string]: `${y2}px`,
+            animation: `shop-pollen ${8 + pi * 1.5}s ease-in-out ${pi * 1.2}s infinite`,
+          }} />
+        )
+      })}
+      {Array.from({ length: 5 }).map((_, li) => {
+        const x1 = 15 + Math.sin(li * 2) * 20
+        const y1 = -10 + Math.cos(li) * 15
+        const x2 = 30 + Math.sin(li * 3) * 50
+        const y2 = -60 - jitter(li + 300) * 40
+        const rot = 120 + li * 60
+        return (
+          <div key={`l-${li}`} style={{
+            position: 'absolute',
+            left: `${5 + (li * 19) % 85}%`,
+            top: `${50 + (li * 13) % 40}%`,
+            width: 8, height: 5,
+            backgroundColor: isDark ? '#6a8a4a20' : '#5a7a3a18',
+            borderRadius: '50% 50% 50% 0',
+            ['--sl-x1' as string]: `${x1}px`, ['--sl-y1' as string]: `${y1}px`,
+            ['--sl-x2' as string]: `${x2}px`, ['--sl-y2' as string]: `${y2}px`,
+            ['--sl-r' as string]: `${rot}deg`,
+            animation: `shop-leaf-float ${12 + li * 2}s ease-in-out ${li * 2.5}s infinite`,
+          }} />
+        )
+      })}
+    </div>
+  )
+})
+
+type MarketCardProps = {
+  type: string
+  i: number
+  isDark: boolean
+  isDailyDeal: boolean
+  isRevealed: boolean
+  isCracking: boolean
+  soldOut: boolean
+  discount: number
+  freshToken: number | undefined // set while this card's reveal animations are playing
+  textMuted: string
+  onFreshDone: (i: number, token: number) => void
+  onReveal: (i: number) => void
+  onSelect: (type: string) => void
+}
+
+// One market card. Memoised so revealing a card re-renders only that card.
+const MarketCard = memo(function MarketCard({
+  type, i, isDark, isDailyDeal, isRevealed, isCracking, soldOut, discount, freshToken, textMuted, onReveal, onSelect, onFreshDone,
+}: MarketCardProps) {
+  const t = TREE_TYPES[type]
+  const rarity = t?.rarity ?? 'common'
+  const reduced = useReducedMotion()
+  const face = useMemo(() => revealFaceAnims(rarity), [rarity])
+  // The reveal stays "fresh" until its last animation — burst or card face —
+  // has finished, then hands the token back so it is never replayed on remount.
+  const freshEndMs = useMemo(() => Math.max(face.endMs, buildBurst(rarity, reduced).endMs), [face, rarity, reduced])
+  useEffect(() => {
+    if (freshToken === undefined) return
+    const id = window.setTimeout(() => onFreshDone(i, freshToken), freshEndMs)
+    return () => window.clearTimeout(id)
+  }, [freshToken, freshEndMs, i, onFreshDone])
+  if (!t) return null
+  const fresh = freshToken !== undefined
+  const rarityCol = SHOP_RARITY_COLOR[t.rarity] || '#8a7a6a'
+  // Unflipped cards wear their rarity colour; rare and up get a soft glow
+  const fancy = t.rarity !== 'common' && t.rarity !== 'uncommon'
+  const cardW = 160
+  const cardH = 270
+  const arcOffset = [18, 0, 0, 18][i] || 0
+  const arcRotate = [-7, -2.5, 2.5, 7][i] || 0
+
+  return (
+    <div className="seed-card-wrap" style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: arcOffset, rotate: `${arcRotate}deg`, ['--float-y' as string]: `${-5 - i * 1.2}px`, animation: `card-float ${5 + i * 0.6}s ease-in-out ${i * 0.4}s infinite` }}>
+      {/* Daily deal label */}
+      {isDailyDeal && (
+        <div style={{
+          position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+          fontSize: 7, fontWeight: 400, color: '#dc2626', letterSpacing: '0.1em',
+          textTransform: 'uppercase', whiteSpace: 'nowrap', zIndex: 20,
+          background: isDark ? 'rgba(220,38,38,0.1)' : 'rgba(220,38,38,0.08)',
+          padding: '2px 8px', borderRadius: 4,
+          border: `1px solid ${isDark ? 'rgba(220,38,38,0.25)' : 'rgba(220,38,38,0.2)'}`,
+        }}>Daily Deal</div>
+      )}
+      {/* Seed card */}
+      <div
+        className={`seed-packet ${isCracking ? 'seed-cracking' : ''} ${isRevealed ? 'seed-revealed' : ''} ${isDailyDeal && !isRevealed ? 'daily-deal' : ''}`}
+        onClick={() => !isRevealed && onReveal(i)}
+        style={{
+          width: cardW, height: cardH, borderRadius: 12,
+          position: 'relative', overflow: 'hidden',
+          cursor: 'pointer',
+          ['--crack-dur' as string]: `${(CRACK_MS[t.rarity] ?? CRACK_MS.common) / 1000}s`,
+          boxShadow: isDailyDeal
+            ? (isDark ? '0 2px 16px rgba(220,38,38,0.25)' : '0 2px 16px rgba(220,38,38,0.15)')
+            : !isRevealed && fancy
+              ? `${isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)'}, 0 0 22px ${hexA(rarityCol, isDark ? 0.22 : 0.28)}`
+              : (isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)'),
+          border: isDailyDeal
+            ? `1.5px solid ${isDark ? 'rgba(220,38,38,0.4)' : 'rgba(220,38,38,0.35)'}`
+            : !isRevealed
+              ? `1px solid ${hexA(rarityCol, t.rarity === 'common' ? (isDark ? 0.18 : 0.3) : (isDark ? 0.45 : 0.55))}`
+              : `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+        }}
+      >
+        {!isRevealed ? (
+          /* Unrevealed — tinted by rarity so you can see what's inside before flipping */
+          <div
+            onClick={() => onReveal(i)}
+            style={{
+              width: '100%', height: '100%', borderRadius: 'inherit',
+              background: isDark
+                ? `radial-gradient(120% 70% at 50% 0%, ${hexA(rarityCol, t.rarity === 'common' ? 0.06 : 0.2)} 0%, transparent 70%), linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)`
+                : `radial-gradient(120% 70% at 50% 0%, ${hexA(rarityCol, t.rarity === 'common' ? 0.1 : 0.28)} 0%, transparent 70%), linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)`,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              position: 'relative',
+            }}
+          >
+            {/* Botanical filigree border */}
+            <svg viewBox="0 0 180 320" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+              {(() => { const fc = t.rarity === 'common' ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)') : hexA(rarityCol, isDark ? 0.35 : 0.5); return (<>
+                <rect x="12" y="12" width="156" height="296" rx="8" fill="none" stroke={fc} strokeWidth="0.5" />
+                <path d="M12 40 Q30 38 36 28 Q38 35 48 36" fill="none" stroke={fc} strokeWidth="0.5" />
+                <path d="M168 40 Q150 38 144 28 Q142 35 132 36" fill="none" stroke={fc} strokeWidth="0.5" />
+                <path d="M12 280 Q30 282 36 292 Q38 285 48 284" fill="none" stroke={fc} strokeWidth="0.5" />
+                <path d="M168 280 Q150 282 144 292 Q142 285 132 284" fill="none" stroke={fc} strokeWidth="0.5" />
+                <circle cx="12" cy="40" r="1.5" fill={fc} />
+                <circle cx="168" cy="40" r="1.5" fill={fc} />
+                <circle cx="12" cy="280" r="1.5" fill={fc} />
+                <circle cx="168" cy="280" r="1.5" fill={fc} />
+                <line x1="48" y1="16" x2="132" y2="16" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
+                <line x1="48" y1="304" x2="132" y2="304" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
+              </>)})()}
+            </svg>
+            {/* Sprouting seed */}
+            {(() => {
+              const seedCol = t.rarity === 'sacred' ? (isDark ? '#9a80c0' : '#7a60a0')
+                : t.rarity === 'true rare' ? (isDark ? '#8a7aaa' : '#6a5a8a')
+                : isDark ? '#8a7a6a' : '#6a5a4a'
+              const sproutCol = t.rarity === 'sacred' ? (isDark ? '#8a6ac0' : '#7050a0')
+                : t.rarity === 'true rare' ? (isDark ? '#7a6aaa' : '#5a4a8a')
+                : isDark ? '#6a8a4a' : '#5a7a3a'
+              return (
+                <svg width="40" height="52" viewBox="0 0 40 52" style={{ opacity: isDark ? 0.35 : 0.4 }}>
+                  {/* Seed body */}
+                  <ellipse cx="20" cy="38" rx="8" ry="10" fill={seedCol} opacity="0.6" />
+                  <ellipse cx="20" cy="38" rx="8" ry="10" stroke={seedCol} strokeWidth="1" fill="none" opacity="0.8" />
+                  {/* Crack line */}
+                  <path d="M20 30 Q18 34 20 38 Q22 34 20 30" stroke={seedCol} strokeWidth="0.8" fill="none" opacity="0.5" />
+                  {/* Sprout stem */}
+                  <path d="M20 30 Q19 24 20 16" stroke={sproutCol} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                  {/* Left leaf */}
+                  <path d="M20 22 Q14 18 12 14 Q16 16 20 20" fill={sproutCol} opacity="0.7" />
+                  {/* Right leaf */}
+                  <path d="M20 18 Q26 14 28 10 Q24 13 20 16" fill={sproutCol} opacity="0.7" />
+                  {/* Tiny unfurling leaf at top */}
+                  <path d="M20 16 Q18 12 16 10 Q18 11 20 14" fill={sproutCol} opacity="0.5" />
+                </svg>
+              )
+            })()}
+            {/* Discount badge */}
+            {discount > 0 && (
+              <div style={{
+                position: 'absolute', top: 14, right: 18,
+                fontSize: 8, fontWeight: 400, color: '#d97706',
+                opacity: isDark ? 0.4 : 0.35,
+              }}>%</div>
+            )}
+          </div>
+        ) : (
+          /* Revealed — plant on earthy ground */
+          <div
+            onClick={() => onSelect(type)}
+            style={{
+              width: '100%', height: '100%', borderRadius: 'inherit',
+              background: isDark
+                ? 'linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)'
+                : 'linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
+              position: 'relative', overflow: 'hidden',
+            }}
+          >
+            {/* Rarity color fade-in */}
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: 'inherit',
+              background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
+              animation: fresh ? faceAnimCss(face.bg) : undefined,
+              zIndex: 0,
+            }} />
+            {/* Subtle paper texture */}
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: 'inherit',
+              backgroundImage: `radial-gradient(circle at 20% 30%, ${isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'} 1px, transparent 1px), radial-gradient(circle at 70% 60%, ${isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)'} 1px, transparent 1px), radial-gradient(circle at 40% 80%, ${isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.018)'} 1px, transparent 1px)`,
+              backgroundSize: '8px 8px, 12px 12px, 6px 6px',
+              zIndex: 1, pointerEvents: 'none',
+            }} />
+            {/* Sacred white flash */}
+            {fresh && face.flash && t.rarity === 'sacred' && (
+              <div style={{
+                position: 'absolute', inset: 0, borderRadius: 'inherit',
+                background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.4) 40%, transparent 70%)',
+                animation: faceAnimCss(face.flash),
+                zIndex: 1, pointerEvents: 'none',
+              }} />
+            )}
+            {/* True rare flash */}
+            {fresh && face.flash && t.rarity === 'true rare' && (
+              <div style={{
+                position: 'absolute', inset: 0, borderRadius: 'inherit',
+                background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.6) 0%, rgba(167,139,250,0.2) 50%, transparent 70%)',
+                animation: faceAnimCss(face.flash),
+                zIndex: 1, pointerEvents: 'none',
+              }} />
+            )}
+            <RarityScene rarity={t.rarity} isDark={isDark} />
+            <Sparkles rarity={t.rarity} count={3} />
+            {/* Botanical filigree border */}
+            <svg viewBox="0 0 180 320" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 6 }}>
+              {(() => { const fc = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'; return (<>
+                <rect x="10" y="10" width="160" height="300" rx="8" fill="none" stroke={fc} strokeWidth="0.5" />
+                <path d="M10 38 Q28 36 34 26 Q36 33 46 34" fill="none" stroke={fc} strokeWidth="0.5" />
+                <path d="M170 38 Q152 36 146 26 Q144 33 134 34" fill="none" stroke={fc} strokeWidth="0.5" />
+                <path d="M10 282 Q28 284 34 294 Q36 287 46 286" fill="none" stroke={fc} strokeWidth="0.5" />
+                <path d="M170 282 Q152 284 146 294 Q144 287 134 286" fill="none" stroke={fc} strokeWidth="0.5" />
+                <circle cx="10" cy="38" r="1.5" fill={fc} />
+                <circle cx="170" cy="38" r="1.5" fill={fc} />
+                <circle cx="10" cy="282" r="1.5" fill={fc} />
+                <circle cx="170" cy="282" r="1.5" fill={fc} />
+                <line x1="46" y1="14" x2="134" y2="14" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
+                <line x1="46" y1="306" x2="134" y2="306" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
+              </>)})()}
+            </svg>
+            {/* Inner vignette */}
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: 'inherit',
+              boxShadow: `inset 0 0 20px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)'}`,
+              pointerEvents: 'none', zIndex: 4,
+            }} />
+            {/* Tree name */}
+            <div style={{
+              position: 'absolute', top: 7, left: '50%', transform: 'translateX(-50%)',
+              fontSize: t.rarity === 'sacred' ? 15 : t.rarity === 'true rare' ? 14 : 13,
+              fontWeight: t.rarity === 'sacred' || t.rarity === 'true rare' ? 500 : 400,
+              color: t.rarity === 'sacred' ? '#e0d0ff'
+                : t.rarity === 'true rare' ? (isDark ? '#fcd34d' : '#b45309')
+                : t.rarity === 'rare' ? (isDark ? '#93c5fd' : '#1d4ed8')
+                : t.rarity === 'uncommon' ? (isDark ? '#86efac' : '#15803d')
+                : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)'),
+              fontFamily: 'Crimson Pro, serif',
+              letterSpacing: t.rarity === 'sacred' ? '0.12em' : t.rarity === 'true rare' ? '0.08em' : '0.02em',
+              textTransform: t.rarity === 'sacred' || t.rarity === 'true rare' ? 'uppercase' as const : 'none' as const,
+              animation: fresh ? faceAnimCss(face.name) : undefined,
+              zIndex: 5, whiteSpace: 'nowrap',
+              ...(t.rarity === 'sacred' ? {
+                textShadow: '0 0 8px rgba(180,140,255,0.6), 0 0 18px rgba(140,100,220,0.3)',
+              } : t.rarity === 'true rare' ? {
+                textShadow: isDark ? '0 0 6px rgba(252,211,77,0.4)' : '0 0 6px rgba(180,119,6,0.2)',
+              } : {}),
+            }}>
+              {t.name}
+            </div>
+            {/* Rarity label */}
+            <div style={{
+              position: 'absolute', top: 40, left: '50%', transform: 'translateX(-50%)',
+              fontSize: 7, fontWeight: 400, color: t.rarity === 'sacred' ? '#d4b8ff' : rarityCol,
+              letterSpacing: t.rarity === 'sacred' ? '0.14em' : '0.08em', textTransform: 'uppercase',
+              animation: fresh ? faceAnimCss(face.label) : undefined,
+              zIndex: 5, whiteSpace: 'nowrap',
+              ...(t.rarity === 'sacred' ? {
+                textShadow: '0 0 6px rgba(180,140,255,0.8), 0 0 14px rgba(140,100,220,0.5)',
+              } : {}),
+            }}>
+              {t.rarity === 'sacred' ? '✦ ' : ''}{RARITY_LABEL[t.rarity]}{t.rarity === 'sacred' ? ' ✦' : ''}
+            </div>
+            {/* Sold out */}
+            {soldOut && (
+              <div style={{
+                position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
+                fontSize: 7, fontWeight: 400, color: textMuted, textTransform: 'uppercase',
+                background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)',
+                padding: '2px 6px', borderRadius: 3,
+                backdropFilter: 'blur(4px)', zIndex: 5,
+              }}>Sold out</div>
+            )}
+            {/* Discount badge - now on price tag */}
+            {discount > 0 && false && (
+              <div style={{
+                position: 'absolute', bottom: 36, right: 18,
+                fontSize: 8, fontWeight: 400, color: ACCENT_CONTRAST,
+                background: ACCENT, padding: '2px 5px', borderRadius: 3,
+                zIndex: 5,
+              }}>-{discount}%</div>
+            )}
+            {/* Plant — centered, base on ground */}
+            <div style={{
+              position: 'absolute', bottom: `${Math.round(plantBottomFrac(type) * 100)}%`, left: 0, right: 0,
+              display: 'flex', justifyContent: 'center',
+              zIndex: 2,
+            }}>
+              <div style={{
+                transformOrigin: rarityPlantClass(t.rarity) && t.rarity !== 'rare' ? 'bottom center' : undefined,
+                animation: fresh ? faceAnimCss(face.pop) : undefined,
+              }}>
+              <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative' }}>
+                <CachedPlantIcon type={type} size={120} stage={3} hideGround />
+                {/* Ground blend */}
+                {(() => { const tc = getTerrainColors(type, isDark); return (
+                <div style={{
+                  position: 'absolute', bottom: -3, left: '50%', transform: 'translateX(-50%)',
+                  width: '60%', height: 10, zIndex: 5,
+                  background: `linear-gradient(to top, ${tc.blendBase} 0%, transparent 100%)`,
+                  borderRadius: '50%',
+                }} />
+                )})()}
+              </div>
+              </div>
+            </div>
+            {/* Ground */}
+            {(() => { const tc = getTerrainColors(type, isDark); const gp = getGroundPath(type); return (
+            <svg viewBox="0 0 180 60" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '22%', zIndex: 3 }}>
+              <defs>
+                <linearGradient id={`ground-${i}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={tc.top} />
+                  <stop offset="40%" stopColor={tc.mid} />
+                  <stop offset="100%" stopColor={tc.bottom} />
+                </linearGradient>
+              </defs>
+              <path d={gp.fill} fill={`url(#ground-${i})`} />
+              <path d={gp.edge} fill="none" stroke={tc.edge} strokeWidth="0.6" opacity="0.3" />
+            </svg>
+            )})()}
+          </div>
+        )}
+        {/* Rarity color bleeding through crack */}
+        {isCracking && (
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 5,
+            background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
+            animation: `rarity-color-in ${(CRACK_MS[t.rarity] ?? CRACK_MS.common) * 0.85 / 1000}s cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '0.2s' : t.rarity === 'true rare' ? '0.15s' : '0.05s'} both`,
+          }} />
+        )}
+        {/* Crack overlay — fades out to reveal */}
+        {isCracking && (
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
+            background: isDark
+              ? 'linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)'
+              : 'linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)',
+            animation: `seed-crack-fade ${`${(CRACK_MS[t.rarity] ?? CRACK_MS.common) / 1000}s`} cubic-bezier(0.4, 0, 0.2, 1) forwards`,
+            willChange: 'opacity, transform',
+          }} />
+        )}
+      </div>
+      {/* Hanging parchment price tag */}
+      {(() => {
+        const tagRot = [(-3), 2, (-1.5), 3, (-2.5)][i % 5]
+        const tagOffX = [(-6), 8, 3, (-9), 5][i % 5]
+        const stringH = [26, 34, 18, 40, 22][i % 5]
+        return (
+      <div onClick={(e) => { e.stopPropagation(); if (isRevealed) onSelect(type) }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', visibility: isRevealed ? 'visible' : 'hidden', marginTop: -2, marginLeft: tagOffX, transform: `rotate(${-arcRotate}deg)`, transformOrigin: 'top center', cursor: isRevealed ? 'pointer' : 'default' }}>
+        <svg width="4" height={stringH} style={{ overflow: 'visible' }}>
+          <line x1="2" y1="0" x2="2" y2={stringH} stroke={isDark ? '#8b7355' : '#6b5335'} strokeWidth="0.8" strokeLinecap="round" />
+          <line x1="2" y1="0" x2="2" y2={stringH} stroke={isDark ? 'rgba(160,130,90,0.25)' : 'rgba(120,90,50,0.2)'} strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+        <div style={{
+          position: 'relative',
+          transform: `rotate(${tagRot}deg)`,
+          background: isDark
+            ? 'linear-gradient(145deg, #2a2418 0%, #1e1a14 50%, #252018 100%)'
+            : 'linear-gradient(145deg, #f2e8d4 0%, #e8dcc4 50%, #f0e4ce 100%)',
+          border: `1px solid ${isDark ? 'rgba(180,160,130,0.15)' : 'rgba(140,120,80,0.2)'}`,
+          borderRadius: 3,
+          padding: '5px 12px 6px',
+          minWidth: 54,
+          textAlign: 'center' as const,
+          boxShadow: isDark
+            ? '0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03)'
+            : '0 2px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)',
+        }}>
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', overflow: 'hidden', pointerEvents: 'none' }}>
+            {[0.25, 0.5, 0.75].map(y => (
+              <div key={y} style={{ position: 'absolute', left: '8%', right: '8%', top: `${y * 100}%`, height: 0.5, background: isDark ? 'rgba(180,160,130,0.05)' : 'rgba(140,120,80,0.05)' }} />
+            ))}
+          </div>
+          <div style={{
+            position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
+            width: 4, height: 4, borderRadius: '50%',
+            background: isDark ? '#0e0d0b' : '#e0d8c8',
+            border: `0.5px solid ${isDark ? 'rgba(180,160,130,0.2)' : 'rgba(140,120,80,0.15)'}`,
+          }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1, marginTop: 0 }}>
+            {discount > 0 ? (<>
+              <span style={{ fontSize: 9, fontWeight: 400, color: isDark ? '#8a7a60' : '#8a7a60', fontFamily: font, textDecoration: 'line-through', opacity: 0.7 }}>{(TREE_TYPES[type]?.cost || 0).toLocaleString()}</span>
+              <span style={{ fontSize: 13, fontWeight: 400, color: '#dc2626', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{Math.round((TREE_TYPES[type]?.cost || 0) * (1 - discount / 100)).toLocaleString()}<PulpIcon size={11} /></span>
+            </>) : (
+              <span style={{ fontSize: 13, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{(TREE_TYPES[type]?.cost || 0).toLocaleString()}<PulpIcon size={11} /></span>
+            )}
+          </div>
+        </div>
+      </div>
+        )
+      })()}
+
+      {/* Pop effects on reveal */}
+      {isRevealed && freshToken !== undefined && (
+        <RevealBurst key={freshToken} rarity={t.rarity} originY={arcOffset + cardH * (1 - plantBottomFrac(type)) - 58} />
+      )}
+    </div>
+  )
+})
+
 export const BoutiqueView = memo(function BoutiqueView({
   isOpen, onClose, theme, accent,
   sap, inventory, setSap, setInventory, setGrove,
@@ -633,14 +1890,28 @@ export const BoutiqueView = memo(function BoutiqueView({
   const [shopDiscounts, setShopDiscounts] = useState<Record<string, number>>({})
   const [selectedPlant, setSelectedPlant] = useState<string | null>(null)
   const [previewStage, setPreviewStage] = useState(3)
-  const [countdown, setCountdown] = useState('')
   const [revealedCards, setRevealedCards] = useState<Set<number>>(new Set())
   // Split screen: the 4-card fan is ~860px wide, so shrink it to fit (rail + margins ≈ 100px).
   const windowWidth = useWindowWidth()
   const cardFanZoom = Math.min(1, Math.max(0.5, (windowWidth - 100) / 860))
   const [crackingCard, setCrackingCard] = useState<number | null>(null)
-  const [revealEffect, setRevealEffect] = useState<{ index: number; rarity: string } | null>(null)
+  // Cards turned over during this visit -> a token that keys their one-shot reveal animations.
+  const [freshReveals, setFreshReveals] = useState<Record<number, number>>({})
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
+  const [prevTab, setPrevTab] = useState<TabId>(activeTab)
+  if (prevTab !== activeTab) {
+    // The cards unmount off the Shop tab; drop fresh reveals so coming back never replays them.
+    setPrevTab(activeTab)
+    if (activeTab !== 'shop') setFreshReveals({})
+  }
+  if (prevIsOpen !== isOpen) {
+    // Leaving the market forgets the fresh reveals, so reopening never replays them.
+    setPrevIsOpen(isOpen)
+    if (!isOpen) setFreshReveals({})
+  }
   const [marketEpoch, setMarketEpoch] = useState(getMarketEpoch)
+  // Get the audio engine ready while idle so the first reveal sound doesn't drop a frame.
+  useEffect(() => { if (isOpen) warmAudio() }, [isOpen])
   const prevTabRef = useRef<TabId>('shop')
 
   const isDark = theme === 'dark'
@@ -672,26 +1943,19 @@ export const BoutiqueView = memo(function BoutiqueView({
     return () => window.removeEventListener('keydown', handleEsc)
   }, [isOpen, onClose, selectedPlant])
 
+  // Market rollover. Only sets state when the epoch actually changes; the
+  // ticking countdown lives in <MarketCountdown/> so the market doesn't
+  // re-render every second.
   useEffect(() => {
     if (!isOpen) return
-    const tick = () => {
-      const diff = getNextMarketRefresh() - Date.now()
-      if (diff <= 0) {
-        setCountdown('Refreshing...')
-        const newEpoch = getMarketEpoch()
-        if (newEpoch !== marketEpoch) {
-          setMarketEpoch(newEpoch)
-          setRevealedCards(new Set())
-        }
-        return
+    const id = setInterval(() => {
+      const newEpoch = getMarketEpoch()
+      if (newEpoch !== marketEpoch) {
+        setMarketEpoch(newEpoch)
+        setRevealedCards(new Set())
+        setFreshReveals({})
       }
-      const h = Math.floor(diff / 3600000)
-      const m = Math.floor((diff % 3600000) / 60000)
-      const s = Math.floor((diff % 60000) / 1000)
-      setCountdown(`${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`)
-    }
-    tick()
-    const id = setInterval(tick, 1000)
+    }, 1000)
     return () => clearInterval(id)
   }, [isOpen, marketEpoch])
 
@@ -722,24 +1986,57 @@ export const BoutiqueView = memo(function BoutiqueView({
     }
   }, [isOpen, marketEpoch])
 
-  const revealCard = (index: number) => {
-    if (revealedCards.has(index) || crackingCard !== null) return
-    const type = dailySeeds[index]
+  // Latest values for the stable callbacks below (so memoised cards keep the same props).
+  const latestRef = useRef({ revealedCards, dailySeeds, isOpen })
+  useEffect(() => { latestRef.current = { revealedCards, dailySeeds, isOpen } })
+  const crackingRef = useRef(false)
+  const freshSeqRef = useRef(0)
+  const crackTimersRef = useRef<Set<number>>(new Set())
+  useEffect(() => {
+    const timers = crackTimersRef.current
+    return () => { timers.forEach(id => window.clearTimeout(id)); timers.clear() }
+  }, [])
+
+  const revealCard = useCallback((index: number) => {
+    const { revealedCards: rc, dailySeeds: ds } = latestRef.current
+    if (rc.has(index) || crackingRef.current) return
+    const type = ds[index]
     const rarity = type ? TREE_TYPES[type]?.rarity || 'common' : 'common'
+    crackingRef.current = true
     setCrackingCard(index)
     const crackDur = CRACK_MS[rarity] ?? CRACK_MS.common
-    setTimeout(() => {
-      const next = new Set(revealedCards)
+    const id = window.setTimeout(() => {
+      crackTimersRef.current.delete(id)
+      crackingRef.current = false
+      const next = new Set(latestRef.current.revealedCards)
       next.add(index)
       setRevealedCards(next)
       localStorage.setItem('pulp_revealed_cards', JSON.stringify([...next]))
       setCrackingCard(null)
-      setRevealEffect({ index, rarity })
+      // The burst (<RevealBurst/>) times its own exit from its animation lengths.
+      if (latestRef.current.isOpen) {
+        const token = ++freshSeqRef.current
+        setFreshReveals(prev => ({ ...prev, [index]: token }))
+      }
       playSound(rarity === 'common' || rarity === 'uncommon' ? 'reveal' : 'revealRare')
-      const effectDur = rarity === 'sacred' ? 6000 : rarity === 'true rare' ? 4000 : rarity === 'rare' ? 1500 : rarity === 'uncommon' ? 1000 : 600
-      setTimeout(() => setRevealEffect(null), effectDur)
     }, crackDur)
-  }
+    crackTimersRef.current.add(id)
+  }, [])
+
+  // A card's reveal finished: forget it (unless a newer reveal replaced the token).
+  const clearFresh = useCallback((index: number, token: number) => {
+    setFreshReveals(prev => {
+      if (prev[index] !== token) return prev
+      const next = { ...prev }
+      delete next[index]
+      return next
+    })
+  }, [])
+
+  const selectPlant = useCallback((type: string) => {
+    setSelectedPlant(type)
+    setPreviewStage(0)
+  }, [])
 
   const forceRefresh = () => {
     const newEpoch = Date.now()
@@ -748,6 +2045,7 @@ export const BoutiqueView = memo(function BoutiqueView({
     setShopStock(stock)
     setShopDiscounts(discounts)
     setRevealedCards(new Set())
+    setFreshReveals({})
     localStorage.setItem('pulp_last_market_reset', String(getMarketEpoch()))
     localStorage.setItem('pulp_daily_seeds', JSON.stringify(seeds))
     localStorage.setItem('pulp_shop_stock', JSON.stringify(stock))
@@ -889,37 +2187,37 @@ export const BoutiqueView = memo(function BoutiqueView({
           100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
         @keyframes pop-sacred {
-          0% { transform: scale(0) rotate(-6deg); opacity: 0; filter: brightness(2.5); }
-          30% { transform: scale(1.25) rotate(2deg); opacity: 1; filter: brightness(1.8); }
-          55% { transform: scale(0.92) rotate(-1deg); filter: brightness(1.2); }
-          75% { transform: scale(1.05) rotate(0deg); filter: brightness(1); }
-          100% { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1); }
+          0% { transform: scale(0) rotate(-6deg); opacity: 0; }
+          30% { transform: scale(1.25) rotate(2deg); opacity: 1; }
+          55% { transform: scale(0.92) rotate(-1deg); }
+          75% { transform: scale(1.05) rotate(0deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
-        @keyframes pop-ring {
-          0% { transform: scale(0); opacity: 0.8; }
-          50% { transform: scale(1); opacity: 0.3; }
-          100% { transform: scale(1.8); opacity: 0; }
+        /* Reveal burst. Motion (rb-move / rb-grow) is a single eased segment;
+           fade/scale envelopes sit on their own element/animation and every
+           keyframe boundary has zero slope on both sides, so nothing stalls. */
+        @keyframes rb-move {
+          from { transform: translate3d(0, 0, 0); }
+          to { transform: translate3d(var(--rb-x), var(--rb-y), 0); }
         }
-        @keyframes pop-particle {
-          0% { transform: translate(0, 0) scale(0); opacity: 0; }
-          15% { transform: translate(var(--pp-x1), var(--pp-y1)) scale(1.2); opacity: 1; }
-          100% { transform: translate(var(--pp-x2), var(--pp-y2)) scale(0); opacity: 0; }
+        @keyframes rb-env {
+          0% { opacity: 0; transform: scale(0.5); animation-timing-function: cubic-bezier(0.3, 0, 0.4, 1); }
+          12% { opacity: 1; transform: scale(1.1); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+          50% { opacity: 0.9; transform: scale(1); animation-timing-function: cubic-bezier(0.45, 0, 0.6, 1); }
+          100% { opacity: 0; transform: scale(0.3); }
         }
-        @keyframes sacred-nova {
-          0% { transform: scale(0); opacity: 0; }
-          20% { transform: scale(0.6); opacity: 0.5; }
-          100% { transform: scale(2.5); opacity: 0; }
+        @keyframes rb-grow {
+          from { transform: scale(var(--rb-from)); }
+          to { transform: scale(var(--rb-to)); }
         }
-        @keyframes sacred-star {
-          0% { transform: translate(0, 0) scale(0) rotate(0deg); opacity: 0; }
-          10% { opacity: 1; transform: translate(var(--ss-x1), var(--ss-y1)) scale(1) rotate(90deg); }
-          60% { opacity: 0.7; transform: translate(var(--ss-x2), var(--ss-y2)) scale(0.6) rotate(200deg); }
-          100% { opacity: 0; transform: translate(var(--ss-x3), var(--ss-y3)) scale(0) rotate(360deg); }
+        @keyframes rb-fade-fast {
+          0% { opacity: 0; animation-timing-function: cubic-bezier(0.3, 0, 0.4, 1); }
+          8% { opacity: var(--rb-peak); animation-timing-function: cubic-bezier(0.35, 0, 0.65, 1); }
+          100% { opacity: 0; }
         }
-        @keyframes sacred-shimmer {
-          0% { opacity: 0; }
-          20% { opacity: 0.3; }
-          50% { opacity: 0.15; }
+        @keyframes rb-fade-slow {
+          0% { opacity: 0; animation-timing-function: cubic-bezier(0.3, 0, 0.4, 1); }
+          22% { opacity: var(--rb-peak); animation-timing-function: cubic-bezier(0.35, 0, 0.65, 1); }
           100% { opacity: 0; }
         }
         @keyframes rarity-color-in {
@@ -927,15 +2225,15 @@ export const BoutiqueView = memo(function BoutiqueView({
           100% { opacity: 1; }
         }
         @keyframes rarity-color-cinematic {
-          0% { opacity: 0; transform: scale(1.15); filter: brightness(2); }
-          40% { opacity: 0.8; transform: scale(1.02); filter: brightness(1.3); }
-          100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+          0% { opacity: 0; transform: scale(1.15); }
+          40% { opacity: 0.8; transform: scale(1.02); }
+          100% { opacity: 1; transform: scale(1); }
         }
         @keyframes sacred-bg-ignite {
-          0% { opacity: 0; transform: scale(1.5); filter: brightness(1) blur(16px); }
-          25% { opacity: 0.6; transform: scale(1.1); filter: brightness(2.5) blur(4px); }
-          50% { opacity: 0.9; transform: scale(1); filter: brightness(1.5) blur(0px); }
-          100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+          0% { opacity: 0; transform: scale(1.5); }
+          25% { opacity: 0.6; transform: scale(1.1); }
+          50% { opacity: 0.9; transform: scale(1); }
+          100% { opacity: 1; transform: scale(1); }
         }
         @keyframes sacred-flash {
           0% { opacity: 0; }
@@ -963,9 +2261,10 @@ export const BoutiqueView = memo(function BoutiqueView({
           50% { box-shadow: 0 0 20px #d9770650, 0 0 40px #d9770625; }
         }
         @keyframes card-float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(var(--float-y, -6px)); } }
-        .seed-packet { transition: box-shadow 0.3s ease; }
-        .seed-card-wrap { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease; }
-        .seed-card-wrap:hover { transform: translateY(-8px) scale(1.02); filter: brightness(1.05); }
+        .seed-packet { transition: box-shadow 0.3s ease, filter 0.5s ease; }
+        .seed-card-wrap { transition: translate 0.5s cubic-bezier(0.22, 1, 0.36, 1), scale 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+        .seed-card-wrap:hover { translate: 0 -8px; scale: 1.02; }
+        .seed-card-wrap:hover .seed-packet { filter: brightness(1.05); }
         .seed-cracking { animation: seed-wobble var(--crack-dur, 1.1s) ease-in-out !important; will-change: transform; }
         .seed-revealed { }
         .daily-deal { }
@@ -987,610 +2286,7 @@ export const BoutiqueView = memo(function BoutiqueView({
           {activeTab === 'shop' && (
             <div style={{ padding: '0 40px 20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
               {/* Terraced landscape background */}
-              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-                {/* Terrain background */}
-                {(() => {
-                  const groundY = 165
-                  const hillPts: string[] = []
-                  for (let x = -10; x <= 410; x += 10) hillPts.push(`${x},${getMarketHillY(x).toFixed(1)}`)
-                  const hillPath = `M${hillPts[0]} ${hillPts.slice(1).map(p => `L${p}`).join(' ')} L410,${groundY} L-10,${groundY} Z`
-                  const hillRidge = `M${hillPts[0]} ${hillPts.slice(1).map(p => `L${p}`).join(' ')}`
-                  return (
-                <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-                  <defs>
-                    <linearGradient id="m-sky" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#08060a' : '#c8b8a0'} />
-                      <stop offset="50%" stopColor={isDark ? '#10100e' : '#d8c8b0'} />
-                      <stop offset="100%" stopColor={isDark ? '#1e1a12' : '#e4d8c0'} />
-                    </linearGradient>
-                    <linearGradient id="m-hill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#162018' : '#6a8060'} />
-                      <stop offset="40%" stopColor={isDark ? '#0e1610' : '#7a9070'} />
-                      <stop offset="100%" stopColor={isDark ? '#0a0e0c' : '#7a8870'} />
-                    </linearGradient>
-                    <linearGradient id="m-ground" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#1a2014' : '#3e4e34'} />
-                      <stop offset="100%" stopColor={isDark ? '#141810' : '#2e3e24'} />
-                    </linearGradient>
-                    <radialGradient id="m-star-g">
-                      <stop offset="0%" stopColor="#ffeedd" stopOpacity="1" />
-                      <stop offset="40%" stopColor="#ffeedd" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#ffeedd" stopOpacity="0" />
-                    </radialGradient>
-                  </defs>
-
-                  <style>{`
-                    @keyframes m-twinkle { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-                    @keyframes m-firefly { 0% { transform: translate(0,0); opacity: 0; } 8% { opacity: 0.6; } 25% { transform: translate(4px,-6px); opacity: 0.7; } 50% { transform: translate(8px,-12px); opacity: 0.5; } 75% { transform: translate(2px,-3px); opacity: 0.7; } 92% { opacity: 0.6; } 100% { transform: translate(-4px,6px); opacity: 0; } }
-                    @keyframes m-firefly2 { 0% { transform: translate(0,0); opacity: 0; } 10% { opacity: 0.5; } 30% { transform: translate(-5px,-4px); opacity: 0.6; } 55% { transform: translate(-10px,-8px); opacity: 0.4; } 75% { transform: translate(-3px,-2px); opacity: 0.6; } 90% { opacity: 0.5; } 100% { transform: translate(5px,10px); opacity: 0; } }
-                    @keyframes m-cloud-drift { 0% { transform: translateX(0); } 100% { transform: translateX(400px); } }
-                  `}</style>
-
-                  {/* Sky */}
-                  <rect width="400" height="300" fill="url(#m-sky)" />
-
-                  {/* Stars */}
-                  {isDark && <>
-                    {[[32,18,1.2],[78,12,0.8],[125,28,1.0],[168,8,0.7],[210,22,1.1],[258,15,0.9],[305,25,0.7],[350,10,1.0],[55,40,0.6],[145,42,0.8],[240,38,0.7],[310,35,0.9],[380,42,0.6],[20,55,0.5],[95,50,0.7],[195,52,0.6],[280,48,0.8],[365,55,0.5],[12,8,0.9],[48,32,0.7],[110,5,1.0],[175,38,0.6],[225,8,0.8],[270,30,0.9],[340,42,0.7],[390,18,0.8],[65,22,0.5],[155,15,0.7],[295,12,0.6],[370,32,0.8],[42,48,0.6],[200,28,0.9],[330,8,0.7],[115,58,0.5],[250,55,0.6],[380,58,0.5]].map(([x,y,r], i) => (
-                      <circle key={`st${i}`} cx={x} cy={y} r={r as number} fill="url(#m-star-g)" opacity={0.75 + (i % 3) * 0.08} style={{ animation: `m-twinkle ${3 + (i % 4) * 1.5}s ease-in-out ${(i * 0.7) % 4}s infinite` }} />
-                    ))}
-                  </>}
-
-                  {/* Moon */}
-                  {isDark && (() => {
-                    const mx = 310, my = 55, sc = 4
-                    return (
-                      <g>
-                        <defs>
-                          <radialGradient id="bg-moon-glow" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stopColor="#c0cee0" stopOpacity="0.15" />
-                            <stop offset="30%" stopColor="#a0b0c8" stopOpacity="0.06" />
-                            <stop offset="70%" stopColor="#8090b0" stopOpacity="0.02" />
-                            <stop offset="100%" stopColor="#8090b0" stopOpacity="0" />
-                          </radialGradient>
-                          <radialGradient id="bg-moon-edge" cx="20%" cy="45%" r="80%">
-                            <stop offset="0%" stopColor="#f0f4ff" />
-                            <stop offset="40%" stopColor="#dde4f0" />
-                            <stop offset="100%" stopColor="#b8c4d8" />
-                          </radialGradient>
-                          <mask id="bg-moon-mask">
-                            <circle cx={mx} cy={my} r={1.2 * sc} fill="white" />
-                            <circle cx={mx + 0.9 * sc} cy={my - 0.1 * sc} r={1.1 * sc} fill="black" />
-                          </mask>
-                        </defs>
-                        <ellipse cx={mx} cy={my} rx={5 * sc} ry={3.5 * sc} fill="url(#bg-moon-glow)" />
-                        <circle cx={mx} cy={my} r={1.2 * sc} fill="url(#bg-moon-edge)" mask="url(#bg-moon-mask)" />
-                        <circle cx={mx - 0.4 * sc} cy={my - 0.2 * sc} r={0.15 * sc} fill="rgba(160,170,190,0.35)" mask="url(#bg-moon-mask)" />
-                        <circle cx={mx - 0.2 * sc} cy={my + 0.33 * sc} r={0.1 * sc} fill="rgba(155,165,185,0.3)" mask="url(#bg-moon-mask)" />
-                        <ellipse cx={mx - 0.57 * sc} cy={my + 0.03 * sc} rx={0.07 * sc} ry={0.05 * sc} fill="rgba(150,162,182,0.28)" mask="url(#bg-moon-mask)" />
-                      </g>
-                    )
-                  })()}
-
-                  {/* Clouds */}
-                  {[
-                    { y: 50, rx: 30, ry: 5, opacity: 0.04, dur: 700, delay: 0 },
-                    { y: 60, rx: 22, ry: 4, opacity: 0.035, dur: 560, delay: -200 },
-                    { y: 45, rx: 25, ry: 4.5, opacity: 0.03, dur: 480, delay: -350 },
-                  ].map((c, i) => (
-                    <ellipse key={`cloud${i}`} cx={-60} cy={c.y} rx={c.rx} ry={c.ry} fill={isDark ? '#8090a0' : '#f0e8d8'} opacity={isDark ? c.opacity : c.opacity * 2} style={{ animation: `m-cloud-drift ${c.dur}s linear ${c.delay}s infinite` }} />
-                  ))}
-
-                  {/* Distant far hill — left side */}
-                  <defs>
-                    <linearGradient id="m-far-hill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#0a0e0c' : '#7a8870'} />
-                      <stop offset="100%" stopColor={isDark ? '#080c0a' : '#6a7860'} />
-                    </linearGradient>
-                  </defs>
-                  <path d="M-10,130 C10,118 40,100 80,92 C110,86 140,88 170,95 C190,100 210,108 230,118 L230,170 L-10,170 Z" fill="url(#m-far-hill)" opacity="0.8" />
-                  <path d="M-10,130 C10,118 40,100 80,92 C110,86 140,88 170,95 C190,100 210,108 230,118" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
-                  <path d="M-10,133 C10,121 40,104 80,96 C110,90 140,92 170,99 C190,104 210,112 230,122" fill="none" stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'} strokeWidth="0.3" />
-                  {/* Boulders on far hill */}
-                  {(() => {
-                    const rng = marketSeededRng(7712)
-                    const farPts: [number,number][] = [[-10,130],[10,118],[40,100],[80,92],[110,86],[140,88],[170,95],[190,100],[210,108],[230,118]]
-                    const getFarY = (x: number) => {
-                      for (let j = 0; j < farPts.length - 1; j++) {
-                        if (x >= farPts[j][0] && x <= farPts[j+1][0]) {
-                          const t = (x - farPts[j][0]) / (farPts[j+1][0] - farPts[j][0])
-                          return farPts[j][1] + t * (farPts[j+1][1] - farPts[j][1])
-                        }
-                      }
-                      return 120
-                    }
-                    const rocks: string[] = []
-                    const rockDark: string[] = []
-                    const highlightsP: string[] = []
-                    const cracksP: string[] = []
-                    const baseC = isDark ? '#141816' : '#6a7462'
-                    const darkC = isDark ? '#0e1210' : '#586858'
-                    const lightC = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)'
-                    const crackC = isDark ? '#0c0e0c' : '#4a5a44'
-                    const sizes = [0.5, 0.15, 0.9, 0.25, 1.2, 0.2, 0.65, 0.35, 1.5, 0.3, 0.75, 0.18, 1.0, 0.4]
-                    for (let i = 0; i < 14; i++) {
-                      const rx = 5 + (i / 14) * 220 + (rng() - 0.5) * 25
-                      const ry = getFarY(rx) + 2 + rng() * 18
-                      const sizeMul = sizes[i]
-                      const w = sizeMul * (2 + rng() * 3), h = sizeMul * (1.5 + rng() * 2.5)
-                      const tilt = (rng() - 0.5) * 0.8
-                      const jL = rng() * 0.3, jR = rng() * 0.3, jT = rng() * 0.2
-                      rocks.push(`M${(rx - w).toFixed(1)},${ry.toFixed(1)}Q${(rx - w * (0.7 + jL)).toFixed(1)},${(ry - h * (0.5 + jL)).toFixed(1)} ${(rx - w * 0.3 + tilt).toFixed(1)},${(ry - h * (0.9 + jT)).toFixed(1)}Q${(rx + tilt).toFixed(1)},${(ry - h * (1.05 + jT)).toFixed(1)} ${(rx + w * 0.35 + tilt).toFixed(1)},${(ry - h * (0.8 + jR)).toFixed(1)}Q${(rx + w * (0.8 + jR)).toFixed(1)},${(ry - h * (0.4 + jR)).toFixed(1)} ${(rx + w).toFixed(1)},${ry.toFixed(1)}Z`)
-                      rockDark.push(`M${(rx - w * 0.9).toFixed(1)},${(ry + 0.5).toFixed(1)}Q${rx.toFixed(1)},${(ry + h * 0.15 + 0.5).toFixed(1)} ${(rx + w * 0.9).toFixed(1)},${(ry + 0.5).toFixed(1)}`)
-                      highlightsP.push(`M${(rx - w * 0.3 + tilt).toFixed(1)},${(ry - h * (0.9 + jT)).toFixed(1)}Q${(rx + tilt).toFixed(1)},${(ry - h * (1.05 + jT)).toFixed(1)} ${(rx + w * 0.35 + tilt).toFixed(1)},${(ry - h * (0.8 + jR)).toFixed(1)}`)
-                      const cx1 = rx + (rng() - 0.5) * w * 0.5, cy1 = ry - h * (0.3 + rng() * 0.4)
-                      cracksP.push(`M${cx1.toFixed(1)},${cy1.toFixed(1)}l${(rng() * 1.5 - 0.7).toFixed(1)},${(rng() * 1).toFixed(1)}`)
-                      if (w > 4) {
-                        const cx2 = rx + (rng() - 0.5) * w * 0.4, cy2 = ry - h * (0.2 + rng() * 0.3)
-                        cracksP.push(`M${cx2.toFixed(1)},${cy2.toFixed(1)}l${(rng() - 0.5).toFixed(1)},${(rng() * 0.8).toFixed(1)}`)
-                      }
-                    }
-                    return <g>
-                      <path d={rocks.join('')} fill={baseC} />
-                      <path d={rockDark.join('')} stroke={darkC} strokeWidth="0.5" fill="none" opacity="0.6" />
-                      <path d={highlightsP.join('')} stroke={lightC} strokeWidth="0.5" fill="none" />
-                      <path d={cracksP.join('')} stroke={crackC} strokeWidth="0.3" fill="none" opacity="0.5" />
-                    </g>
-                  })()}
-
-                  {/* Background hill */}
-                  <path d={hillPath} fill="url(#m-hill)" />
-                  <path d={hillRidge} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.6" />
-                  {/* Shadow band */}
-                  {(() => {
-                    const shadowPts: string[] = []
-                    for (let x = -10; x <= 410; x += 10) shadowPts.push(`${x},${(getMarketHillY(x) + 8).toFixed(1)}`)
-                    const shadowPath = `M${shadowPts[0]} ${shadowPts.slice(1).map(p => `L${p}`).join(' ')} L410,${groundY} L-10,${groundY} Z`
-                    return <path d={shadowPath} fill="rgba(0,0,0,0.08)" />
-                  })()}
-                  {/* Contour lines */}
-                  {[3, 6].map(offset => {
-                    const cPts: string[] = []
-                    for (let x = -10; x <= 410; x += 10) cPts.push(`${x},${(getMarketHillY(x) + offset).toFixed(1)}`)
-                    return <path key={`c-${offset}`} d={`M${cPts[0]} ${cPts.slice(1).map(p => `L${p}`).join(' ')}`} fill="none" stroke={isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.03)'} strokeWidth={offset === 3 ? "0.4" : "0.3"} />
-                  })}
-
-                  <MarketHillPaths isDark={isDark} />
-                  <MarketTangerineTrees isDark={isDark} />
-                  <MarketHillGrass isDark={isDark} />
-
-                  {/* Ground plane */}
-                  <path d={`M-10,${groundY} L200,${groundY - 2} L410,${groundY} L410,300 L-10,300 Z`} fill="url(#m-ground)" />
-                  <path d={`M-10,${groundY + 3} L200,${groundY + 1} L410,${groundY + 3}`} fill="none" stroke={isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.03)'} strokeWidth="0.4" />
-                  <path d={`M-10,${groundY + 8} L200,${groundY + 6} L410,${groundY + 8}`} fill="none" stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.025)'} strokeWidth="0.3" />
-                  <path d={`M-10,${groundY + 15} L200,${groundY + 13} L410,${groundY + 15}`} fill="none" stroke={isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.02)'} strokeWidth="0.25" />
-                  <path d={`M-10,${groundY + 6} L200,${groundY + 4} L410,${groundY + 6} L410,300 L-10,300 Z`} fill="rgba(0,0,0,0.05)" />
-                  <MarketGroundGrass isDark={isDark} groundY={groundY - 1} />
-
-                  {/* Fence */}
-                  {(() => {
-                    const fenceColor = isDark ? '#4a3e28' : '#6a5a3a'
-                    const fenceLight = isDark ? '#5a4e32' : '#7a6a4a'
-                    const posts = [60, 200, 340]
-                    const postH = 24
-                    const postW = 4.5
-                    const railYTop = (px: number) => groundY + Math.sin(px / 400 * Math.PI) * -2.5 - postH * 0.7
-                    const railYBot = (px: number) => groundY + Math.sin(px / 400 * Math.PI) * -2.5 - postH * 0.25
-                    return (
-                      <g>
-                        <line x1={0} y1={railYTop(0)} x2={400} y2={railYTop(400)} stroke={fenceColor} strokeWidth="1" />
-                        <line x1={0} y1={railYBot(0)} x2={400} y2={railYBot(400)} stroke={fenceColor} strokeWidth="0.8" />
-                        <line x1={0} y1={railYTop(0)} x2={400} y2={railYTop(400)} stroke={fenceLight} strokeWidth="0.3" opacity="0.3" />
-                        {posts.map(px => {
-                          const t = px / 400
-                          const yOff = Math.sin(t * Math.PI) * -2.5
-                          const py = groundY + yOff
-                          return (
-                            <g key={`fp-${px}`}>
-                              <rect x={px - postW / 2} y={py - postH} width={postW} height={postH + 0.5} rx={0.3} fill={fenceColor} />
-                              <rect x={px - postW * 0.2} y={py - postH} width={postW * 0.35} height={postH + 0.5} fill={fenceLight} opacity="0.35" />
-                              <rect x={px - postW * 0.6} y={py - postH - 0.5} width={postW * 1.2} height={0.8} rx={0.15} fill={fenceColor} />
-                            </g>
-                          )
-                        })}
-                      </g>
-                    )
-                  })()}
-
-                  {/* Lamppost */}
-                  {(() => {
-                    const lx = 170, ly = groundY, sc = 6
-                    const iron = isDark ? '#3a3a3a' : '#4a4a4a'
-                    const ironD = isDark ? '#2a2a2a' : '#3a3a3a'
-                    const isNight = isDark
-                    const glass = isNight ? '#fbbf24' : '#8a8a82'
-                    const glassL = isNight ? '#fcd34d' : '#9a9a92'
-                    return (
-                      <g>
-                        <defs>
-                          <radialGradient id="bg-lamp-glow" cx="50%" cy="45%" r="50%">
-                            <stop offset="0%" stopColor={glassL} stopOpacity="0.3" />
-                            <stop offset="50%" stopColor={glass} stopOpacity="0.1" />
-                            <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                          </radialGradient>
-                          <radialGradient id="bg-lamp-wash-a" cx="30%" cy="45%" r="55%">
-                            <stop offset="0%" stopColor={glassL} stopOpacity="0.09" />
-                            <stop offset="30%" stopColor={glass} stopOpacity="0.05" />
-                            <stop offset="65%" stopColor={glass} stopOpacity="0.02" />
-                            <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                          </radialGradient>
-                          <radialGradient id="bg-lamp-ground" cx="40%" cy="25%" r="55%">
-                            <stop offset="0%" stopColor="#d97706" stopOpacity="0.07" />
-                            <stop offset="40%" stopColor="#92400e" stopOpacity="0.03" />
-                            <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
-                          </radialGradient>
-                          <linearGradient id="bg-lamp-cone" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={glassL} stopOpacity="0.14" />
-                            <stop offset="35%" stopColor={glass} stopOpacity="0.04" />
-                            <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        {isNight && <>
-                          <ellipse cx={lx + 15 * sc / 0.65} cy={ly + 2 * sc} rx={55 * sc} ry={18 * sc} fill="url(#bg-lamp-wash-a)" style={{ filter: 'blur(8px)' }} />
-                          <ellipse cx={lx + 5 * sc / 0.65} cy={ly + 4 * sc} rx={30 * sc} ry={10 * sc} fill="url(#bg-lamp-ground)" style={{ filter: 'blur(12px)' }} />
-                          <ellipse cx={lx - 8 * sc} cy={ly + 3 * sc} rx={18 * sc} ry={7 * sc} fill="url(#bg-lamp-ground)" style={{ filter: 'blur(10px)' }} opacity="0.5" />
-                          <path d={`M${lx - 1.5 * sc},${ly - 7 * sc} Q${lx + 3 * sc},${ly - 1 * sc} ${lx + 10 * sc},${ly + 6 * sc} L${lx - 5 * sc},${ly + 6 * sc} Q${lx - 4 * sc},${ly - 1 * sc} ${lx - 1.5 * sc},${ly - 7 * sc}`} fill="url(#bg-lamp-cone)" opacity="0.4" style={{ filter: 'blur(3px)' }} />
-                          <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#bg-lamp-glow)" style={{ filter: 'blur(4px)' }} />
-                        </>}
-                        <ellipse cx={lx - 4 * sc} cy={ly + 1.5 * sc} rx={6 * sc} ry={1 * sc} fill={isDark ? 'rgba(0,0,0,0.18)' : 'rgba(20,15,5,0.12)'} />
-                        <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
-                        <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
-                        <path d={`M${lx},${ly - 7.5 * sc} Q${lx - 0.8 * sc},${ly - 8.5 * sc} ${lx - 1.5 * sc},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
-                        <rect x={lx - 2.2 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
-                        <rect x={lx - 2.05 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
-                        <rect x={lx - 1.5 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
-                        <polygon points={`${lx - 0.6 * sc},${ly - 8.5 * sc} ${lx - 1.5 * sc},${ly - 9.2 * sc} ${lx - 2.4 * sc},${ly - 8.5 * sc}`} fill={iron} />
-                      </g>
-                    )
-                  })()}
-
-                  {/* Fireflies */}
-                  {isDark && [[50,140,6],[120,125,8],[180,135,7],[250,120,9],[320,130,6],[80,155,7],[200,150,8],[340,145,6],[150,160,7],[280,155,8],[60,170,6],[230,165,7]].map(([fx,fy,dur], i) => {
-                    const ffColor = i % 5 === 0 ? '#6abf5e' : '#d97706'
-                    return (
-                    <g key={`ff${i}`}>
-                      <circle cx={fx} cy={fy} r={0.7} fill={ffColor} opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${(dur as number) * 3}s ease-in-out ${(i * 2.5) % 12}s infinite` }} />
-                      <circle cx={fx} cy={fy} r={1.8} fill={ffColor} opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${(dur as number) * 3}s ease-in-out ${(i * 2.5) % 12}s infinite`, filter: 'blur(1px)' }} />
-                    </g>
-                    )
-                  })}
-                </svg>
-                  )
-                })()}
-                {/* Shopkeeper stall SVG */}
-                <svg viewBox="0 0 400 265" preserveAspectRatio="xMidYMax meet" style={{ position: 'absolute', bottom: -8, left: 0, width: '100%', height: '65%' }}>
-                  <defs>
-                    <radialGradient id="o-body" cx="38%" cy="35%">
-                      <stop offset="0%" stopColor="#e8a030" />
-                      <stop offset="50%" stopColor="#d97706" />
-                      <stop offset="100%" stopColor="#b06205" />
-                    </radialGradient>
-                    <radialGradient id="lantern-glow">
-                      <stop offset="0%" stopColor="#d97706" stopOpacity="0.35" />
-                      <stop offset="25%" stopColor="#d97706" stopOpacity="0.18" />
-                      <stop offset="50%" stopColor="#d97706" stopOpacity="0.07" />
-                      <stop offset="75%" stopColor="#d97706" stopOpacity="0.02" />
-                      <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-                    </radialGradient>
-                  </defs>
-
-                  <style>{`
-                    @keyframes root-sway-l { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-0.3px,-0.4px); } }
-                    @keyframes root-sway-r { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(0.3px,-0.4px); } }
-                    @keyframes blink-open { 0%, 90%, 95%, 100% { opacity: 1; } 92.5% { opacity: 0; } }
-                    @keyframes blink-shut { 0%, 90%, 95%, 100% { opacity: 0; } 92.5% { opacity: 1; } }
-                  `}</style>
-
-                  {/* ============ CANOPY ============ */}
-                  {/* Left pole */}
-                  <rect x="113" y="103" width="7" height="114" rx="2.5" fill={isDark ? '#3e3018' : '#a89878'} />
-                  <rect x="114" y="103" width="5" height="114" rx="2" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <path d="M115 110 L118 110 M115 125 L118 125 M115 145 L118 145 M115 170 L118 170 M115 195 L118 195" stroke={isDark ? '#6a5a42' : '#c8b898'} strokeWidth="0.3" fill="none" />
-                  <path d="M113 132 L120 129 M113 148 L120 145 M113 162 L120 159 M113 178 L120 175" stroke={isDark ? '#7a6a4a' : '#b0a080'} strokeWidth="0.8" fill="none" />
-                  <circle cx="117" cy="150" r="1.2" fill={isDark ? '#7a6a4a' : '#b0a080'} />
-
-                  {/* Right pole */}
-                  <rect x="279" y="103" width="7" height="114" rx="2.5" fill={isDark ? '#3e3018' : '#a89878'} />
-                  <rect x="280" y="103" width="5" height="114" rx="2" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <path d="M281 110 L284 110 M281 125 L284 125 M281 145 L284 145 M281 170 L284 170 M281 195 L284 195" stroke={isDark ? '#6a5a42' : '#c8b898'} strokeWidth="0.3" fill="none" />
-                  <path d="M279 132 L286 129 M279 148 L286 145 M279 162 L286 159 M279 178 L286 175" stroke={isDark ? '#7a6a4a' : '#b0a080'} strokeWidth="0.8" fill="none" />
-                  <circle cx="283" cy="150" r="1.2" fill={isDark ? '#7a6a4a' : '#b0a080'} />
-
-                  {/* Pole finials */}
-                  <circle cx="117" cy="103" r="5" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <circle cx="117" cy="103" r="3.5" fill={isDark ? '#6a5a42' : '#c8b898'} />
-                  <circle cx="117" cy="103" r="1.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <circle cx="117" cy="103" r="0.6" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
-                  <circle cx="283" cy="103" r="5" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <circle cx="283" cy="103" r="3.5" fill={isDark ? '#6a5a42' : '#c8b898'} />
-                  <circle cx="283" cy="103" r="1.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <circle cx="283" cy="103" r="0.6" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
-
-                  {/* String lights between posts — behind canopy */}
-                  <path d="M117 125 Q200 158 283 125" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.5" fill="none" />
-                  {[130, 145, 160, 175, 190, 205, 220, 235, 250, 265].map((lx, li) => {
-                    const t = (lx - 117) / (283 - 117)
-                    const ly = 125 + 2 * t * (1 - t) * 33
-                    return (
-                      <g key={`sl-${li}`}>
-                        <line x1={lx} y1={ly} x2={lx} y2={ly + 4} stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.3" />
-                        <circle cx={lx} cy={ly + 4.5} r={1.4} fill="#d97706" opacity="0.8" />
-                        <circle cx={lx} cy={ly + 4.5} r={0.6} fill="#f0c050" />
-                        <circle cx={lx} cy={ly + 4} r={3} fill="#d97706" opacity="0.06" />
-                      </g>
-                    )
-                  })}
-
-                  {/* Canopy fabric */}
-                  <path d="M103 105 Q200 84 297 105 L293 116 Q200 97 107 116 Z" fill="#d97706" />
-                  <path d="M120 110 L130 107 M150 107 L160 105 M190 104 L200 103 M230 104 L240 105 M260 106 L270 108 M280 109 L290 112" stroke="#c06e05" strokeWidth="0.3" fill="none" strokeDasharray="2 3" />
-                  <path d="M107 116 Q200 97 293 116 L290 125 Q200 108 110 125 Z" fill={isDark ? '#a06820' : '#c8a050'} />
-                  <path d="M110 125 Q200 108 290 125 L287 132 Q200 116 113 132 Z" fill="#c48a18" />
-                  <path d="M103 105 Q110 112 117 105 Q124 112 131 105 Q138 112 145 105 Q152 112 159 105 Q166 112 173 105 Q180 112 187 105 Q194 112 201 105 Q208 112 215 105 Q222 112 229 105 Q236 112 243 105 Q250 112 257 105 Q264 112 271 105 Q278 112 285 105 Q292 112 297 105" fill="none" stroke="#b07a10" strokeWidth="1.5" />
-                  <path d="M110 108 L111 110 M124 108 L125 110 M138 108 L139 110 M152 108 L153 110 M166 108 L167 110 M180 108 L181 110 M194 108 L195 110 M222 108 L223 110 M250 108 L251 110 M278 108 L279 110" stroke="#9a6818" strokeWidth="0.4" fill="none" />
-
-                  {/* ============ LANTERNS ============ */}
-                  {/* Left lantern */}
-                  <line x1="140" y1="126" x2="140" y2="147" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="1" />
-                  <circle cx="140" cy="126" r="1" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <path d="M140 147 L142 147 L140 146 L138 147 Z" fill={isDark ? '#5a4a32' : '#a89878'} />
-                  <rect x="131" y="147" width="18" height="22" rx="4.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
-                  <rect x="133" y="149" width="14" height="18" rx="3.5" fill={isDark ? '#2a2418' : '#8a8070'} />
-                  <line x1="133" y1="158" x2="147" y2="158" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
-                  <line x1="140" y1="149" x2="140" y2="167" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
-                  <line x1="134" y1="150" x2="139" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
-                  <line x1="141" y1="150" x2="146" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
-                  <line x1="134" y1="159" x2="139" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
-                  <line x1="141" y1="159" x2="146" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
-                  <circle cx="140" cy="158" r="4.5" fill="#d97706" />
-                  <circle cx="140" cy="158" r="2.5" fill="#e8a030" />
-                  <circle cx="140" cy="157" r="1" fill="#f0c050" />
-                  <circle cx="140" cy="158" r="28" fill="url(#lantern-glow)" style={{ filter: 'blur(8px)' }} />
-                  <ellipse cx="140" cy="168" rx="22" ry="10" fill="url(#lantern-glow)" style={{ filter: 'blur(12px)' }} opacity="0.5" />
-                  <rect x="136" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
-                  <circle cx="140" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
-
-                  {/* Right lantern */}
-                  <line x1="260" y1="126" x2="260" y2="147" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="1" />
-                  <circle cx="260" cy="126" r="1" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <path d="M260 147 L262 147 L260 146 L258 147 Z" fill={isDark ? '#5a4a32' : '#a89878'} />
-                  <rect x="251" y="147" width="18" height="22" rx="4.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
-                  <rect x="253" y="149" width="14" height="18" rx="3.5" fill={isDark ? '#2a2418' : '#8a8070'} />
-                  <line x1="253" y1="158" x2="267" y2="158" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
-                  <line x1="260" y1="149" x2="260" y2="167" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
-                  <line x1="254" y1="150" x2="259" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
-                  <line x1="261" y1="150" x2="266" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
-                  <line x1="254" y1="159" x2="259" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
-                  <line x1="261" y1="159" x2="266" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
-                  <circle cx="260" cy="158" r="4.5" fill="#d97706" />
-                  <circle cx="260" cy="158" r="2.5" fill="#e8a030" />
-                  <circle cx="260" cy="157" r="1" fill="#f0c050" />
-                  <circle cx="260" cy="158" r="28" fill="url(#lantern-glow)" style={{ filter: 'blur(8px)' }} />
-                  <ellipse cx="260" cy="168" rx="22" ry="10" fill="url(#lantern-glow)" style={{ filter: 'blur(12px)' }} opacity="0.5" />
-                  <rect x="256" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
-                  <circle cx="260" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
-
-                  {/* ============ ROOT ARMS ============ */}
-                  {/* Left root arm */}
-                  <g style={{ animation: 'root-sway-l 6s ease-in-out infinite', transformOrigin: '186px 210px' }}>
-                    <path d="M186 212 Q174 213 164 214 Q156 215 150 216" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.8" fill="none" strokeLinecap="round" />
-                    <path d="M150 216 Q146 218 144 222 Q142 228 141 235 Q140 242 140 248" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                    <path d="M140 248 Q139 252 139 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.1" fill="none" strokeLinecap="round" />
-                    <path d="M140 248 Q141 252 142 254" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.9" fill="none" strokeLinecap="round" />
-                    <path d="M140 248 Q138 251 137 254" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
-                    <path d="M139 255 Q138 257 137 256" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                    <path d="M142 254 Q143 256 142 257" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                    <path d="M137 254 Q136 256 135 255" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" strokeLinecap="round" />
-                    <path d="M168 214 Q164 211 160 208" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.1" fill="none" strokeLinecap="round" />
-                    <path d="M160 208 Q158 206 156 205" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
-                    <path d="M160 208 Q157 208 155 209" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
-                    <path d="M156 205 Q155 203 154 204" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
-                    <path d="M144 226 Q140 224 137 223" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
-                    <path d="M137 223 Q135 222 134 223" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
-                    <path d="M137 223 Q136 221 135 222" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
-                    <path d="M141 238 Q138 236 136 235" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
-                    <path d="M136 235 Q134 234 133 235" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                    <path d="M178 213 Q176 210 174 209" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
-                    <path d="M174 209 Q173 208 172 209" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
-                    <circle cx="172" cy="213.5" r="0.5" fill={isDark ? '#4a3218' : '#7a6040'} />
-                    <circle cx="158" cy="215" r="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
-                    <circle cx="148" cy="218" r="0.4" fill={isDark ? '#4a3218' : '#7a6040'} />
-                    <circle cx="143" cy="230" r="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
-                    <circle cx="141" cy="242" r="0.4" fill={isDark ? '#4a3218' : '#7a6040'} />
-                    <path d="M163 214 Q162 215 163 216" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
-                    <path d="M145 224 Q144 225 145 226" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
-                  </g>
-
-                  {/* Right root arm */}
-                  <g style={{ animation: 'root-sway-r 7s ease-in-out infinite', transformOrigin: '214px 210px' }}>
-                    <path d="M214 212 Q226 213 236 214 Q244 215 250 216" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="2" fill="none" strokeLinecap="round" />
-                    <path d="M250 216 Q254 218 256 222 Q258 228 259 235 Q260 242 260 248" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.6" fill="none" strokeLinecap="round" />
-                    <path d="M260 248 Q261 252 261 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                    <path d="M260 248 Q259 252 258 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1" fill="none" strokeLinecap="round" />
-                    <path d="M260 248 Q262 251 263 254" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
-                    <path d="M260 248 Q258 250 256 253" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
-                    <path d="M261 255 Q262 257 263 256" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                    <path d="M258 255 Q257 257 256 256" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                    <path d="M263 254 Q264 256 265 255" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" strokeLinecap="round" />
-                    <path d="M256 253 Q255 255 254 254" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" strokeLinecap="round" />
-                    <path d="M232 214 Q234 210 236 207" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                    <path d="M236 207 Q237 205 238 203" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
-                    <path d="M236 207 Q238 207 240 208" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
-                    <path d="M238 203 Q239 201 238 200" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                    <path d="M238 200 Q237 198 236 199" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
-                    <path d="M240 208 Q242 207 241 209" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
-                    <path d="M257 226 Q260 224 263 223" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
-                    <path d="M263 223 Q265 222 266 223" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
-                    <path d="M259 240 Q262 238 264 237" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
-                    <path d="M264 237 Q266 236 267 237" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                    <path d="M264 237 Q265 235 264 234" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
-                    <path d="M222 213 Q224 210 226 209" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
-                    <circle cx="230" cy="214" r="0.6" fill={isDark ? '#4a3218' : '#7a6040'} />
-                    <circle cx="242" cy="215" r="0.7" fill={isDark ? '#3e2a14' : '#6a5030'} />
-                    <circle cx="252" cy="219" r="0.5" fill={isDark ? '#4a3218' : '#7a6040'} />
-                    <circle cx="258" cy="232" r="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
-                    <circle cx="260" cy="244" r="0.4" fill={isDark ? '#4a3218' : '#7a6040'} />
-                    <ellipse cx="248" cy="217" rx="0.8" ry="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
-                    <path d="M238 214 Q237 215 238 216" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
-                    <path d="M255 225 Q254 226 255 227" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
-                  </g>
-
-                  {/* ============ THE ORANGE ============ */}
-                  <circle cx="200" cy="210" r="20" fill="url(#o-body)" stroke={isDark ? '#1a1410' : '#8a7050'} strokeWidth="0.15" />
-                  <ellipse cx="194" cy="201" rx="5" ry="7" fill="#e0a830" opacity="0.35" transform="rotate(-15 194 201)" />
-                  <rect x="199" y="188" width="2.5" height="4" rx="1" fill="#4a6a2a" stroke={isDark ? '#1a1410' : '#8a7050'} strokeWidth="0.12" />
-                  <rect x="199.3" y="188.5" width="1.8" height="1.5" rx="0.5" fill="#5a7a3a" />
-                  <path d="M201.5 190 Q206 184 210 186 Q206 189 201.5 190" fill="#4a7a2a" stroke={isDark ? '#1a1410' : '#8a7050'} strokeWidth="0.12" />
-                  <path d="M201.5 190 Q206 185.5 209 186" stroke="#3a6a1a" strokeWidth="0.3" fill="none" />
-
-                  {/* Tiny earrings */}
-                  <line x1="181" y1="212" x2="179" y2="215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.4" />
-                  <circle cx="179" cy="216" r="1.2" fill="#d97706" />
-                  <circle cx="179" cy="216" r="0.5" fill="#e8a030" />
-                  <line x1="219" y1="212" x2="221" y2="215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.4" />
-                  <circle cx="221" cy="216" r="1.2" fill="#d97706" />
-                  <circle cx="221" cy="216" r="0.5" fill="#e8a030" />
-
-                  {/* Face */}
-                  <g style={{ animation: 'blink-open 5s ease-in-out infinite' }}>
-                    <circle cx="194" cy="207" r="2.5" fill={isDark ? '#1a1410' : '#3a3020'} />
-                    <circle cx="206" cy="207" r="2.5" fill={isDark ? '#1a1410' : '#3a3020'} />
-                    <circle cx="195" cy="205.8" r="1" fill="#fff" />
-                    <circle cx="207" cy="205.8" r="1" fill="#fff" />
-                    <circle cx="194.3" cy="206.8" r="0.5" fill="#fff" />
-                    <circle cx="206.3" cy="206.8" r="0.5" fill="#fff" />
-                  </g>
-                  <g style={{ animation: 'blink-shut 5s ease-in-out infinite' }}>
-                    <path d="M192 207 Q194 209 196 207" stroke={isDark ? '#1a1410' : '#3a3020'} strokeWidth="1.3" fill="none" strokeLinecap="round" />
-                    <path d="M204 207 Q206 209 208 207" stroke={isDark ? '#1a1410' : '#3a3020'} strokeWidth="1.3" fill="none" strokeLinecap="round" />
-                  </g>
-                  <ellipse cx="200" cy="216" rx="2.2" ry="2.8" fill="#8a4a05" />
-                  <ellipse cx="200" cy="216" rx="1.5" ry="2" fill="#6a3a04" />
-
-                  {/* ============ CART ============ */}
-                  {/* Cart body planks */}
-                  <rect x="100" y="218" width="200" height="44" rx="3" fill={isDark ? '#3a2e20' : '#a09070'} />
-                  <rect x="100" y="218" width="200" height="10" rx="2" fill={isDark ? '#4a3a28' : '#b0a080'} />
-                  <path d="M110 220 Q130 221 150 220 Q170 219 190 220 Q210 221 230 220 Q260 219 290 220" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
-                  <path d="M115 224 Q135 225 155 224 Q180 223 200 224 Q230 225 260 224 Q280 223 295 224" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
-                  <circle cx="145" cy="222" r="1.5" fill={isDark ? '#3e3018' : '#a89878'} />
-                  <circle cx="145" cy="222" r="0.8" fill={isDark ? '#342a1c' : '#988868'} />
-                  <rect x="100" y="228" width="200" height="9" fill={isDark ? '#423626' : '#a89878'} />
-                  <path d="M108 231 Q140 232 170 231 Q200 230 240 231 Q270 232 295 231" stroke={isDark ? '#3a2e1e' : '#988868'} strokeWidth="0.3" fill="none" />
-                  <path d="M110 234 Q150 235 180 234 Q220 233 260 234 Q285 235 295 234" stroke={isDark ? '#3a2e1e' : '#988868'} strokeWidth="0.3" fill="none" />
-                  <ellipse cx="230" cy="232" rx="2" ry="1.2" fill={isDark ? '#3a2e1e' : '#988868'} />
-                  <rect x="100" y="237" width="200" height="9" fill={isDark ? '#4a3a28' : '#b0a080'} />
-                  <path d="M105 240 Q140 241 175 240 Q210 239 250 240 Q280 241 298 240" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
-                  <circle cx="180" cy="241" r="1.2" fill={isDark ? '#3e3018' : '#a89878'} />
-                  <circle cx="180" cy="241" r="0.5" fill={isDark ? '#342a1c' : '#988868'} />
-                  <rect x="100" y="246" width="200" height="9" fill={isDark ? '#3e3222' : '#a09070'} />
-                  <path d="M108 249 Q145 250 185 249 Q225 248 270 249 Q290 250 298 249" stroke={isDark ? '#342a1a' : '#988868'} strokeWidth="0.3" fill="none" />
-                  <ellipse cx="270" cy="250" rx="1.5" ry="1" fill={isDark ? '#342a1a' : '#988868'} />
-                  <rect x="100" y="255" width="200" height="7" fill={isDark ? '#4a3a28' : '#b0a080'} />
-                  <path d="M110 258 Q150 259 200 258 Q250 257 290 258" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
-
-                  {/* Vertical plank seams */}
-                  <line x1="148" y1="218" x2="147" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
-                  <circle cx="148" cy="222" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
-                  <circle cx="147" cy="240" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
-                  <circle cx="147" cy="255" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
-                  <line x1="205" y1="218" x2="204" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
-                  <circle cx="205" cy="225" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
-                  <circle cx="204" cy="248" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
-                  <line x1="260" y1="218" x2="261" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
-                  <circle cx="260" cy="230" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
-                  <circle cx="261" cy="252" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
-
-                  {/* Top rail */}
-                  <rect x="95" y="212" width="210" height="8" rx="3" fill={isDark ? '#4a3a28' : '#b0a080'} />
-                  <rect x="95" y="212" width="210" height="4" rx="2" fill={isDark ? '#6a5a42' : '#c8b898'} />
-                  <rect x="95" y="212" width="210" height="2" rx="1" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
-                  <path d="M120 214 L125 214" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
-                  <path d="M180 215 L188 215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
-                  <path d="M250 214 L258 214" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
-                  <rect x="109" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
-                  <rect x="149" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
-                  <rect x="199" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
-                  <rect x="249" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
-                  <rect x="289" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
-
-                  {/* Iron corner brackets */}
-                  <path d="M97 212 L97 230" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
-                  <path d="M97 212 L112 212" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="97" cy="215" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
-                  <circle cx="97" cy="222" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
-                  <circle cx="97" cy="228" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
-                  <circle cx="105" cy="212.5" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
-                  <path d="M303 212 L303 230" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
-                  <path d="M288 212 L303 212" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="303" cy="215" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
-                  <circle cx="303" cy="222" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
-                  <circle cx="303" cy="228" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
-                  <circle cx="295" cy="212.5" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
-
-                  {/* ============ CART GOODS ============ */}
-                  {/* Potted plant */}
-                  <ellipse cx="287" cy="211" rx="9" ry="2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.35" />
-                  <path d="M278 200 L280 212 L294 212 L296 200 Z" fill="#7a4a2a" />
-                  <path d="M278 200 L280 212 L287 212 L285 200 Z" fill="#8a5a3a" opacity="0.3" />
-                  <path d="M287 200 L287 212 L294 212 L296 200 Z" fill="#5a3a1a" opacity="0.2" />
-                  <rect x="277" y="198" width="20" height="3" rx="0.8" fill="#8a5a3a" />
-                  <rect x="277" y="198" width="20" height="1.5" rx="0.5" fill="#9a6a4a" opacity="0.4" />
-                  <path d="M278 200 L296 200" stroke="#6a3a1a" strokeWidth="0.5" />
-                  <path d="M280 211 L294 211" stroke="#6a3a1a" strokeWidth="0.4" />
-                  <path d="M282 210 L292 210" stroke="#6a3a1a" strokeWidth="0.3" opacity="0.5" />
-                  <ellipse cx="287" cy="200" rx="7" ry="1.5" fill={isDark ? '#3a2a18' : '#6a5a40'} />
-                  <ellipse cx="287" cy="199.5" rx="5" ry="0.8" fill={isDark ? '#4a3a22' : '#7a6a48'} opacity="0.4" />
-                  <path d="M287 200 Q283 193 280 188" stroke={isDark ? '#2a4a1a' : '#5a8a4a'} strokeWidth="1.4" fill="none" strokeLinecap="round" opacity="0.3" />
-                  <path d="M287 200 Q284 193 281 189" stroke={isDark ? '#3a6a2a' : '#6a9a5a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                  <path d="M281 189 Q279 187 277 188" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
-                  <path d="M281 189 Q280 186 279 187" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
-                  <path d="M287 200 Q287 192 287 187" stroke={isDark ? '#4a7a3a' : '#7aaa6a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                  <path d="M287 187 Q286 185 285 186" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
-                  <path d="M287 187 Q288 185 289 186" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
-                  <path d="M287 200 Q290 193 293 189" stroke={isDark ? '#3a6a2a' : '#6a9a5a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                  <path d="M293 189 Q295 187 297 188" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
-                  <path d="M287 194 Q289 192 291 193" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
-                  <path d="M284 192 Q282 193 281 192" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
-                  <path d="M289 200 Q290 197 291 196" stroke={isDark ? '#5a8a3a' : '#8aaa6a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
-                  <path d="M291 196 Q292 195 293 196" fill={isDark ? '#5a8a3a' : '#8aaa6a'} />
-
-                  {/* Dynamic seed jars matching daily seeds */}
-                  <g transform="translate(0,2)">
-                    {dailySeeds.map((seedType, si) => {
-                      const jx = [155, 170, 185, 240, 255][si]
-                      const jh = [12, 14, 10, 13, 11][si]
-                      const jw = [14, 12, 10, 12, 11][si]
-                      const jy = 212 - jh
-                      const sc = TREE_TYPES[seedType]?.color || '#8a7a5a'
-                      const sdull = sc + '90'
-                      return (
-                        <g key={`jar-${si}`}>
-                          <ellipse cx={jx} cy={211.5} rx={jw / 2 + 1} ry={1.2} fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
-                          <rect x={jx - jw / 2} y={jy} width={jw} height={jh} rx={jw / 2 - 2} fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
-                          <rect x={jx - jw / 2 + 1} y={jy + 1} width={jw - 2} height={jh - 2} rx={jw / 2 - 2.5} fill="#3a4a3a" opacity="0.4" />
-                          <rect x={jx - 3} y={jy - 3} width={6} height={3.5} rx={1.8} fill="#4a5a4a" opacity="0.5" />
-                          <rect x={jx - 2.5} y={jy - 4.5} width={5} height={2.5} rx={1.2} fill={isDark ? '#6a5a42' : '#c8b898'} />
-                          <ellipse cx={jx} cy={jy + jh / 2} rx={1.8} ry={2.5} fill={sdull} opacity="0.7" />
-                          <path d={`M${jx} ${jy + jh / 2 - 2.5} Q${jx} ${jy + jh / 2} ${jx} ${jy + jh / 2 + 2.5}`} stroke={sc} strokeWidth="0.4" fill="none" opacity="0.3" />
-                          <path d={`M${jx} ${jy + jh / 2 - 2} Q${jx - 1} ${jy + jh / 2 - 3.5} ${jx} ${jy + jh / 2 - 4.5} Q${jx + 1} ${jy + jh / 2 - 3.5} ${jx} ${jy + jh / 2 - 2}`} fill="#4a6a2a" opacity="0.5" />
-                        </g>
-                      )
-                    })}
-                  </g>
-
-                  {/* SEEDS sign */}
-                  <line x1="200" y1="220" x2="200" y2="228" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="1" />
-                  <rect x="170" y="228" width="60" height="18" rx="2.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
-                  <path d="M174 232 Q200 231 226 232" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
-                  <path d="M174 238 Q200 237 226 238" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
-                  <text x="200" y="241" textAnchor="middle" fill={isDark ? '#1a1410' : '#2a2218'} fontSize="6.5" fontFamily="'Inter', system-ui, sans-serif" fontWeight="600" opacity="0.85" letterSpacing="0.3">{countdown || 'Trade'}</text>
-                  <circle cx="200" cy="229" r="0.8" fill={isDark ? '#4a3a28' : '#8a7a60'} />
-
-                  {/* Cart base shadow */}
-                  <ellipse cx="200" cy="262" rx="60" ry="3" fill={isDark ? '#0a0806' : '#b0a890'} opacity="0.3" />
-                </svg>
-              </div>
+              <MarketBackdrop isDark={isDark} dailySeeds={dailySeeds} />
 
 
               {(() => { return (<>
@@ -1635,550 +2331,26 @@ export const BoutiqueView = memo(function BoutiqueView({
                 return (
               <div style={{ display: 'flex', gap: 72, justifyContent: 'center', flex: 1, alignItems: 'flex-start', paddingTop: 60, position: 'relative', zIndex: 2, zoom: cardFanZoom }}>
                 {/* Ambient particles */}
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
-                  {Array.from({ length: 8 }).map((_, pi) => {
-                    const x1 = -20 + Math.sin(pi * 1.3) * 30
-                    const y1 = -10 + Math.cos(pi * 0.9) * 20
-                    const x2 = 40 + Math.sin(pi * 2.1) * 60
-                    const y2 = -80 - Math.random() * 60
-                    return (
-                      <div key={`p-${pi}`} style={{
-                        position: 'absolute',
-                        left: `${10 + (pi * 11) % 80}%`,
-                        top: `${30 + (pi * 17) % 50}%`,
-                        width: 3, height: 3, borderRadius: '50%',
-                        backgroundColor: isDark ? '#d9770640' : '#d9770630',
-                        ['--sp-x1' as string]: `${x1}px`, ['--sp-y1' as string]: `${y1}px`,
-                        ['--sp-x2' as string]: `${x2}px`, ['--sp-y2' as string]: `${y2}px`,
-                        animation: `shop-pollen ${8 + pi * 1.5}s ease-in-out ${pi * 1.2}s infinite`,
-                      }} />
-                    )
-                  })}
-                  {Array.from({ length: 5 }).map((_, li) => {
-                    const x1 = 15 + Math.sin(li * 2) * 20
-                    const y1 = -10 + Math.cos(li) * 15
-                    const x2 = 30 + Math.sin(li * 3) * 50
-                    const y2 = -60 - Math.random() * 40
-                    const rot = 120 + li * 60
-                    return (
-                      <div key={`l-${li}`} style={{
-                        position: 'absolute',
-                        left: `${5 + (li * 19) % 85}%`,
-                        top: `${50 + (li * 13) % 40}%`,
-                        width: 8, height: 5,
-                        backgroundColor: isDark ? '#6a8a4a20' : '#5a7a3a18',
-                        borderRadius: '50% 50% 50% 0',
-                        ['--sl-x1' as string]: `${x1}px`, ['--sl-y1' as string]: `${y1}px`,
-                        ['--sl-x2' as string]: `${x2}px`, ['--sl-y2' as string]: `${y2}px`,
-                        ['--sl-r' as string]: `${rot}deg`,
-                        animation: `shop-leaf-float ${12 + li * 2}s ease-in-out ${li * 2.5}s infinite`,
-                      }} />
-                    )
-                  })}
-                </div>
+                <MarketAmbient isDark={isDark} />
                 {dailySeeds.map((type, i) => {
-                  const isDailyDeal = hasDeal && i === dealIdx
-                  const t = TREE_TYPES[type]
-                  if (!t) return null
-                  const isRevealed = revealedCards.has(i)
-                  const isCracking = crackingCard === i
-                  const soldOut = (shopStock[type] || 0) <= 0
-                  const rarityCol = SHOP_RARITY_COLOR[t.rarity] || '#8a7a6a'
-                  // Unflipped cards wear their rarity colour; rare and up get a soft glow
-                  const fancy = t.rarity !== 'common' && t.rarity !== 'uncommon'
-                  const discount = shopDiscounts[type] || 0
-                  const growthMins = TREE_TYPES[type]?.growthMinutes || 25
-                  if (i >= 4) return null
-                  const cardW = 160
-                  const cardH = 270
-                  const arcOffset = [18, 0, 0, 18][i] || 0
-                  const arcRotate = [-7, -2.5, 2.5, 7][i] || 0
-
+                  if (i >= 4 || !TREE_TYPES[type]) return null
                   return (
-                    <div key={`${type}-${i}`} className="seed-card-wrap" style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: arcOffset, rotate: `${arcRotate}deg`, ['--float-y' as string]: `${-5 - i * 1.2}px`, animation: `card-float ${5 + i * 0.6}s ease-in-out ${i * 0.4}s infinite` }}>
-                      {/* Daily deal label */}
-                      {isDailyDeal && (
-                        <div style={{
-                          position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-                          fontSize: 7, fontWeight: 400, color: '#dc2626', letterSpacing: '0.1em',
-                          textTransform: 'uppercase', whiteSpace: 'nowrap', zIndex: 20,
-                          background: isDark ? 'rgba(220,38,38,0.1)' : 'rgba(220,38,38,0.08)',
-                          padding: '2px 8px', borderRadius: 4,
-                          border: `1px solid ${isDark ? 'rgba(220,38,38,0.25)' : 'rgba(220,38,38,0.2)'}`,
-                        }}>Daily Deal</div>
-                      )}
-                      {/* Seed card */}
-                      <div
-                        className={`seed-packet ${isCracking ? 'seed-cracking' : ''} ${isRevealed ? 'seed-revealed' : ''} ${isDailyDeal && !isRevealed ? 'daily-deal' : ''}`}
-                        onClick={() => !isRevealed && revealCard(i)}
-                        style={{
-                          width: cardW, height: cardH, borderRadius: 12,
-                          position: 'relative', overflow: 'hidden',
-                          cursor: 'pointer',
-                          ['--crack-dur' as string]: `${(CRACK_MS[t.rarity] ?? CRACK_MS.common) / 1000}s`,
-                          boxShadow: isDailyDeal
-                            ? (isDark ? '0 2px 16px rgba(220,38,38,0.25)' : '0 2px 16px rgba(220,38,38,0.15)')
-                            : !isRevealed && fancy
-                              ? `${isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)'}, 0 0 22px ${hexA(rarityCol, isDark ? 0.22 : 0.28)}`
-                              : (isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)'),
-                          border: isDailyDeal
-                            ? `1.5px solid ${isDark ? 'rgba(220,38,38,0.4)' : 'rgba(220,38,38,0.35)'}`
-                            : !isRevealed
-                              ? `1px solid ${hexA(rarityCol, t.rarity === 'common' ? (isDark ? 0.18 : 0.3) : (isDark ? 0.45 : 0.55))}`
-                              : `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
-                        }}
-                      >
-                        {!isRevealed ? (
-                          /* Unrevealed — tinted by rarity so you can see what's inside before flipping */
-                          <div
-                            onClick={() => revealCard(i)}
-                            style={{
-                              width: '100%', height: '100%', borderRadius: 'inherit',
-                              background: isDark
-                                ? `radial-gradient(120% 70% at 50% 0%, ${hexA(rarityCol, t.rarity === 'common' ? 0.06 : 0.2)} 0%, transparent 70%), linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)`
-                                : `radial-gradient(120% 70% at 50% 0%, ${hexA(rarityCol, t.rarity === 'common' ? 0.1 : 0.28)} 0%, transparent 70%), linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)`,
-                              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                              position: 'relative',
-                            }}
-                          >
-                            {/* Botanical filigree border */}
-                            <svg viewBox="0 0 180 320" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-                              {(() => { const fc = t.rarity === 'common' ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)') : hexA(rarityCol, isDark ? 0.35 : 0.5); return (<>
-                                <rect x="12" y="12" width="156" height="296" rx="8" fill="none" stroke={fc} strokeWidth="0.5" />
-                                <path d="M12 40 Q30 38 36 28 Q38 35 48 36" fill="none" stroke={fc} strokeWidth="0.5" />
-                                <path d="M168 40 Q150 38 144 28 Q142 35 132 36" fill="none" stroke={fc} strokeWidth="0.5" />
-                                <path d="M12 280 Q30 282 36 292 Q38 285 48 284" fill="none" stroke={fc} strokeWidth="0.5" />
-                                <path d="M168 280 Q150 282 144 292 Q142 285 132 284" fill="none" stroke={fc} strokeWidth="0.5" />
-                                <circle cx="12" cy="40" r="1.5" fill={fc} />
-                                <circle cx="168" cy="40" r="1.5" fill={fc} />
-                                <circle cx="12" cy="280" r="1.5" fill={fc} />
-                                <circle cx="168" cy="280" r="1.5" fill={fc} />
-                                <line x1="48" y1="16" x2="132" y2="16" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
-                                <line x1="48" y1="304" x2="132" y2="304" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
-                              </>)})()}
-                            </svg>
-                            {/* Sprouting seed */}
-                            {(() => {
-                              const seedCol = t.rarity === 'sacred' ? (isDark ? '#9a80c0' : '#7a60a0')
-                                : t.rarity === 'true rare' ? (isDark ? '#8a7aaa' : '#6a5a8a')
-                                : isDark ? '#8a7a6a' : '#6a5a4a'
-                              const sproutCol = t.rarity === 'sacred' ? (isDark ? '#8a6ac0' : '#7050a0')
-                                : t.rarity === 'true rare' ? (isDark ? '#7a6aaa' : '#5a4a8a')
-                                : isDark ? '#6a8a4a' : '#5a7a3a'
-                              return (
-                                <svg width="40" height="52" viewBox="0 0 40 52" style={{ opacity: isDark ? 0.35 : 0.4 }}>
-                                  {/* Seed body */}
-                                  <ellipse cx="20" cy="38" rx="8" ry="10" fill={seedCol} opacity="0.6" />
-                                  <ellipse cx="20" cy="38" rx="8" ry="10" stroke={seedCol} strokeWidth="1" fill="none" opacity="0.8" />
-                                  {/* Crack line */}
-                                  <path d="M20 30 Q18 34 20 38 Q22 34 20 30" stroke={seedCol} strokeWidth="0.8" fill="none" opacity="0.5" />
-                                  {/* Sprout stem */}
-                                  <path d="M20 30 Q19 24 20 16" stroke={sproutCol} strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                                  {/* Left leaf */}
-                                  <path d="M20 22 Q14 18 12 14 Q16 16 20 20" fill={sproutCol} opacity="0.7" />
-                                  {/* Right leaf */}
-                                  <path d="M20 18 Q26 14 28 10 Q24 13 20 16" fill={sproutCol} opacity="0.7" />
-                                  {/* Tiny unfurling leaf at top */}
-                                  <path d="M20 16 Q18 12 16 10 Q18 11 20 14" fill={sproutCol} opacity="0.5" />
-                                </svg>
-                              )
-                            })()}
-                            {/* Discount badge */}
-                            {discount > 0 && (
-                              <div style={{
-                                position: 'absolute', top: 14, right: 18,
-                                fontSize: 8, fontWeight: 400, color: '#d97706',
-                                opacity: isDark ? 0.4 : 0.35,
-                              }}>%</div>
-                            )}
-                          </div>
-                        ) : (
-                          /* Revealed — plant on earthy ground */
-                          <div
-                            onClick={() => {
-                              setSelectedPlant(type)
-                              setPreviewStage(0)
-                            }}
-                            style={{
-                              width: '100%', height: '100%', borderRadius: 'inherit',
-                              background: isDark
-                                ? 'linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)'
-                                : 'linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)',
-                              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
-                              position: 'relative', overflow: 'hidden',
-                            }}
-                          >
-                            {/* Rarity color fade-in */}
-                            <div style={{
-                              position: 'absolute', inset: 0, borderRadius: 'inherit',
-                              background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
-                              animation: revealEffect?.index === i
-                                ? t.rarity === 'sacred'
-                                  ? 'sacred-bg-ignite 2.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both'
-                                  : t.rarity === 'true rare'
-                                  ? 'rarity-color-cinematic 2s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both'
-                                  : `rarity-color-in ${t.rarity === 'rare' ? '1s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'rare' ? '0.4s' : '0.2s'} both`
-                                : undefined,
-                              zIndex: 0,
-                            }} />
-                            {/* Subtle paper texture */}
-                            <div style={{
-                              position: 'absolute', inset: 0, borderRadius: 'inherit',
-                              backgroundImage: `radial-gradient(circle at 20% 30%, ${isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'} 1px, transparent 1px), radial-gradient(circle at 70% 60%, ${isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)'} 1px, transparent 1px), radial-gradient(circle at 40% 80%, ${isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.018)'} 1px, transparent 1px)`,
-                              backgroundSize: '8px 8px, 12px 12px, 6px 6px',
-                              zIndex: 1, pointerEvents: 'none',
-                            }} />
-                            {/* Sacred white flash */}
-                            {revealEffect?.index === i && t.rarity === 'sacred' && (
-                              <div style={{
-                                position: 'absolute', inset: 0, borderRadius: 'inherit',
-                                background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.4) 40%, transparent 70%)',
-                                animation: 'sacred-flash 1.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both',
-                                zIndex: 1, pointerEvents: 'none',
-                              }} />
-                            )}
-                            {/* True rare flash */}
-                            {revealEffect?.index === i && t.rarity === 'true rare' && (
-                              <div style={{
-                                position: 'absolute', inset: 0, borderRadius: 'inherit',
-                                background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.6) 0%, rgba(167,139,250,0.2) 50%, transparent 70%)',
-                                animation: 'sacred-flash 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both',
-                                zIndex: 1, pointerEvents: 'none',
-                              }} />
-                            )}
-                            <RarityScene rarity={t.rarity} isDark={isDark} />
-                            <Sparkles rarity={t.rarity} count={3} />
-                            {/* Botanical filigree border */}
-                            <svg viewBox="0 0 180 320" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 6 }}>
-                              {(() => { const fc = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'; return (<>
-                                <rect x="10" y="10" width="160" height="300" rx="8" fill="none" stroke={fc} strokeWidth="0.5" />
-                                <path d="M10 38 Q28 36 34 26 Q36 33 46 34" fill="none" stroke={fc} strokeWidth="0.5" />
-                                <path d="M170 38 Q152 36 146 26 Q144 33 134 34" fill="none" stroke={fc} strokeWidth="0.5" />
-                                <path d="M10 282 Q28 284 34 294 Q36 287 46 286" fill="none" stroke={fc} strokeWidth="0.5" />
-                                <path d="M170 282 Q152 284 146 294 Q144 287 134 286" fill="none" stroke={fc} strokeWidth="0.5" />
-                                <circle cx="10" cy="38" r="1.5" fill={fc} />
-                                <circle cx="170" cy="38" r="1.5" fill={fc} />
-                                <circle cx="10" cy="282" r="1.5" fill={fc} />
-                                <circle cx="170" cy="282" r="1.5" fill={fc} />
-                                <line x1="46" y1="14" x2="134" y2="14" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
-                                <line x1="46" y1="306" x2="134" y2="306" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
-                              </>)})()}
-                            </svg>
-                            {/* Inner vignette */}
-                            <div style={{
-                              position: 'absolute', inset: 0, borderRadius: 'inherit',
-                              boxShadow: `inset 0 0 20px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)'}`,
-                              pointerEvents: 'none', zIndex: 4,
-                            }} />
-                            {/* Tree name */}
-                            <div style={{
-                              position: 'absolute', top: 7, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: t.rarity === 'sacred' ? 15 : t.rarity === 'true rare' ? 14 : 13,
-                              fontWeight: t.rarity === 'sacred' || t.rarity === 'true rare' ? 500 : 400,
-                              color: t.rarity === 'sacred' ? '#e0d0ff'
-                                : t.rarity === 'true rare' ? (isDark ? '#fcd34d' : '#b45309')
-                                : t.rarity === 'rare' ? (isDark ? '#93c5fd' : '#1d4ed8')
-                                : t.rarity === 'uncommon' ? (isDark ? '#86efac' : '#15803d')
-                                : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)'),
-                              fontFamily: 'Crimson Pro, serif',
-                              letterSpacing: t.rarity === 'sacred' ? '0.12em' : t.rarity === 'true rare' ? '0.08em' : '0.02em',
-                              textTransform: t.rarity === 'sacred' || t.rarity === 'true rare' ? 'uppercase' as const : 'none' as const,
-                              animation: revealEffect?.index === i
-                                ? `rarity-color-in ${t.rarity === 'sacred' ? '1.2s' : t.rarity === 'true rare' ? '1s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '0.8s' : t.rarity === 'true rare' ? '0.6s' : '0.25s'} both`
-                                : undefined,
-                              zIndex: 5, whiteSpace: 'nowrap',
-                              ...(t.rarity === 'sacred' ? {
-                                textShadow: '0 0 8px rgba(180,140,255,0.6), 0 0 18px rgba(140,100,220,0.3)',
-                              } : t.rarity === 'true rare' ? {
-                                textShadow: isDark ? '0 0 6px rgba(252,211,77,0.4)' : '0 0 6px rgba(180,119,6,0.2)',
-                              } : {}),
-                            }}>
-                              {t.name}
-                            </div>
-                            {/* Rarity label */}
-                            <div style={{
-                              position: 'absolute', top: 40, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: 7, fontWeight: 400, color: t.rarity === 'sacred' ? '#d4b8ff' : rarityCol,
-                              letterSpacing: t.rarity === 'sacred' ? '0.14em' : '0.08em', textTransform: 'uppercase',
-                              animation: revealEffect?.index === i
-                                ? `rarity-color-in ${t.rarity === 'sacred' ? '1.2s' : t.rarity === 'true rare' ? '1s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '1s' : t.rarity === 'true rare' ? '0.7s' : '0.3s'} both`
-                                : undefined,
-                              zIndex: 5, whiteSpace: 'nowrap',
-                              ...(t.rarity === 'sacred' ? {
-                                textShadow: '0 0 6px rgba(180,140,255,0.8), 0 0 14px rgba(140,100,220,0.5)',
-                              } : {}),
-                            }}>
-                              {t.rarity === 'sacred' ? '✦ ' : ''}{RARITY_LABEL[t.rarity]}{t.rarity === 'sacred' ? ' ✦' : ''}
-                            </div>
-                            {/* Sold out */}
-                            {soldOut && (
-                              <div style={{
-                                position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
-                                fontSize: 7, fontWeight: 400, color: textMuted, textTransform: 'uppercase',
-                                background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)',
-                                padding: '2px 6px', borderRadius: 3,
-                                backdropFilter: 'blur(4px)', zIndex: 5,
-                              }}>Sold out</div>
-                            )}
-                            {/* Discount badge - now on price tag */}
-                            {discount > 0 && false && (
-                              <div style={{
-                                position: 'absolute', bottom: 36, right: 18,
-                                fontSize: 8, fontWeight: 400, color: '#fff',
-                                background: '#d97706', padding: '2px 5px', borderRadius: 3,
-                                zIndex: 5,
-                              }}>-{discount}%</div>
-                            )}
-                            {/* Plant — centered, base on ground */}
-                            <div style={{
-                              position: 'absolute', bottom: (() => { const sh = TREE_TYPES[type]?.shape || ''; return ['coral', 'whirlpool', 'lotus', 'cattail', 'mushroom'].includes(sh) ? '10%' : ['cactus', 'agave', 'sage'].includes(sh) ? '12%' : ['palm', 'papaya', 'bamboo', 'mangrove'].includes(sh) ? '14%' : '15%' })(), left: 0, right: 0,
-                              display: 'flex', justifyContent: 'center',
-                              zIndex: 2,
-                            }}>
-                              <div className={rarityPlantClass(t.rarity)} style={{
-                                animation: revealEffect?.index === i
-                                  ? `pop-${t.rarity === 'true rare' ? 'true-rare' : t.rarity} ${t.rarity === 'sacred' ? '2.2s' : t.rarity === 'true rare' ? '1.6s' : t.rarity === 'rare' ? '1s' : t.rarity === 'uncommon' ? '0.8s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) both`
-                                  : undefined,
-                                animationDelay: revealEffect?.index === i ? (t.rarity === 'sacred' ? '0.25s' : t.rarity === 'true rare' ? '0.15s' : '0.05s') : undefined,
-                                position: 'relative',
-                              }}>
-                                <CachedPlantIcon type={type} size={120} stage={3} hideGround />
-                                {/* Ground blend */}
-                                {(() => { const tc = getTerrainColors(type, isDark); return (
-                                <div style={{
-                                  position: 'absolute', bottom: -3, left: '50%', transform: 'translateX(-50%)',
-                                  width: '60%', height: 10, zIndex: 5,
-                                  background: `linear-gradient(to top, ${tc.blendBase} 0%, transparent 100%)`,
-                                  borderRadius: '50%',
-                                }} />
-                                )})()}
-                              </div>
-                            </div>
-                            {/* Ground */}
-                            {(() => { const tc = getTerrainColors(type, isDark); const gp = getGroundPath(type); return (
-                            <svg viewBox="0 0 180 60" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '22%', zIndex: 3 }}>
-                              <defs>
-                                <linearGradient id={`ground-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor={tc.top} />
-                                  <stop offset="40%" stopColor={tc.mid} />
-                                  <stop offset="100%" stopColor={tc.bottom} />
-                                </linearGradient>
-                              </defs>
-                              <path d={gp.fill} fill={`url(#ground-${i})`} />
-                              <path d={gp.edge} fill="none" stroke={tc.edge} strokeWidth="0.6" opacity="0.3" />
-                            </svg>
-                            )})()}
-                          </div>
-                        )}
-                        {/* Rarity color bleeding through crack */}
-                        {isCracking && (
-                          <div style={{
-                            position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 5,
-                            background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
-                            animation: `rarity-color-in ${(CRACK_MS[t.rarity] ?? CRACK_MS.common) * 0.85 / 1000}s cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '0.2s' : t.rarity === 'true rare' ? '0.15s' : '0.05s'} both`,
-                          }} />
-                        )}
-                        {/* Crack overlay — fades out to reveal */}
-                        {isCracking && (
-                          <div style={{
-                            position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
-                            background: isDark
-                              ? 'linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)'
-                              : 'linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)',
-                            animation: `seed-crack-fade ${`${(CRACK_MS[t.rarity] ?? CRACK_MS.common) / 1000}s`} cubic-bezier(0.4, 0, 0.2, 1) forwards`,
-                            willChange: 'opacity, transform',
-                          }} />
-                        )}
-                      </div>
-                      {/* Hanging parchment price tag */}
-                      {(() => {
-                        const tagRot = [(-3), 2, (-1.5), 3, (-2.5)][i % 5]
-                        const tagOffX = [(-6), 8, 3, (-9), 5][i % 5]
-                        const stringH = [26, 34, 18, 40, 22][i % 5]
-                        return (
-                      <div onClick={(e) => { e.stopPropagation(); if (isRevealed) { setSelectedPlant(type); setPreviewStage(0) } }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', visibility: isRevealed ? 'visible' : 'hidden', marginTop: -2, marginLeft: tagOffX, transform: `rotate(${-arcRotate}deg)`, transformOrigin: 'top center', cursor: isRevealed ? 'pointer' : 'default' }}>
-                        <svg width="4" height={stringH} style={{ overflow: 'visible' }}>
-                          <line x1="2" y1="0" x2="2" y2={stringH} stroke={isDark ? '#8b7355' : '#6b5335'} strokeWidth="0.8" strokeLinecap="round" />
-                          <line x1="2" y1="0" x2="2" y2={stringH} stroke={isDark ? 'rgba(160,130,90,0.25)' : 'rgba(120,90,50,0.2)'} strokeWidth="1.4" strokeLinecap="round" />
-                        </svg>
-                        <div style={{
-                          position: 'relative',
-                          transform: `rotate(${tagRot}deg)`,
-                          background: isDark
-                            ? 'linear-gradient(145deg, #2a2418 0%, #1e1a14 50%, #252018 100%)'
-                            : 'linear-gradient(145deg, #f2e8d4 0%, #e8dcc4 50%, #f0e4ce 100%)',
-                          border: `1px solid ${isDark ? 'rgba(180,160,130,0.15)' : 'rgba(140,120,80,0.2)'}`,
-                          borderRadius: 3,
-                          padding: '5px 12px 6px',
-                          minWidth: 54,
-                          textAlign: 'center' as const,
-                          boxShadow: isDark
-                            ? '0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03)'
-                            : '0 2px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)',
-                        }}>
-                          <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', overflow: 'hidden', pointerEvents: 'none' }}>
-                            {[0.25, 0.5, 0.75].map(y => (
-                              <div key={y} style={{ position: 'absolute', left: '8%', right: '8%', top: `${y * 100}%`, height: 0.5, background: isDark ? 'rgba(180,160,130,0.05)' : 'rgba(140,120,80,0.05)' }} />
-                            ))}
-                          </div>
-                          <div style={{
-                            position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
-                            width: 4, height: 4, borderRadius: '50%',
-                            background: isDark ? '#0e0d0b' : '#e0d8c8',
-                            border: `0.5px solid ${isDark ? 'rgba(180,160,130,0.2)' : 'rgba(140,120,80,0.15)'}`,
-                          }} />
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1, marginTop: 0 }}>
-                            {discount > 0 ? (<>
-                              <span style={{ fontSize: 9, fontWeight: 400, color: isDark ? '#8a7a60' : '#8a7a60', fontFamily: font, textDecoration: 'line-through', opacity: 0.7 }}>{(TREE_TYPES[type]?.cost || 0).toLocaleString()}</span>
-                              <span style={{ fontSize: 13, fontWeight: 400, color: '#dc2626', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{Math.round((TREE_TYPES[type]?.cost || 0) * (1 - discount / 100)).toLocaleString()}<PulpIcon size={11} /></span>
-                            </>) : (
-                              <span style={{ fontSize: 13, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{(TREE_TYPES[type]?.cost || 0).toLocaleString()}<PulpIcon size={11} /></span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                        )
-                      })()}
-
-                      {/* Pop effects on reveal */}
-                      {revealEffect?.index === i && (() => {
-                        const r = t.rarity
-                        const particleCount = r === 'sacred' ? 24 : r === 'true rare' ? 16 : r === 'rare' ? 8 : r === 'uncommon' ? 5 : 3
-                        const dur = r === 'sacred' ? 4 : r === 'true rare' ? 3 : r === 'rare' ? 1.2 : r === 'uncommon' ? 0.9 : 0.7
-                        const col = r === 'sacred' ? '#c4b5fd' : r === 'true rare' ? '#a78bfa' : r === 'rare' ? '#60a5fa' : r === 'uncommon' ? '#4ade80' : '#d97706'
-                        const baseDelay = r === 'sacred' ? 0.8 : r === 'true rare' ? 0.5 : 0.2
-                        return (
-                          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 20, overflow: 'visible' }}>
-                            {/* Expanding ring */}
-                            <div style={{
-                              position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
-                              width: r === 'sacred' ? 240 : r === 'true rare' ? 200 : r === 'rare' ? 120 : 80,
-                              height: r === 'sacred' ? 240 : r === 'true rare' ? 200 : r === 'rare' ? 120 : 80,
-                              borderRadius: '50%',
-                              border: `${r === 'sacred' ? 2.5 : 2}px solid ${col}`,
-                              opacity: 0,
-                              animation: `pop-ring ${dur * 0.6}s cubic-bezier(0.22, 1, 0.36, 1) ${baseDelay}s forwards`,
-                            }} />
-                            {/* Particles — staggered in waves for sacred/true rare */}
-                            {Array.from({ length: particleCount }).map((_, pi) => {
-                              const angle = (pi / particleCount) * Math.PI * 2 + (pi * 0.3)
-                              const wave = r === 'sacred' ? Math.floor(pi / 8) : r === 'true rare' ? Math.floor(pi / 8) : 0
-                              const dist1 = 15 + Math.sin(pi * 2.1) * 10 + wave * 10
-                              const dist2 = 50 + Math.cos(pi * 1.7) * 30 + (r === 'sacred' ? 60 + wave * 20 : r === 'true rare' ? 40 + wave * 15 : 0)
-                              const x1 = Math.cos(angle) * dist1
-                              const y1 = Math.sin(angle) * dist1
-                              const x2 = Math.cos(angle) * dist2
-                              const y2 = Math.sin(angle) * dist2
-                              const size = r === 'sacred' ? 3 + (pi % 3) : r === 'true rare' ? 2.5 + (pi % 3) * 0.8 : r === 'rare' ? 3 : 2.5
-                              const delay = baseDelay + wave * 0.6 + pi * 0.04
-                              return (
-                                <div key={pi} style={{
-                                  position: 'absolute', top: '55%', left: '50%',
-                                  width: size, height: size, borderRadius: '50%',
-                                  background: pi % 4 === 0 ? '#fff' : pi % 4 === 1 ? col : pi % 4 === 2 ? (r === 'sacred' ? '#e0d0ff' : col) : col,
-                                  boxShadow: `0 0 ${size * 3}px ${col}`,
-                                  opacity: 0,
-                                  ['--pp-x1' as string]: `${x1}px`, ['--pp-y1' as string]: `${y1}px`,
-                                  ['--pp-x2' as string]: `${x2}px`, ['--pp-y2' as string]: `${y2}px`,
-                                  animation: `pop-particle ${dur * 0.7}s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s forwards`,
-                                }} />
-                              )
-                            })}
-                            {/* True rare — aurora ring + second wave */}
-                            {r === 'true rare' && (<>
-                              <div style={{
-                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
-                                width: 180, height: 180, borderRadius: '50%',
-                                background: 'radial-gradient(circle, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.1) 50%, transparent 70%)',
-                                animation: `sacred-nova 2.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards`,
-                                opacity: 0,
-                              }} />
-                              <div style={{
-                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
-                                width: 260, height: 260, borderRadius: '50%',
-                                border: '1px solid rgba(167,139,250,0.2)',
-                                opacity: 0,
-                                animation: `pop-ring 2.2s cubic-bezier(0.22, 1, 0.36, 1) 1s forwards`,
-                              }} />
-                            </>)}
-                            {/* Sacred galaxy explosion */}
-                            {r === 'sacred' && (<>
-                              {/* Initial shockwave */}
-                              <div style={{
-                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
-                                width: 160, height: 160, borderRadius: '50%',
-                                border: '2px solid rgba(255,255,255,0.5)',
-                                opacity: 0,
-                                animation: `pop-ring 1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards`,
-                              }} />
-                              {/* Nova burst — first wave */}
-                              <div style={{
-                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
-                                width: 350, height: 350, borderRadius: '50%',
-                                background: 'radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(196,181,253,0.2) 30%, rgba(139,92,246,0.1) 50%, transparent 70%)',
-                                animation: `sacred-nova 3s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards`,
-                                opacity: 0,
-                              }} />
-                              {/* Nebula — rotating conic */}
-                              <div style={{
-                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
-                                width: 300, height: 300, borderRadius: '50%',
-                                background: `conic-gradient(from 0deg, rgba(196,181,253,0.2), rgba(139,92,246,0.08), rgba(99,102,241,0.15), rgba(196,181,253,0.05), rgba(167,139,250,0.2), rgba(255,255,255,0.1), rgba(196,181,253,0.15))`,
-                                animation: `sacred-shimmer 4s ease-out 0.5s forwards`,
-                                filter: 'blur(10px)',
-                                opacity: 0,
-                              }} />
-                              {/* Second nova — delayed */}
-                              <div style={{
-                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
-                                width: 250, height: 250, borderRadius: '50%',
-                                background: 'radial-gradient(circle, rgba(196,181,253,0.3) 0%, rgba(139,92,246,0.1) 40%, transparent 65%)',
-                                animation: `sacred-nova 2.5s cubic-bezier(0.22, 1, 0.36, 1) 1.2s forwards`,
-                                opacity: 0,
-                              }} />
-                              {/* Trailing stars — three waves */}
-                              {Array.from({ length: 18 }).map((_, si) => {
-                                const a = (si / 18) * Math.PI * 2
-                                const wave = Math.floor(si / 6)
-                                const r1 = 10 + wave * 8
-                                const r2 = 40 + si * 3 + wave * 15
-                                const r3 = 80 + si * 5 + wave * 20
-                                const starSize = 2 + (si % 3)
-                                return (
-                                  <div key={`s${si}`} style={{
-                                    position: 'absolute', top: '55%', left: '50%',
-                                    width: starSize, height: starSize,
-                                    background: si % 3 === 0 ? '#fff' : si % 3 === 1 ? '#e0d0ff' : '#c4b5fd',
-                                    borderRadius: '50%',
-                                    boxShadow: `0 0 ${starSize * 2}px rgba(196,181,253,0.8), 0 0 ${starSize * 4}px rgba(139,92,246,0.4)`,
-                                    opacity: 0,
-                                    ['--ss-x1' as string]: `${Math.cos(a) * r1}px`, ['--ss-y1' as string]: `${Math.sin(a) * r1}px`,
-                                    ['--ss-x2' as string]: `${Math.cos(a) * r2}px`, ['--ss-y2' as string]: `${Math.sin(a) * r2}px`,
-                                    ['--ss-x3' as string]: `${Math.cos(a) * r3}px`, ['--ss-y3' as string]: `${Math.sin(a) * r3}px`,
-                                    animation: `sacred-star ${2.5 + si * 0.08}s cubic-bezier(0.22, 1, 0.36, 1) ${0.2 + wave * 0.8 + (si % 6) * 0.08}s forwards`,
-                                  }} />
-                                )
-                              })}
-                              {/* Outer rings — staggered */}
-                              <div style={{
-                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
-                                width: 280, height: 280, borderRadius: '50%',
-                                border: '1px solid rgba(196,181,253,0.25)',
-                                opacity: 0,
-                                animation: `pop-ring 2s cubic-bezier(0.22, 1, 0.36, 1) 0.8s forwards`,
-                              }} />
-                              <div style={{
-                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
-                                width: 340, height: 340, borderRadius: '50%',
-                                border: '0.5px solid rgba(196,181,253,0.15)',
-                                opacity: 0,
-                                animation: `pop-ring 2.5s cubic-bezier(0.22, 1, 0.36, 1) 1.5s forwards`,
-                              }} />
-                            </>)}
-                          </div>
-                        )
-                      })()}
-                    </div>
+                    <MarketCard
+                      key={`${type}-${i}`}
+                      type={type}
+                      i={i}
+                      isDark={isDark}
+                      isDailyDeal={hasDeal && i === dealIdx}
+                      isRevealed={revealedCards.has(i)}
+                      isCracking={crackingCard === i}
+                      soldOut={(shopStock[type] || 0) <= 0}
+                      discount={shopDiscounts[type] || 0}
+                      freshToken={freshReveals[i]}
+                      textMuted={textMuted}
+                      onReveal={revealCard}
+                      onSelect={selectPlant}
+                      onFreshDone={clearFresh}
+                    />
                   )
                 })}
               </div>
@@ -2300,7 +2472,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         style={{
                           fontFamily: font, cursor: canAfford ? 'pointer' : 'not-allowed', border: 'none',
                           display: 'inline-flex', alignItems: 'center', gap: 5,
-                          background: canAfford ? '#d97706' : (isDark ? '#3f3f46' : '#d4d4d8'), color: canAfford ? '#fff' : (isDark ? '#71717a' : '#a1a1aa'),
+                          background: canAfford ? ACCENT : (isDark ? '#3f3f46' : '#d4d4d8'), color: canAfford ? ACCENT_CONTRAST : (isDark ? '#71717a' : '#a1a1aa'),
                           padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 400,
                           opacity: canAfford ? 1 : 0.7,
                         }}
@@ -2609,7 +2781,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 <button
                   onClick={() => { setSatchelFullPopup(false); setActiveTab('satchel') }}
                   className="px-4 py-1.5 rounded-lg text-[12px] font-normal transition-all"
-                  style={{ background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer' }}
+                  style={{ background: ACCENT, color: ACCENT_CONTRAST, border: 'none', cursor: 'pointer' }}
                 >
                   Open Seeds
                 </button>

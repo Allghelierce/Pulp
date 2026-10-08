@@ -4,8 +4,7 @@ import { apiFetch } from "@/lib/apiFetch"
 import { SCHOOLS } from "@/lib/schools"
 import { GRADES } from "@/lib/term"
 import { generateUsername } from "@/lib/usernames"
-
-const accent = '#d97706'
+import { ACCENT, ACCENT_CONTRAST, accentAlpha } from "@/lib/accent"
 
 export const OnboardingModal = memo(function OnboardingModal({
   theme, onDone, initialUsername,
@@ -51,7 +50,7 @@ export const OnboardingModal = memo(function OnboardingModal({
         <button type="button" title="Roll a new name" aria-label="Roll a new name"
           onClick={() => { setTouched(true); setUsername(generateUsername()) }}
           style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 32, height: 30, borderRadius: 8,
-            border: 'none', background: 'rgba(217,119,6,0.12)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>🎲</button>
+            border: 'none', background: accentAlpha(0.12), cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>🎲</button>
         </div>
         <select value={school} onChange={e => setSchool(e.target.value)}
           style={{ width: '100%', padding: '10px 12px', borderRadius: 10, marginBottom: 12,
@@ -68,7 +67,7 @@ export const OnboardingModal = memo(function OnboardingModal({
         {error && <p style={{ color: '#ef4444', fontSize: 13, margin: '0 0 12px' }}>{error}</p>}
         <button onClick={submit} disabled={busy || username.trim().length < 3}
           style={{ width: '100%', padding: '11px', borderRadius: 10, border: 'none', cursor: 'pointer',
-            background: accent, color: '#fff', fontFamily: 'Crimson Pro, serif', fontSize: 15,
+            background: ACCENT, color: ACCENT_CONTRAST, fontFamily: 'Crimson Pro, serif', fontSize: 15,
             opacity: busy || username.trim().length < 3 ? 0.6 : 1 }}>
           {busy ? 'Saving…' : 'Continue'}
         </button>

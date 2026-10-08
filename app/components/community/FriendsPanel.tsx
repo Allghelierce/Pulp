@@ -1,8 +1,9 @@
 "use client"
 import { useState, useEffect, useCallback, memo } from "react"
 import { apiFetch } from "@/lib/apiFetch"
+import { ACCENT, ACCENT_CONTRAST } from "@/lib/accent"
 
-const accent = '#d97706'
+const accent = ACCENT
 interface Card { friendshipId: number; user_id: string; username: string | null; level?: number }
 
 export const FriendsPanel = memo(function FriendsPanel({ theme, friendCode }: { theme: "light" | "dark"; friendCode: string | null }) {
@@ -55,7 +56,7 @@ export const FriendsPanel = memo(function FriendsPanel({ theme, friendCode }: { 
         <input value={input} onChange={e => setInput(e.target.value)} placeholder="friend code or @username"
           style={{ flex: 1, padding: '9px 12px', borderRadius: 10, outline: 'none',
             border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`, background: isDark ? '#0e0c09' : '#fff', color: text }} />
-        <button onClick={add} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: accent, color: '#fff', cursor: 'pointer' }}>Add</button>
+        <button onClick={add} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: accent, color: ACCENT_CONTRAST, cursor: 'pointer' }}>Add</button>
       </div>
       {msg && <p style={{ color: sub, fontSize: 13, margin: '0 0 12px' }}>{msg}</p>}
 

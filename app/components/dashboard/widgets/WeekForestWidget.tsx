@@ -1,5 +1,6 @@
 "use client"
 import { memo, useMemo } from "react"
+import { ACCENT, accentAlpha } from "@/lib/accent"
 import { registerWidget, ROW_HEIGHT, GRID_GAP, type WidgetProps } from "../widgetRegistry"
 import { GroveBackdrop } from "@/app/components/GroveScene"
 import { PlantIcon, ANIMATED_SHAPES } from "@/app/components/PlantIcon"
@@ -65,7 +66,7 @@ const WeekForestWidget = memo(function WeekForestWidget({ isDark, dailyStats, gr
         const title = `${d.today ? 'Today' : d.name} · ${d.minutes} min focus${d.chars ? ` · ${d.chars.toLocaleString()} chars` : ''}`
         const dayLabel = (
           <div style={{ marginTop: 3, fontSize: 10, letterSpacing: '0.04em', whiteSpace: 'nowrap', textShadow: shadowText,
-            color: d.today ? '#d97706' : label, fontWeight: d.today ? 600 : 400 }}>
+            color: d.today ? ACCENT : label, fontWeight: d.today ? 600 : 400 }}>
             {d.today ? 'today' : d.name}
             {d.minutes > 0 && <span style={{ color: soft, fontWeight: 400 }}> · {fmtMinutes(d.minutes)}</span>}
           </div>
@@ -81,7 +82,7 @@ const WeekForestWidget = memo(function WeekForestWidget({ isDark, dailyStats, gr
               )}
               <div style={{ width: 30 * scale, height: 8 * scale, borderRadius: '50%',
                 background: isDark ? 'radial-gradient(ellipse at 50% 35%, #6b4a2c, #3d2a18 75%)' : 'radial-gradient(ellipse at 50% 35%, #a87a4f, #7c5634 75%)',
-                boxShadow: d.today ? `0 0 0 1px ${isDark ? 'rgba(253,230,138,0.35)' : 'rgba(217,119,6,0.45)'}` : 'none',
+                boxShadow: d.today ? `0 0 0 1px ${accentAlpha(isDark ? 0.4 : 0.45)}` : 'none',
                 opacity: d.today ? 1 : 0.85 }} />
               {dayLabel}
             </div>

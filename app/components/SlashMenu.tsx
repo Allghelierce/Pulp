@@ -6,6 +6,7 @@ const getKatex = async () => { if (!_katex) _katex = await import("katex"); retu
 import { DatetimePicker } from "@/components/ui/datetime-picker"
 import { GlassFilter } from "@/components/ui/liquid-glass-button"
 import type { TextBox } from "@/app/types"
+import { ACCENT, accentAlpha, readableOn } from "@/lib/accent"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -57,8 +58,8 @@ function OIcon({ children, isActive }: { children: React.ReactNode; isActive: bo
     <div style={{
       width: 24, height: 24, borderRadius: 6, flexShrink: 0,
       display: "flex", alignItems: "center", justifyContent: "center",
-      background: isActive ? "rgba(217,119,6,0.15)" : "transparent",
-      color: isActive ? "#d97706" : "rgba(217,119,6,0.6)",
+      background: isActive ? accentAlpha(0.15) : "transparent",
+      color: isActive ? ACCENT : accentAlpha(0.6),
       transition: "all 0.1s ease",
     }}>
       {children}
@@ -96,7 +97,7 @@ function CustomDateWrapper({ onInsert, onClose, mode, accent }: { onInsert: (str
             onClose()
           }}
           style={{
-            background: accent, color: "white", padding: "4px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500, cursor: "pointer",
+            background: accent, color: readableOn(accent), padding: "4px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500, cursor: "pointer",
             border: "none"
           }}
         >
@@ -512,7 +513,7 @@ function MediaInput({ onInsert, onUpload, onClose, accent, mode }: { onInsert: (
             placeholder="Paste Link (Image, Video, YouTube)"
             style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: isLight ? "1px solid rgba(0,0,0,0.15)" : "1px solid rgba(255,255,255,0.15)", outline: "none", boxSizing: "border-box", background: isLight ? "#fff" : "rgba(255,255,255,0.08)", color: isLight ? "#111" : "#eee" }}
           />
-          <button onClick={handleInsert} style={{ width: "100%", padding: "6px 0", background: accent, color: "white", border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+          <button onClick={handleInsert} style={{ width: "100%", padding: "6px 0", background: accent, color: readableOn(accent), border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
             Embed Link
           </button>
         </div>
@@ -559,7 +560,7 @@ function EquationInput({ onInsert, onClose, accent }: { onInsert: (html: string)
       {latex.trim() && (
         <div style={{ padding: "8px 10px", background: "#fdfdfd", border: "1px solid #e4e4e7", borderRadius: 4, marginBottom: 8, color: "#1a1a2e", overflowX: "auto" }} dangerouslySetInnerHTML={{ __html: renderedLatex }} />
       )}
-      <button onClick={handleInsert} style={{ width: "100%", padding: "5px 0", background: accent, color: "white", border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}>
+      <button onClick={handleInsert} style={{ width: "100%", padding: "5px 0", background: accent, color: readableOn(accent), border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}>
         Insert (⌘↵)
       </button>
     </div>
@@ -619,7 +620,7 @@ function BookmarkInput({ onInsert, onClose, mode, accent }: { onInsert: (html: s
         style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(0,0,0,0.15)", outline: "none", boxSizing: "border-box", marginBottom: 8, background: isLight ? "#fff" : "rgba(255,255,255,0.08)", color: isLight ? "#111" : "#eee" }}
       />
       {error && <div style={{ fontSize: 10.5, color: "#ef4444", marginBottom: 6 }}>{error}</div>}
-      <button onClick={handleFetch} disabled={loading} style={{ width: "100%", padding: "5px 0", background: loading ? `${accent}88` : accent, color: "white", border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: loading ? "default" : "pointer" }}>
+      <button onClick={handleFetch} disabled={loading} style={{ width: "100%", padding: "5px 0", background: loading ? `${accent}88` : accent, color: readableOn(accent), border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: loading ? "default" : "pointer" }}>
         {loading ? "Fetching…" : "Fetch & Insert"}
       </button>
     </div>

@@ -2,6 +2,7 @@
 import { memo, useMemo } from "react"
 import { StreakFlame } from "@/app/components/StreakFlame"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { ACCENT } from "@/lib/accent"
 import { CountUp, Burst, usePersonalBest, fmtInt } from "../lively"
 
 const font = 'Crimson Pro, serif'
@@ -65,7 +66,7 @@ export const StreakBadge = memo(function StreakBadge({ isDark, dailyStats, daily
         <span style={{ fontFamily: font, fontSize: 20, color: current > 0 ? (current < 3 ? (isDark ? '#dcd8d0' : '#2a2620') : color) : muted }}>
           <CountUp value={current} format={fmtInt} /> <span style={{ fontSize: 11, color: muted }}>{current === 1 ? 'day' : 'days'}</span>
         </span>
-        <span style={{ fontFamily: font, fontStyle: 'italic', fontSize: 10.5, color: newBest ? '#d97706' : muted, marginTop: 3, letterSpacing: 0 }}>{hint}</span>
+        <span style={{ fontFamily: font, fontStyle: 'italic', fontSize: 10.5, color: newBest ? ACCENT : muted, marginTop: 3, letterSpacing: 0 }}>{hint}</span>
         {newBest && <Burst kind="spark" left="20%" top="40%" radius={26} count={10} delay={1} />}
       </div>
     </div>
@@ -106,11 +107,11 @@ const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats, go
         </div>
       </div>
       {newBest ? (
-        <span className="lively-anim" style={{ fontSize: 9, color: '#d97706', marginTop: 2, fontFamily: font, fontStyle: 'italic', animation: 'livelyFadeUp .5s ease-out 1.1s both' }}>longest yet</span>
+        <span className="lively-anim" style={{ fontSize: 9, color: ACCENT, marginTop: 2, fontFamily: font, fontStyle: 'italic', animation: 'livelyFadeUp .5s ease-out 1.1s both' }}>longest yet</span>
       ) : current > 0 && !goalMet ? (
         <span style={{ fontSize: 8, color: textMuted, marginTop: 2 }}>{minutesLeft}m to keep it lit</span>
       ) : multiplier > 1 ? (
-        <span style={{ fontSize: 9, color: '#d97706', marginTop: 2, fontFamily: font }}>{multiplier}x active</span>
+        <span style={{ fontSize: 9, color: ACCENT, marginTop: 2, fontFamily: font }}>{multiplier}x active</span>
       ) : goalStreak > 0 ? (
         <span style={{ fontSize: 8, color: textMuted, marginTop: 2 }}>{goalStreak}/7 to 2x</span>
       ) : current === 0 ? (

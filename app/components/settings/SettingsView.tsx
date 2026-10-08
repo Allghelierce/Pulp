@@ -12,6 +12,7 @@ import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 import { SettingSection } from "./SettingSection"
 import { PricingSection } from "@/components/blocks/pricing-section"
 import { Zap, Sparkles } from "lucide-react"
+import { ACCENT, ACCENT_CONTRAST, accentAlpha, accentForTheme, BRAND_ORANGE } from "@/lib/accent"
 import { DestructiveButton } from "@/components/ui/destructive-button"
 import { verifyPasswordAndDelete } from "@/app/actions/deleteAccount"
 import { changePassword } from "@/app/actions/changePassword"
@@ -358,10 +359,10 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-normal transition-all ${
                         isActive
                           ? isPremium
-                            ? isDark ? "bg-[#d97706]/10 text-[#d97706]" : "bg-[#d97706]/10 text-[#d97706]"
+                            ? isDark ? "bg-[rgb(var(--accent-rgb)/0.1)] text-[var(--accent)]" : "bg-[rgb(var(--accent-rgb)/0.1)] text-[var(--accent)]"
                             : isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
                           : isPremium
-                            ? isDark ? "text-[#d97706]/70 hover:bg-[#d97706]/5" : "text-[#d97706]/70 hover:bg-[#d97706]/5"
+                            ? isDark ? "text-[rgb(var(--accent-rgb)/0.7)] hover:bg-[rgb(var(--accent-rgb)/0.05)]" : "text-[rgb(var(--accent-rgb)/0.7)] hover:bg-[rgb(var(--accent-rgb)/0.05)]"
                             : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
                       }`}
                     >
@@ -417,13 +418,13 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     onClick={() => user && avatarInputRef.current?.click()}
                     disabled={avatarUploading || !user}
                     className="relative w-11 h-11 rounded-full shrink-0 shadow-md group overflow-hidden"
-                    style={{ background: avatarUrl ? undefined : 'linear-gradient(135deg, #d9770699, #d97706)' }}
+                    style={{ background: avatarUrl ? undefined : `linear-gradient(135deg, ${accentAlpha(0.6)}, ${ACCENT})` }}
                     title="Change profile picture"
                   >
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
                     ) : (
-                      <span className="flex items-center justify-center w-full h-full text-[15px] font-normal text-white">
+                      <span className="flex items-center justify-center w-full h-full text-[15px] font-normal" style={{ color: ACCENT_CONTRAST }}>
                         {user?.email?.[0]?.toUpperCase() ?? "?"}
                       </span>
                     )}
@@ -537,7 +538,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           setPwMsg({ ok: false, text: res.error || "Failed" })
                         }
                       }}
-                      className={`text-[11.5px] font-normal px-3.5 py-2 rounded-lg transition-all mt-1 ${(!pwCurrent || !pwNew || !pwConfirm || pwLoading) ? (isDark ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-zinc-100 text-zinc-400 cursor-not-allowed") : (isDark ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-amber-500 hover:bg-amber-600 text-white")}`}
+                      className={`text-[11.5px] font-normal px-3.5 py-2 rounded-lg transition-all mt-1 ${(!pwCurrent || !pwNew || !pwConfirm || pwLoading) ? (isDark ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-zinc-100 text-zinc-400 cursor-not-allowed") : "bg-[var(--accent)] hover:bg-[var(--accent-strong)] text-[var(--accent-contrast)]"}`}
                     >
                       {pwLoading ? "Updating..." : "Update Password"}
                     </button>
@@ -609,7 +610,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                               <button
                                 disabled={idBusy || !editDraft.trim()}
                                 onClick={saveIdentity}
-                                className={`flex-1 text-[11.5px] font-normal px-3.5 py-2 rounded-lg transition-all ${(idBusy || !editDraft.trim()) ? (isDark ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-zinc-100 text-zinc-400 cursor-not-allowed") : (isDark ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-amber-500 hover:bg-amber-600 text-white")}`}
+                                className={`flex-1 text-[11.5px] font-normal px-3.5 py-2 rounded-lg transition-all ${(idBusy || !editDraft.trim()) ? (isDark ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-zinc-100 text-zinc-400 cursor-not-allowed") : "bg-[var(--accent)] hover:bg-[var(--accent-strong)] text-[var(--accent-contrast)]"}`}
                               >
                                 {idBusy ? "Saving…" : "Save"}
                               </button>
@@ -760,7 +761,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           {!unlocked && (
                             <div className="absolute -top-1 -right-1 flex items-center justify-center">
                               {pro ? (
-                                <span className="text-[7px] font-normal bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                                <span className="text-[7px] font-normal bg-[var(--accent)] text-[var(--accent-contrast)] px-1 rounded-full leading-tight">PRO</span>
                               ) : (
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
@@ -820,7 +821,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           {!unlocked && (
                             <span className="absolute -top-1.5 -right-1.5">
                               {pro ? (
-                                <span className="text-[7px] font-normal bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                                <span className="text-[7px] font-normal bg-[var(--accent)] text-[var(--accent-contrast)] px-1 rounded-full leading-tight">PRO</span>
                               ) : (
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
@@ -859,7 +860,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           {!unlocked && (
                             <span className="absolute -top-1.5 -right-1.5">
                               {pro ? (
-                                <span className="text-[7px] font-normal bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                                <span className="text-[7px] font-normal bg-[var(--accent)] text-[var(--accent-contrast)] px-1 rounded-full leading-tight">PRO</span>
                               ) : (
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
@@ -914,7 +915,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           {!unlocked && (
                             <span className="absolute -top-1.5 -right-1.5">
                               {pro ? (
-                                <span className="text-[7px] font-normal bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                                <span className="text-[7px] font-normal bg-[var(--accent)] text-[var(--accent-contrast)] px-1 rounded-full leading-tight">PRO</span>
                               ) : (
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
@@ -1136,8 +1137,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 {plan?.plus ? (
                   <button
                     onClick={openBillingPortal}
-                    className="w-full py-2.5 rounded-lg text-[12px] font-normal text-white transition-all hover:brightness-110"
-                    style={{ backgroundColor: '#d97706', border: 'none', cursor: 'pointer' }}
+                    className="w-full py-2.5 rounded-lg text-[12px] font-normal transition-all hover:brightness-110"
+                    style={{ backgroundColor: ACCENT, color: ACCENT_CONTRAST, border: 'none', cursor: 'pointer' }}
                   >
                     Manage billing
                   </button>
@@ -1162,7 +1163,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   <PricingSection
                     className="relative z-10"
                     isDark={isDark}
-                    accentColor="#d97706"
+                    accentColor={accentForTheme(accentColor, isDark ? "dark" : "light")}
                     tiers={[
                       {
                         name: "Plus",
@@ -1170,8 +1171,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                         description: "Unlimited AI recall",
                         buttonLabel: "Upgrade to Plus",
                         highlight: true,
-                        icon: <Sparkles className="w-5 h-5" style={{ color: '#d97706' }} />,
-                        ctaOverride: ({ isYearly, ...props }) => <button {...props} onClick={() => startCheckout(isYearly ? 'plus_yearly' : 'plus_monthly')} />,
+                        icon: <Sparkles className="w-5 h-5" style={{ color: BRAND_ORANGE }} />, // matches the brand hero above
+                        ctaOverride: ({ isYearly, ...props }) => <button {...props} style={{ ...props.style, color: ACCENT_CONTRAST }} onClick={() => startCheckout(isYearly ? 'plus_yearly' : 'plus_monthly')} />,
                         features: [
                           { name: "AI cards from every session", description: "Free: 2 sessions a day", included: true },
                           { name: "AI-graded answers", description: "Free: 15 a day, then grade yourself", included: true },
@@ -1287,7 +1288,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     </div>
                     <div className="min-w-0">
                       <p className={`text-[12px] font-normal ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>General Support</p>
-                      <a href="mailto:pulpsupport@gmail.com" className="text-[11.5px] text-[#d97706] hover:underline">pulpsupport@gmail.com</a>
+                      <a href="mailto:pulpsupport@gmail.com" className="text-[11.5px] text-[var(--accent)] hover:underline">pulpsupport@gmail.com</a>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -1298,7 +1299,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       <p className={`text-[12px] font-normal ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>Report a Bug</p>
                       <p className={`text-[11.5px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
                         Found something broken? Email us at{" "}
-                        <a href="mailto:pulpsupport@gmail.com?subject=Bug%20Report" className="text-[#d97706] hover:underline">pulpsupport@gmail.com</a>
+                        <a href="mailto:pulpsupport@gmail.com?subject=Bug%20Report" className="text-[var(--accent)] hover:underline">pulpsupport@gmail.com</a>
                         {" "}with a description of the issue and steps to reproduce it. Screenshots help!
                       </p>
                     </div>
@@ -1312,8 +1313,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
             <p className={`text-[11px] ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Changes save automatically</p>
             <button
               onClick={onClose}
-              className="px-6 py-2 rounded-xl text-[12.5px] font-normal text-white transition-all hover:scale-105 active:scale-[0.97] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
-              style={{ backgroundColor: '#d97706' }}
+              className="px-6 py-2 rounded-xl text-[12.5px] font-normal transition-all hover:scale-105 active:scale-[0.97] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+              style={{ backgroundColor: ACCENT, color: ACCENT_CONTRAST }}
             >Save changes</button>
           </div>
         </div>
@@ -1499,7 +1500,7 @@ function SoundSection({ isDark }: { isDark: boolean }) {
               onPointerUp={() => playSound("correct")}
               onKeyUp={() => playSound("correct")}
               aria-label="Sound volume"
-              style={{ width: 120, accentColor: "#d97706" }}
+              style={{ width: 120, accentColor: ACCENT }}
             />
           }
         />
@@ -1599,7 +1600,7 @@ function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
         )}
         <button
           onClick={() => setIsRecording(true)}
-          className={`min-w-[40px] px-2 py-1 rounded text-[10px] font-mono font-normal border transition-all active:scale-95 ${isRecording ? (isDark ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500" : "bg-white border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-400")}`}
+          className={`min-w-[40px] px-2 py-1 rounded text-[10px] font-mono font-normal border transition-all active:scale-95 ${isRecording ? (isDark ? "bg-[rgb(var(--accent-rgb)/0.2)] border-[var(--accent)] text-[var(--accent)]" : "bg-[rgb(var(--accent-rgb)/0.08)] border-[rgb(var(--accent-rgb)/0.35)] text-[var(--accent)]") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500" : "bg-white border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-400")}`}
         >
           {isRecording ? "Press keys..." : formatShortcut(currentKey)}
         </button>

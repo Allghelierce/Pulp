@@ -1,6 +1,7 @@
 "use client"
 import { memo, useEffect, useState } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { ACCENT, ACCENT_CONTRAST, accentAlpha } from "@/lib/accent"
 import { Burst, useReducedMotion } from "../lively"
 
 const font = 'Crimson Pro, serif'
@@ -60,9 +61,10 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
 
   const rings = [
-    { value: quotaProgress, label: 'quota', display: `${Math.round(quotaProgress * 100)}%`, color: '#ea580c', radius: (size - strokeW) / 2 },
-    { value: streakProgress, label: 'streak', display: `${goalStreak}d`, color: '#d97706', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: isEarlyBird ? earlyBirdProgress : 0, label: 'early bird', display: isEarlyBird ? `${Math.round(earlyBirdProgress * 100)}%` : 'off', color: '#60a5fa', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    // Quota/streak follow the accent (quota is a warmer shade of it); early bird stays morning-sky blue.
+    { value: quotaProgress, label: 'quota', display: `${Math.round(quotaProgress * 100)}%`, color: `color-mix(in srgb, ${ACCENT} 80%, #ff0000)`, glow: accentAlpha(0.4), ink: ACCENT_CONTRAST, radius: (size - strokeW) / 2 },
+    { value: streakProgress, label: 'streak', display: `${goalStreak}d`, color: ACCENT, glow: accentAlpha(0.4), ink: ACCENT_CONTRAST, radius: (size - strokeW) / 2 - strokeW - gap },
+    { value: isEarlyBird ? earlyBirdProgress : 0, label: 'early bird', display: isEarlyBird ? `${Math.round(earlyBirdProgress * 100)}%` : 'off', color: '#60a5fa', glow: '#60a5fa66', ink: '#fff', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
   // Rings sweep in from empty when the page opens.
@@ -147,17 +149,17 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
                 strokeDasharray={`${trackLen} ${gapLen}`} strokeDashoffset={-gapLen / 2} transform={`rotate(-90 ${cx} ${cy})`} />
               <circle
                 cx={cx} cy={cy} r={ring.radius} fill="none"
-                stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
+                strokeWidth={strokeW} strokeLinecap="round"
                 strokeDasharray={`${fillLen} ${circ - fillLen}`}
                 transform={`rotate(${-90 + (gapLen / circ) * 180} ${cx} ${cy})`}
-                style={{ filter: `drop-shadow(0 0 4px ${ring.color}66)`,
+                style={{ stroke: ring.color, filter: `drop-shadow(0 0 4px ${ring.glow})`,
                   transition: reduce ? 'none' : `stroke-dasharray 1.2s cubic-bezier(.2,.8,.2,1) ${i * 0.12}s` }}
               />
               {complete && (
                 <g className="lively-anim" style={{ animation: reduce ? 'none' : `livelyFadeUp .4s ease-out ${1 + i * 0.12}s both` }}>
-                  <circle cx={checkX} cy={checkY} r={strokeW + 2.5} fill="none" stroke={ring.color} strokeWidth={0.5} opacity={0.35} />
-                  <circle cx={checkX} cy={checkY} r={strokeW + 1} fill={ring.color} />
-                  <path d={`M${checkX - 2.5} ${checkY + 0.5} l2 2 l3.5 -4`} fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx={checkX} cy={checkY} r={strokeW + 2.5} fill="none" style={{ stroke: ring.color }} strokeWidth={0.5} opacity={0.35} />
+                  <circle cx={checkX} cy={checkY} r={strokeW + 1} style={{ fill: ring.color }} />
+                  <path d={`M${checkX - 2.5} ${checkY + 0.5} l2 2 l3.5 -4`} fill="none" style={{ stroke: ring.ink }} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </g>
               )}
             </g>
@@ -208,9 +210,9 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
                     fontSize: 9, fontWeight: active ? 600 : 400, fontFamily: 'Inter, system-ui, sans-serif',
                     padding: '3px 8px', borderRadius: 5, cursor: locked ? 'not-allowed' : 'pointer',
                     opacity: locked ? 0.35 : 1,
-                    background: active ? 'rgba(217,119,6,0.15)' : 'transparent',
-                    border: `1px solid ${active ? 'rgba(217,119,6,0.3)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                    color: active ? '#d97706' : textMuted,
+                    background: active ? accentAlpha(0.15) : 'transparent',
+                    border: `1px solid ${active ? accentAlpha(0.3) : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                    color: active ? ACCENT : textMuted,
                   }}>
                   {t} {labels[t]}
                 </button>
@@ -232,8 +234,8 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
             />
             <span style={{ fontSize: 9, color: textMuted }}>min/day</span>
             <button onClick={saveQuota} style={{
-              fontSize: 9, fontWeight: 500, fontFamily: font, color: '#fff',
-              background: '#d97706', border: 'none', borderRadius: 5,
+              fontSize: 9, fontWeight: 500, fontFamily: font, color: ACCENT_CONTRAST,
+              background: ACCENT, border: 'none', borderRadius: 5,
               padding: '3px 10px', cursor: 'pointer',
             }}>Save</button>
           </div>

@@ -7,6 +7,7 @@ import dynamic from "next/dynamic"
 import type { Bookmark, User } from "@/app/types"
 import { apiFetch } from "@/lib/apiFetch"
 import { GlassFilter } from "@/components/ui/liquid-glass-button"
+import { ACCENT, accentAlpha, accentForTheme, ACCENT_DARK_SURFACE } from "@/lib/accent"
 
 const ShopCountdown = memo(function ShopCountdown() {
   const [cd, setCd] = useState('')
@@ -53,7 +54,7 @@ function ArchiveSection({ archivedNotes, onUnarchiveNote }: {
             <button
               onClick={() => onUnarchiveNote(an.id)}
               title="Unarchive"
-              className="opacity-0 group-hover/ar:opacity-100 transition-opacity text-[10px] text-zinc-500 hover:text-[#d97706] shrink-0"
+              className="opacity-0 group-hover/ar:opacity-100 transition-opacity text-[10px] text-zinc-500 hover:text-[var(--accent)] shrink-0"
             >
               Restore
             </button>
@@ -357,8 +358,10 @@ export const Sidebar = memo(function Sidebar({
     setNestTargetId(null)
   }
 
+  // The sidebar is dark in both themes, so use the dark-theme accent here (visible in light theme too).
+  const accentOnDark = useMemo(() => accentForTheme(accent.length > 7 ? accent.slice(0, 7) : accent, "dark"), [accent])
   const noteRowStyle = (id: string): React.CSSProperties => {
-    const accentSolid = accent.length > 7 ? accent.slice(0, 7) : accent
+    const accentSolid = accentOnDark
     const r = parseInt(accentSolid.slice(1, 3), 16), g = parseInt(accentSolid.slice(3, 5), 16), b = parseInt(accentSolid.slice(5, 7), 16)
     if (multiSelectedIds.has(id)) return { backgroundColor: `rgba(${r},${g},${b},0.15)` }
     if (nestTargetId === id && draggedNoteId !== id)
@@ -564,7 +567,7 @@ export const Sidebar = memo(function Sidebar({
         </div>
       )}
 
-      <div id="app-sidebar" className={`text-white flex flex-col shrink-0 h-full ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} relative z-[250]`} style={{ width: mini ? 58 : sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 100ms cubic-bezier(0.25, 1, 0.5, 1)", boxShadow: "0 0 0 1px rgba(255,255,255,0.03)" }}>
+      <div id="app-sidebar" className={`text-white flex flex-col shrink-0 h-full ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} relative z-[250]`} style={{ ...ACCENT_DARK_SURFACE, width: mini ? 58 : sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 100ms cubic-bezier(0.25, 1, 0.5, 1)", boxShadow: "0 0 0 1px rgba(255,255,255,0.03)" }}>
         <div className="absolute inset-0 z-0 overflow-hidden" style={{ backdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)', WebkitBackdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)' }} />
         <div className="absolute inset-0 z-0" style={{ background: 'rgba(35,33,33,0.92)' }} />
         <div className="absolute inset-0 z-0 pointer-events-none rounded-r-sm" style={{ boxShadow: 'inset -1px 0 3px rgba(0,0,0,0.18), inset 0 0 40px rgba(255,255,255,0.01)' }} />
@@ -624,9 +627,9 @@ export const Sidebar = memo(function Sidebar({
             <div className="w-7 h-px mb-4 shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }} />
             <div className="flex flex-col items-center gap-0.5 px-1 w-full">
               {onOpenRecall && (
-                <button onClick={onOpenRecall} title={recallDue > 0 ? `Recall · ${recallDue} due` : "Recall"} className="relative w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-white/[0.05]" style={{ color: '#d97706' }}>
+                <button onClick={onOpenRecall} title={recallDue > 0 ? `Recall · ${recallDue} due` : "Recall"} className="relative w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-white/[0.05]" style={{ color: ACCENT }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
-                  {recallDue > 0 && <span style={{ position: 'absolute', top: 3, right: 3, width: 6, height: 6, borderRadius: '50%', background: '#d97706', boxShadow: '0 0 6px #d97706' }} />}
+                  {recallDue > 0 && <span style={{ position: 'absolute', top: 3, right: 3, width: 6, height: 6, borderRadius: '50%', background: ACCENT, boxShadow: `0 0 6px ${ACCENT}` }} />}
                 </button>
               )}
               {onOpenGrove && (
@@ -726,7 +729,7 @@ export const Sidebar = memo(function Sidebar({
                         }}
                       >
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="w-1 h-1 rounded-full shrink-0" style={{ background: r.matchType === "title" ? "#d97706" : r.matchType === "box" ? "#8b5cf6" : "#52525b" }} />
+                          <span className="w-1 h-1 rounded-full shrink-0" style={{ background: r.matchType === "title" ? ACCENT : r.matchType === "box" ? "#8b5cf6" : "#52525b" }} />
                           {r.noteIcon && <span className="text-[10px] shrink-0">{r.noteIcon}</span>}
                           <span className="text-[12px] text-zinc-200 truncate" style={{ fontFamily: 'Crimson Pro, serif' }}>{r.noteName || "Untitled"}</span>
                           {r.matchType !== "title" && (
@@ -743,11 +746,11 @@ export const Sidebar = memo(function Sidebar({
                         {searchResults.length > 0 && <div className="border-t border-white/5 my-1" />}
                         <div className="px-3 py-1 flex items-center gap-1.5">
                           {aiSearching && (
-                            <svg width="10" height="10" viewBox="0 0 24 24" className="animate-spin shrink-0" style={{ color: '#d97706' }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" className="animate-spin shrink-0" style={{ color: ACCENT }}>
                               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="31.4 31.4" strokeLinecap="round" />
                             </svg>
                           )}
-                          <span className="text-[8px] uppercase tracking-[0.15em] font-medium" style={{ color: 'rgba(217,119,6,0.7)' }}>
+                          <span className="text-[8px] uppercase tracking-[0.15em] font-medium" style={{ color: accentAlpha(0.7) }}>
                             {aiSearching ? "Searching…" : "AI"}
                           </span>
                         </div>
@@ -764,12 +767,12 @@ export const Sidebar = memo(function Sidebar({
                             }}
                           >
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <span className="w-1 h-1 rounded-full shrink-0" style={{ background: '#d97706' }} />
+                              <span className="w-1 h-1 rounded-full shrink-0" style={{ background: ACCENT }} />
                               {r.noteIcon && <span className="text-[10px] shrink-0">{r.noteIcon}</span>}
                               <span className="text-[12px] text-zinc-200 truncate" style={{ fontFamily: 'Crimson Pro, serif' }}>{r.noteName || "Untitled"}</span>
                               <span className="text-[9px] text-zinc-600 shrink-0 ml-auto tabular-nums">p{r.pageIdx + 1}</span>
                             </div>
-                            <p className="text-[10px] leading-snug truncate pl-2.5" style={{ color: 'rgba(217,119,6,0.55)' }}>{r.reason}</p>
+                            <p className="text-[10px] leading-snug truncate pl-2.5" style={{ color: accentAlpha(0.55) }}>{r.reason}</p>
                           </button>
                         ))}
                       </>
@@ -785,9 +788,9 @@ export const Sidebar = memo(function Sidebar({
         <div className="px-2 pt-2 pb-1 flex flex-col gap-px z-10 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
           {onOpenRecall && (
             <button onClick={onOpenRecall} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
-              <span className="text-[12px] font-normal" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em', color: '#d97706' }}>recall</span>
-              {recallDue > 0 && <span className="ml-auto tabular-nums text-[10.5px]" style={{ fontFamily: 'Crimson Pro, serif', color: '#d97706', background: 'rgba(217,119,6,0.12)', borderRadius: 999, padding: '0 7px' }}>{recallDue} due</span>}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" style={{ stroke: ACCENT }}><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+              <span className="text-[12px] font-normal" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em', color: ACCENT }}>recall</span>
+              {recallDue > 0 && <span className="ml-auto tabular-nums text-[10.5px]" style={{ fontFamily: 'Crimson Pro, serif', color: ACCENT, background: accentAlpha(0.12), borderRadius: 999, padding: '0 7px' }}>{recallDue} due</span>}
             </button>
           )}
           {onOpenGrove && (
@@ -949,7 +952,7 @@ export const Sidebar = memo(function Sidebar({
                   onDrop={() => handleBookmarkDrop(b.id)}
                   onClick={() => { if (renamingBookmarkId !== b.id) onJumpToBookmark(b) }}
                   className={`relative group flex items-center cursor-pointer py-1.5 pl-6 pr-2 text-[#a1a1aa] hover:bg-white/5 transition-all ${draggedBookmarkId === b.id ? "opacity-30" : ""} ${bookmarkTargetId === b.id ? "border-t-2" : ""}`}
-                  style={{ borderTopColor: bookmarkTargetId === b.id ? accent : "transparent" }}
+                  style={{ borderTopColor: bookmarkTargetId === b.id ? accentOnDark : "transparent" }}
                 >
                   <span className="shrink-0 text-[10px] font-normal text-zinc-600 w-4 text-right">{idx + 1}.</span>
                   {renamingBookmarkId === b.id ? (
@@ -1040,12 +1043,12 @@ export const Sidebar = memo(function Sidebar({
               className={`flex flex-col items-center justify-center w-full py-3 rounded-xl transition-all group cursor-pointer ${timerOpen ? "" : "hover:scale-[1.02] active:scale-[0.98]"}`}
               style={{
                 background: timerOpen
-                  ? 'linear-gradient(135deg, rgba(217,119,6,0.15), rgba(217,119,6,0.08))'
-                  : 'linear-gradient(135deg, rgba(217,119,6,0.06), rgba(217,119,6,0.02))',
+                  ? `linear-gradient(135deg, ${accentAlpha(0.15)}, ${accentAlpha(0.08)})`
+                  : `linear-gradient(135deg, ${accentAlpha(0.06)}, ${accentAlpha(0.02)})`,
                 boxShadow: timerOpen
-                  ? '0 0 20px rgba(217,119,6,0.15), inset 0 1px 0 rgba(217,119,6,0.15)'
-                  : '0 0 12px rgba(217,119,6,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
-                border: timerOpen ? '1px solid rgba(217,119,6,0.2)' : '1px solid rgba(255,255,255,0.05)',
+                  ? `0 0 20px ${accentAlpha(0.15)}, inset 0 1px 0 ${accentAlpha(0.15)}`
+                  : `0 0 12px ${accentAlpha(0.06)}, inset 0 1px 0 rgba(255,255,255,0.04)`,
+                border: timerOpen ? `1px solid ${accentAlpha(0.2)}` : '1px solid rgba(255,255,255,0.05)',
               }}
             >
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className={`mb-1 transition-colors ${timerOpen ? "text-emerald-500" : "text-emerald-600/70 group-hover:text-emerald-500/90"}`}>
@@ -1059,7 +1062,7 @@ export const Sidebar = memo(function Sidebar({
                 <path d="M18 4 L18.5 3 L19 4 L18.5 5Z" fill="currentColor" opacity="0.3" />
                 <path d="M5 6 L5.3 5.2 L5.6 6 L5.3 6.8Z" fill="currentColor" opacity="0.2" />
               </svg>
-              <span className={`text-[13px] font-normal tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50 group-hover:text-amber-500/70"}`} style={{ fontFamily: 'Crimson Pro, serif' }}>focus</span>
+              <span className={`text-[13px] font-normal tracking-wide transition-colors ${timerOpen ? "text-[var(--accent)]" : "text-[rgb(var(--accent-rgb)/0.5)] group-hover:text-[rgb(var(--accent-rgb)/0.7)]"}`} style={{ fontFamily: 'Crimson Pro, serif' }}>focus</span>
             </button>
           </div>
         )}

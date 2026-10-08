@@ -2,10 +2,14 @@
 import { useState, memo } from "react"
 import { motion } from "framer-motion"
 import type { DialogConfig } from "@/app/types"
+import { accentForTheme, readableOn } from "@/lib/accent"
 
 const font = 'Crimson Pro, serif'
 
-export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { config: DialogConfig; accent: string; onClose: () => void }) {
+export const AppDialog = memo(function AppDialog({ config, accent: accentProp, onClose }: { config: DialogConfig; accent: string; onClose: () => void }) {
+  // The panel is near-black in both themes, so use the dark-surface accent (keeps Obsidian visible on light theme).
+  const accent = accentForTheme(accentProp, "dark")
+  const onAccent = readableOn(accent)
   const [val, setVal] = useState(config.type === "prompt" ? (config.defaultValue ?? "") : "")
   const [checked, setChecked] = useState(false)
 
@@ -18,6 +22,7 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
 
   const danger = config.type === "confirm" && config.danger
   const btnColor = danger ? "#ef4444" : accent
+  const btnText = danger ? "#fff" : onAccent
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6">
@@ -95,7 +100,7 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
                 }}
               >
                 {checked && (
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={onAccent} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 )}
@@ -123,7 +128,7 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
               onClick={confirm}
               style={{
                 flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 400,
-                fontFamily: font, color: '#fff', background: btnColor, border: 'none', cursor: 'pointer',
+                fontFamily: font, color: btnText, background: btnColor, border: 'none', cursor: 'pointer',
               }}
               onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
               onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}

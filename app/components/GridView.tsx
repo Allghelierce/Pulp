@@ -3,6 +3,7 @@ import React, { useEffect, memo } from "react"
 import type { NoteData, Bookmark } from "@/app/types"
 import { getPaperBg, type PaperStyle } from "@/app/lib/paperStyle"
 import { sanitizeHTML } from "@/lib/sanitize"
+import { ACCENT } from "@/lib/accent"
 
 interface GridViewProps {
   activeNote: NoteData
@@ -133,7 +134,7 @@ export const GridView = memo(function GridView({ activeNote, theme, accent, setG
 
                 <div className="absolute top-2.5 right-3 z-[50] pointer-events-none flex items-center gap-1.5">
                   {bookmarkedPages.has(idx) && (
-                    <svg width="10" height="12" viewBox="0 0 10 14" fill="#d97706" opacity="0.7">
+                    <svg width="10" height="12" viewBox="0 0 10 14" opacity="0.7" style={{ fill: ACCENT }}>
                       <path d="M1 0h8v14l-4-3-4 3V0z" />
                     </svg>
                   )}

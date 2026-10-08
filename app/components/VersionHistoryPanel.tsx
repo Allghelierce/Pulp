@@ -139,7 +139,7 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
             <div className="flex items-center gap-2 mt-2">
               <button
                 onClick={() => { onRestore(previewVersion); onClose() }}
-                className="text-[10px] font-normal px-2.5 py-1 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-colors cursor-pointer"
+                className="text-[10px] font-normal px-2.5 py-1 rounded-lg bg-[var(--accent)] text-[var(--accent-contrast)] hover:bg-[var(--accent-strong)] transition-colors cursor-pointer"
               >
                 Restore this version
               </button>
@@ -182,7 +182,7 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
                       key={v.timestamp}
                       className={`group rounded-lg border p-2.5 transition-colors cursor-pointer ${
                         previewIdx === globalIdx
-                          ? isDark ? "border-orange-600/40 bg-orange-950/20" : "border-orange-300 bg-orange-50/50"
+                          ? isDark ? "border-[rgb(var(--accent-rgb)/0.4)] bg-[rgb(var(--accent-rgb)/0.08)]" : "border-[rgb(var(--accent-rgb)/0.45)] bg-[rgb(var(--accent-rgb)/0.06)]"
                           : isDark ? "border-zinc-800 hover:border-zinc-700 bg-zinc-900/50" : "border-zinc-100 hover:border-zinc-200 bg-white"
                       }`}
                       onClick={() => setPreviewIdx(previewIdx === globalIdx ? null : globalIdx)}

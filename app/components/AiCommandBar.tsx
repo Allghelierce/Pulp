@@ -48,7 +48,7 @@ export const AiCommandBar = memo(function AiCommandBar({ onClose, onSubmit }: Ai
         style={{ borderRadius: 8 }}
       >
         <form onSubmit={handleSubmit} className="relative flex items-center p-4">
-          <div className="flex items-center justify-center w-8 h-8 mr-3 text-orange-600/80">
+          <div className="flex items-center justify-center w-8 h-8 mr-3 text-[rgb(var(--accent-rgb)/0.8)]">
             <Sparkles className="w-5 h-5" />
           </div>
             <input
@@ -68,7 +68,7 @@ export const AiCommandBar = memo(function AiCommandBar({ onClose, onSubmit }: Ai
             </div>
             <button 
               type="submit"
-              className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-orange-600"
+              className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-[var(--accent)]"
             >
               <CornerDownLeft className="w-4 h-4" />
             </button>

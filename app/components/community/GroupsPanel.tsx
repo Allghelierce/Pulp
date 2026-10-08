@@ -1,8 +1,9 @@
 "use client"
 import { useState, useEffect, useCallback, memo } from "react"
 import { apiFetch } from "@/lib/apiFetch"
+import { ACCENT, ACCENT_CONTRAST } from "@/lib/accent"
 
-const accent = '#d97706'
+const accent = ACCENT
 interface Group { id: number; name: string; invite_code: string; term_end: string; status: string }
 
 function plusMonthsISO(months: number): string {
@@ -62,13 +63,13 @@ export const GroupsPanel = memo(function GroupsPanel({ theme, onOpenGroup }: { t
           <input type="date" value={end} onChange={e => setEnd(e.target.value)} style={{ ...field, flex: 1 }} />
         </div>
         <button onClick={create} disabled={name.trim().length < 2}
-          style={{ padding: '10px', borderRadius: 10, border: 'none', background: accent, color: '#fff', cursor: 'pointer', opacity: name.trim().length < 2 ? 0.6 : 1 }}>Create</button>
+          style={{ padding: '10px', borderRadius: 10, border: 'none', background: accent, color: ACCENT_CONTRAST, cursor: 'pointer', opacity: name.trim().length < 2 ? 0.6 : 1 }}>Create</button>
       </div>
 
       <h3 style={{ color: text, fontSize: 15, margin: '20px 0 8px' }}>Join by code</h3>
       <div style={{ display: 'flex', gap: 8 }}>
         <input value={code} onChange={e => setCode(e.target.value)} placeholder="invite code" style={{ ...field, flex: 1 }} />
-        <button onClick={join} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: accent, color: '#fff', cursor: 'pointer' }}>Join</button>
+        <button onClick={join} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: accent, color: ACCENT_CONTRAST, cursor: 'pointer' }}>Join</button>
       </div>
       {msg && <p style={{ color: '#8a857e', fontSize: 13, marginTop: 10 }}>{msg}</p>}
     </div>

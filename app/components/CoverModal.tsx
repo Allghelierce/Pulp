@@ -5,6 +5,7 @@ import { useImageUpload } from "@/app/hooks/use-image-upload"
 import { ImagePlus, Trash2, X, Pencil, Eraser, RotateCcw, Upload, Image as ImageIcon } from "lucide-react"
 import NextImage from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
+import { ACCENT, accentAlpha, ACCENT_DARK_SURFACE } from "@/lib/accent"
 
 interface CoverModalProps {
   existingCover?: string
@@ -33,7 +34,6 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
   const [tool, setTool] = useState<"pen" | "eraser">("pen")
   const isDrawingRef = useRef(false)
 
-  const pulpOrange = "#d97706"
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -133,6 +133,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
         className="relative bg-zinc-800 border border-zinc-700/50 rounded-2xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] w-full max-w-xl overflow-hidden"
+        style={ACCENT_DARK_SURFACE /* dark panel in both themes */}
       >
         {/* Header */}
         <div className="px-8 pt-8 pb-4 flex items-center justify-between border-b border-white/5">
@@ -141,14 +142,14 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
               onClick={() => setTab("import")}
               className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "import" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
             >
-              {tab === "import" && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
+              {tab === "import" && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)]" />}
               Import
             </button>
             <button
               onClick={() => setTab("draw")}
               className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "draw" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
             >
-              {tab === "draw" && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
+              {tab === "draw" && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)]" />}
               Draw
             </button>
           </div>
@@ -175,7 +176,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
                   className={cn(
                     "flex h-72 cursor-pointer flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed transition-all",
                     isDragging
-                      ? "border-orange-500 bg-orange-500/5 shadow-[0_0_40px_rgba(245,160,48,0.1)]"
+                      ? "border-[var(--accent)] bg-[rgb(var(--accent-rgb)/0.05)] shadow-[0_0_40px_rgb(var(--accent-rgb)/0.1)]"
                       : "border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-600"
                   )}
                 >
@@ -221,13 +222,13 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
                 <div className="flex gap-1.5 p-1 bg-zinc-900/50 rounded-lg border border-zinc-700">
                   <button
                     onClick={() => setTool("pen")}
-                    className={cn("p-2 rounded-lg transition-all", tool === "pen" ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "text-zinc-500 hover:text-zinc-300")}
+                    className={cn("p-2 rounded-lg transition-all", tool === "pen" ? "bg-[var(--accent)] text-[var(--accent-contrast)] shadow-lg shadow-[color:rgb(var(--accent-rgb)/0.2)]" : "text-zinc-500 hover:text-zinc-300")}
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setTool("eraser")}
-                    className={cn("p-2 rounded-lg transition-all", tool === "eraser" ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "text-zinc-500 hover:text-zinc-300")}
+                    className={cn("p-2 rounded-lg transition-all", tool === "eraser" ? "bg-[var(--accent)] text-[var(--accent-contrast)] shadow-lg shadow-[color:rgb(var(--accent-rgb)/0.2)]" : "text-zinc-500 hover:text-zinc-300")}
                   >
                     <Eraser className="h-4 w-4" />
                   </button>
@@ -270,8 +271,8 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
               if (tab === "import" && previewUrl) onConfirm(previewUrl)
               else if (tab === "draw" && canvasRef.current) onConfirm(canvasRef.current.toDataURL("image/png"))
             }}
-            className="w-full py-4 rounded-lg text-white text-[10px] font-normal uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
-            style={{ backgroundColor: pulpOrange, boxShadow: `0 8px 24px -6px ${pulpOrange}44` }}
+            className="w-full py-4 rounded-lg text-[var(--accent-contrast)] text-[10px] font-normal uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+            style={{ backgroundColor: ACCENT, boxShadow: `0 8px 24px -6px ${accentAlpha(0.27)}` }}
           >
             Apply Cover Decoration
           </button>
