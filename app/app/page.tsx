@@ -642,7 +642,7 @@ const BoxItem = memo(function BoxItem({
   )
 })
 
-const BOX_HEADING_SIZES: Record<string, number> = { h1: 42, h2: 28, h3: 22, default: 20, margin: 26 }
+const BOX_HEADING_SIZES: Record<string, number> = { h1: 42, h2: 28, h3: 20, default: 17, margin: 26 }
 const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400, margin: 400 }
 const BOX_FONTS = [
   { value: "cursive", label: "Handwritten" },
