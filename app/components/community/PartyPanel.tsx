@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect, useCallback, useRef, memo } from "react"
-import { loadParty, createParty, joinParty, cancelJoin, answerRequest, leaveParty, standings, hasJoinedBefore, PARTY_CAP, type PartyState } from "@/lib/party"
+import { loadParty, createParty, joinParty, cancelJoin, answerRequest, removeMember, renewParty, leaveParty, standings, minutesIn, treesIn,
+  seasonLabel, seasonDaysLeft, hasJoinedBefore, PARTY_CAP, type PartyState, type PartyRecap, type StandingsMode } from "@/lib/party"
 import { loadFriends, addFriend, answerFriend, removeFriend, type FriendsState, type Friend } from "@/lib/friends"
 import { PlantIcon } from "@/app/components/PlantIcon"
 import { usePartyPresence } from "./PartyPresence"
@@ -12,6 +13,18 @@ import { SCENE_CSS, GroveBackdrop } from "@/app/components/GroveScene"
 
 const accent = ACCENT
 const MEDALS = ['🥇', '🥈', '🥉']
+const RENEW_WINDOW = 14 // days before the season ends that the owner sees "renew"
+
+// Owner-only × on member rows shows on hover (always on touch screens).
+const PANEL_CSS = `
+.party-row .party-kick { opacity: 0; color: #8a857e; transition: opacity .15s, color .15s }
+.party-row:hover .party-kick, .party-row .party-kick:focus-visible { opacity: 1 }
+.party-row .party-kick:hover { color: #ef4444 }
+@media (hover: none) { .party-row .party-kick { opacity: .7 } }
+`
+
+// Opens the app's confirm dialog (AppDialog) — page.tsx passes its openConfirm.
+type ConfirmFn = (title: string, message: string, onYes: () => void, confirmLabel?: string, danger?: boolean) => void
 
 function Dot({ on }: { on: boolean }) {
   return <span title={on ? 'online' : 'offline'} style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
@@ -164,13 +177,47 @@ function Avatar({ name, color }: { name: string; color: string }) {
   )
 }
 
-export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" | "dark" }) {
+// A season that just ended: final standings, and (owner) another season.
+function SeasonRecap({ recap, isDark, text, sub, busy, onRenew }: { recap: PartyRecap; isDark: boolean; text: string; sub: string; busy: boolean; onRenew: () => void }) {
+  const ended = new Date(`${recap.termEnd}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  return (
+    <div data-testid="party-recap" style={{ marginBottom: 18, padding: '14px 16px', borderRadius: 14,
+      background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+        <h2 style={{ color: text, fontSize: 18, margin: 0 }}>{recap.name}</h2>
+        <span style={{ color: sub, fontSize: 12.5 }}>season ended {ended} · final standings</span>
+      </div>
+      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {recap.standings.map(r => (
+          <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, color: text, fontSize: 14 }}>
+            <span style={{ width: 22, textAlign: 'center', fontSize: r.rank <= 3 ? 15 : 12, color: sub }}>{r.rank <= 3 ? MEDALS[r.rank - 1] : r.rank}</span>
+            <Avatar name={r.username} color={r.color} />
+            <span style={{ color: r.isYou ? accent : text }}>@{r.username}{r.isYou ? ' (you)' : ''}</span>
+            {r.trees > 0 && <span title="trees planted this season" style={{ marginLeft: 'auto', color: sub, fontSize: 12 }}>🌳 {r.trees}</span>}
+            <span style={{ marginLeft: r.trees > 0 ? 0 : 'auto', color: sub, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{fmtMin(r.minutes)}</span>
+          </div>
+        ))}
+      </div>
+      {recap.isOwner && (
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button disabled={busy} onClick={onRenew}
+            style={{ padding: '6px 12px', borderRadius: 6, border: 'none', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1,
+              background: accent, color: ACCENT_CONTRAST, fontFamily: 'Crimson Pro, serif', fontSize: 13.5 }}>Renew season</button>
+          <span style={{ color: sub, fontSize: 12.5 }}>same crew, three more months</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export const PartyPanel = memo(function PartyPanel({ theme, onConfirm }: { theme: "light" | "dark"; onConfirm: ConfirmFn }) {
   const isDark = theme === 'dark'
   const text = isDark ? '#fafafa' : '#0f0f10'
   const sub = '#8a857e'
   const rowBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
 
   const [tab, setTab] = useState<'party' | 'friends'>('party')
+  const [board, setBoard] = useState<StandingsMode>('week')
   const [party, setParty] = useState<PartyState | null>(null)
   const [friends, setFriends] = useState<FriendsState | null>(null)
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose')
@@ -187,7 +234,11 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
   const friendsSeq = useRef(0)
   const refreshParty = useCallback(() => {
     const seq = ++partySeq.current
-    loadParty().then(s => { if (seq === partySeq.current) setParty(s) }).catch(e => setMsg({ text: e.message }))
+    loadParty().then(s => {
+      if (seq !== partySeq.current) return
+      setParty(s)
+      if (s.kind === 'none' && s.declined) setMsg({ text: `Your request to join ${s.declined} wasn't accepted.` })
+    }).catch(e => setMsg({ text: e.message }))
   }, [])
   const refreshFriends = useCallback(() => {
     const seq = ++friendsSeq.current
@@ -267,17 +318,19 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
       </div>
     )
     return (
-      <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
+      <div data-testid="party-panel" style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
         {Tabs}
         {!friends ? Loading : friends.kind === 'signed-out' ? SignIn('add friends') : (
           <>
             <h2 style={{ color: text, fontSize: 20, margin: 0 }}>Friends</h2>
             <p style={{ color: sub, fontSize: 13, margin: '4px 0 0' }}>
-              {friends.me ? <>Friends can add you as <b style={{ color: accent }}>@{friends.me}</b></> : 'Set a username in settings so friends can find you.'}
+              {friends.me
+                ? <>Friends can add you as <b style={{ color: accent }}>@{friends.me}</b>{friends.code && <> or <b style={{ color: accent, letterSpacing: '0.04em' }}>#{friends.code}</b></>}</>
+                : 'Set a username in settings so friends can find you.'}
             </p>
 
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <input value={friendInput} onChange={e => setFriendInput(e.target.value)} placeholder="@username"
+              <input value={friendInput} onChange={e => setFriendInput(e.target.value)} placeholder="@username or PULP-code"
                 style={{ ...field, flex: 1 }} onKeyDown={e => { if (e.key === 'Enter' && friendInput.trim() && !busy) add() }} />
               <button onClick={add} disabled={!friendInput.trim() || busy} style={btn(!!friendInput.trim() && !busy)}>Add</button>
             </div>
@@ -296,10 +349,10 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
             )}
 
             <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {friends.friends.length === 0 && <p style={{ color: sub, fontSize: 14, margin: 0 }}>No friends yet — add someone by @username.</p>}
+              {friends.friends.length === 0 && <p style={{ color: sub, fontSize: 14, margin: 0 }}>No friends yet — add someone by @username or friend code.</p>}
               {friends.friends.map(f => (
                 <FriendRow key={f.friendshipId} f={f}>
-                  <button disabled={busy} onClick={() => { if (confirm(`Remove @${f.username}?`)) run(() => removeFriend(f.friendshipId)) }} title="remove"
+                  <button disabled={busy} onClick={() => onConfirm(`Remove @${f.username}?`, 'You can add them again any time.', () => run(() => removeFriend(f.friendshipId)), 'Remove', true)} title="remove"
                     style={{ border: 'none', background: 'none', cursor: 'pointer', color: sub, fontSize: 16, lineHeight: 1 }}>×</button>
                 </FriendRow>
               ))}
@@ -318,12 +371,12 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
   }
 
   // ── PARTY TAB ─────────────────────────────────────────────────────
-  if (!party) return <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>{Tabs}{Loading}</div>
-  if (party.kind === 'signed-out') return <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>{Tabs}{SignIn('start a party with friends')}</div>
+  if (!party) return <div data-testid="party-panel" style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>{Tabs}{Loading}</div>
+  if (party.kind === 'signed-out') return <div data-testid="party-panel" style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>{Tabs}{SignIn('start a party with friends')}</div>
 
   if (party.kind === 'pending') {
     return (
-      <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
+      <div data-testid="party-panel" style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
         {Tabs}
         <div style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
           <style>{SCENE_CSS}</style>
@@ -357,8 +410,12 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
       </button>
     )
     return (
-      <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
+      <div data-testid="party-panel" style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
         {Tabs}
+        {party.recap ? (
+          <SeasonRecap recap={party.recap} isDark={isDark} text={text} sub={sub} busy={busy}
+            onRenew={() => run(() => renewParty(party.recap!.id), 'New season started.')} />
+        ) : (
         <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 14, textAlign: 'center',
           background: accentAlpha(isDark ? 0.10 : 0.08),
           border: `1px solid ${accentAlpha(isDark ? 0.22 : 0.18)}` }}>
@@ -377,6 +434,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
             Race up to {PARTY_CAP} players on <b style={{ color: accent }}>focus minutes</b> each week. Study more, climb the list — standings reset every Monday.
           </p>
         </div>
+        )}
 
         {mode === 'choose' && (
           <div style={{ display: 'flex', gap: 10 }}>
@@ -410,7 +468,10 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
 
   // ── PARTY TAB: in a party ─────────────────────────────────────────
   const p = party.party
-  const rows = standings(p)
+  const weekRows = standings(p, 'week')
+  const rows = standings(p, board)
+  const daysLeft = seasonDaysLeft(p.termEnd)
+  const nameOf = (id: string) => p.members.find(m => m.id === id)?.username
   const onlineCount = p.members.filter(m => online(m.id)).length
   // Minutes left for anyone mid-session (0 once their timer runs out).
   const focusLeft: Record<string, number> = {}
@@ -422,15 +483,25 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
   const weekTotal = p.members.reduce((sum, m) => sum + m.weeklyMinutes, 0)
   const inviteLink = typeof window === 'undefined' ? '' : `${window.location.origin}/join/${p.code}`
   const copyLink = () => { navigator.clipboard?.writeText(inviteLink); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 1500) }
-  const maxMinutes = Math.max(0, ...rows.map(r => r.weeklyMinutes))
+  const maxMinutes = Math.max(0, ...rows.map(r => minutesIn(r, board)))
   const copy = () => { navigator.clipboard?.writeText(p.code); setCopied(true); setTimeout(() => setCopied(false), 1500) }
 
   return (
-    <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
+    <div data-testid="party-panel" style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
       {Tabs}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
         <h2 style={{ color: text, fontSize: 20, margin: 0 }}>{p.name}</h2>
         <span style={{ color: sub, fontSize: 13 }}>{p.members.length}/{PARTY_CAP} · {onlineCount} online{focusingCount ? <> · <span style={{ color: '#34d399' }}>{focusingCount} focusing</span></> : null}</span>
+      </div>
+      <div data-testid="party-season" style={{ marginTop: 3, display: 'flex', alignItems: 'baseline', gap: 6, color: sub, fontSize: 12.5 }}>
+        <span title={`Season runs through ${p.termEnd}`}>{seasonLabel(p.termEnd)}</span>
+        {p.isOwner && daysLeft <= RENEW_WINDOW && (
+          <>
+            <span>·</span>
+            <button disabled={busy} onClick={() => onConfirm('Start a new season?', 'Three more months, starting today. Weekly standings carry on.', () => run(() => renewParty(p.id), 'New season started.'), 'Renew')}
+              style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: accent, fontFamily: 'Crimson Pro, serif', fontSize: 12.5 }}>renew season</button>
+          </>
+        )}
       </div>
 
       <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -450,7 +521,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
       )}
       </div>
 
-      <PartyGrove members={rows} cap={PARTY_CAP} isDark={isDark} focusLeft={focusLeft} />
+      <PartyGrove members={weekRows} cap={PARTY_CAP} isDark={isDark} focusLeft={focusLeft} />
 
       <PartyGoal key={p.id} partyId={p.id} total={weekTotal} members={p.members.length} isDark={isDark} text={text} sub={sub} />
 
@@ -471,12 +542,28 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
         </div>
       )}
 
-      <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ marginTop: 18, marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+        <span style={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: sub }}>standings</span>
+        <div role="tablist" aria-label="Standings period" style={{ marginLeft: 'auto', display: 'inline-flex', padding: 2, borderRadius: 999,
+          background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }}>
+          {(['week', 'term'] as const).map(k => (
+            <button key={k} role="tab" aria-selected={board === k} onClick={() => setBoard(k)}
+              style={{ padding: '2px 10px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 12.5,
+                background: board === k ? (isDark ? 'rgba(255,255,255,0.10)' : '#fff') : 'transparent',
+                boxShadow: board === k && !isDark ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                color: board === k ? text : sub, transition: 'background .15s, color .15s' }}>{k === 'week' ? 'week' : 'season'}</button>
+          ))}
+        </div>
+      </div>
+      <div data-testid="party-standings" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <style>{PANEL_CSS}</style>
         {rows.map(m => {
           const top = m.rank <= 3
-          const pct = maxMinutes > 0 ? Math.round((m.weeklyMinutes / maxMinutes) * 100) : 0
+          const mins = minutesIn(m, board)
+          const trees = treesIn(m, board)
+          const pct = maxMinutes > 0 ? Math.round((mins / maxMinutes) * 100) : 0
           return (
-            <div key={m.id} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px 13px', borderRadius: 12,
+            <div key={m.id} className="party-row" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px 13px', borderRadius: 12,
               background: m.isYou ? accentAlpha(0.12) : rowBg,
               border: m.isYou ? `1px solid ${accentAlpha(0.35)}` : '1px solid transparent', color: text }}>
               <span style={{ width: 22, textAlign: 'center', fontSize: top ? 16 : 13, color: sub }}>{top ? MEDALS[m.rank - 1] : m.rank}</span>
@@ -486,7 +573,14 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
                 : <Dot on={online(m.id)} />}
               <Avatar name={m.username} color={m.color} />
               <span style={{ fontSize: 15 }}>@{m.username}{m.isYou ? ' (you)' : ''}{m.isOwner ? ' 👑' : ''}</span>
-              <span style={{ marginLeft: 'auto', color: accent, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{m.weeklyMinutes} min</span>
+              {trees > 0 && <span title={`trees planted this ${board === 'week' ? 'week' : 'season'}`} style={{ marginLeft: 'auto', color: sub, fontSize: 12 }}>🌳 {trees}</span>}
+              <span style={{ marginLeft: trees > 0 ? 0 : 'auto', color: accent, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{mins} min</span>
+              {/* Owner: × on others' rows; an empty slot on yours keeps the minutes aligned. */}
+              {p.isOwner && (m.isYou ? <span style={{ width: 12, marginRight: -6, flexShrink: 0 }} /> : (
+                <button className="party-kick" disabled={busy} title={`Remove @${m.username}`} aria-label={`Remove @${m.username}`}
+                  onClick={() => onConfirm(`Remove @${m.username}?`, 'They can ask to rejoin with the invite code.', () => run(() => removeMember(p.id, m.id)), 'Remove', true)}
+                  style={{ width: 12, marginRight: -6, flexShrink: 0, border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
+              ))}
               <span style={{ position: 'absolute', left: 14, right: 14, bottom: 5, height: 2, borderRadius: 1, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
                 <span style={{ display: 'block', height: '100%', width: `${pct}%`, borderRadius: 1, transition: 'width .6s ease',
                   background: `linear-gradient(90deg, #4d7c0f, #65a30d 60%, ${ACCENT})` }} />
@@ -495,9 +589,27 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
           )
         })}
       </div>
+
+      {/* Communal grove: the trees members planted lately, newest first, on one strip of ground. */}
+      {p.grove.length > 0 && (
+        <div data-testid="party-trees" style={{ marginTop: -6, display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+          <span style={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: sub, paddingBottom: 4, whiteSpace: 'nowrap' }}>recent trees</span>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'flex-end', gap: 2, overflowX: 'auto', overflowY: 'hidden', padding: '0 4px',
+            borderBottom: `2px solid ${isDark ? 'rgba(120,83,48,0.55)' : 'rgba(120,83,48,0.30)'}` }}>
+            {p.grove.map((t, i) => (
+              <span key={i} title={`${TREE_TYPES[t.type]?.name || t.type}${nameOf(t.userId) ? ` · @${nameOf(t.userId)}` : ''}`} style={{ flexShrink: 0, display: 'inline-flex', marginBottom: -2 }}>
+                <PlantIcon type={t.type} size={38} stage={t.stage} hideGround disableSway />
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       {Msg}
 
-      <button disabled={busy} onClick={() => { if (confirm(p.isOwner ? 'End this party for everyone?' : 'Leave this party?')) run(() => leaveParty(p)) }}
+      <button disabled={busy} onClick={() => onConfirm(
+          p.isOwner ? 'End this party?' : 'Leave this party?',
+          p.isOwner ? 'It ends for everyone — standings and trees too.' : "You'd need the owner to let you back in.",
+          () => run(() => leaveParty(p)), p.isOwner ? 'End party' : 'Leave', true)}
         style={{ marginTop: 18, color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
         {p.isOwner ? 'End party' : 'Leave party'}
       </button>

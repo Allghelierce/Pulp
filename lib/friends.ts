@@ -2,6 +2,7 @@
 import { apiFetch } from "./apiFetch"
 import { supabase } from "./supabase"
 import { colorFor } from "./party"
+import { parseFriendCode } from "./social"
 
 export interface Friend {
   friendshipId: number
@@ -13,7 +14,7 @@ export interface Friend {
 
 export type FriendsState =
   | { kind: "signed-out" }
-  | { kind: "ok"; me: string | null; friends: Friend[]; incoming: Friend[]; outgoing: Friend[] }
+  | { kind: "ok"; me: string | null; code: string | null; friends: Friend[]; incoming: Friend[]; outgoing: Friend[] }
 
 type Row = { friendshipId: number; user_id: string; username?: string | null; level?: number | null }
 const toFriend = (r: Row): Friend => {
@@ -38,21 +39,27 @@ export async function loadFriends(): Promise<FriendsState> {
   if (res.status === 401) return { kind: "signed-out" }
   if (!res.ok) throw new Error(await errorOf(res, "Couldn't load friends"))
   const d = await res.json()
-  const me = meRes.ok ? ((await meRes.json()).username ?? null) : null
+  const identity = meRes.ok ? await meRes.json() : {}
   return {
     kind: "ok",
-    me,
+    me: identity.username ?? null,
+    code: identity.friend_code ?? null,
     friends: (d.friends || []).map(toFriend).sort((a: Friend, b: Friend) => a.username.localeCompare(b.username)),
     incoming: (d.incoming || []).map(toFriend),
     outgoing: (d.outgoing || []).map(toFriend),
   }
 }
 
-// Sends a request, or accepts theirs if they already asked you.
+// Sends a request by @username or friend code (#PULP-XXXX, as shown in
+// Settings), or accepts theirs if they already asked you.
 export async function addFriend(input: string): Promise<"pending" | "accepted"> {
+  const code = parseFriendCode(input)
   const username = (input ?? "").trim().replace(/^@/, "").toLowerCase()
-  if (!/^[a-z0-9_]{3,20}$/.test(username)) throw new Error("Use 3–20 letters, numbers, or _")
-  const res = await apiFetch("/api/friends", { method: "POST", body: JSON.stringify({ action: "request", username }) })
+  if (!code && !/^[a-z0-9_]{3,20}$/.test(username)) throw new Error("Use an @username or a PULP- friend code")
+  const res = await apiFetch("/api/friends", {
+    method: "POST",
+    body: JSON.stringify(code ? { action: "request", friend_code: code } : { action: "request", username }),
+  })
   if (!res.ok) throw new Error(await errorOf(res, "Couldn't send the request"))
   const d = await res.json()
   changed()

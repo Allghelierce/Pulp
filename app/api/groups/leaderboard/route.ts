@@ -4,6 +4,8 @@ import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { getWeekStart } from "@/lib/leagues"
 
+// Party standings: this week and this season ("allTime" = since term_start),
+// each with the trees the member planted in that span.
 export async function GET(req: Request) {
   const ip = getRateLimitKey(req)
   if (!checkRateLimit(`group-lb:${ip}`, { maxRequests: 40, windowMs: 60000 })) {
@@ -18,26 +20,46 @@ export async function GET(req: Request) {
     .select('status').eq('group_id', id).eq('user_id', user.id).maybeSingle()
   if (!membership || membership.status !== 'active') return NextResponse.json({ error: "Not a member" }, { status: 403 })
 
+  const { data: group } = await supabaseAdmin.from('study_groups').select('term_start').eq('id', id).single()
+  const termStart: string = group?.term_start ?? '1970-01-01'
+  const weekStart = getWeekStart()
+
   const { data: members } = await supabaseAdmin.from('group_members')
-    .select('user_id, focus_minutes_total').eq('group_id', id).eq('status', 'active')
+    .select('user_id').eq('group_id', id).eq('status', 'active')
   const ids = (members ?? []).map(m => m.user_id)
   const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
 
+  // Members without a profile row still get a name (ties sort by it).
   const { data: profs } = await supabaseAdmin.from('player_profiles').select('user_id, username').in('user_id', safeIds)
-  const uname: Record<string, string> = {}; for (const p of profs ?? []) uname[p.user_id] = p.username ?? 'writer'
+  const uname: Record<string, string> = {}; for (const p of profs ?? []) uname[p.user_id] = p.username || 'writer'
+  const nameOf = (uid: string) => uname[uid] || 'writer'
 
-  const { data: week } = await supabaseAdmin.from('group_weekly')
-    .select('user_id, focus_minutes').eq('group_id', id).eq('week_start', getWeekStart())
-  const weekMap: Record<string, number> = {}; for (const w of week ?? []) weekMap[w.user_id] = w.focus_minutes
+  // Weekly rows since the season's first week. A renewed season starts mid-week,
+  // so that one week can carry a few minutes from the season before.
+  const { data: weeks } = await supabaseAdmin.from('group_weekly')
+    .select('user_id, week_start, focus_minutes').eq('group_id', id).gte('week_start', getWeekStart(new Date(`${termStart}T12:00:00Z`)))
+  const weekMin: Record<string, number> = {}
+  const termMin: Record<string, number> = {}
+  for (const w of weeks ?? []) {
+    termMin[w.user_id] = (termMin[w.user_id] || 0) + (w.focus_minutes || 0)
+    if (w.week_start === weekStart) weekMin[w.user_id] = (weekMin[w.user_id] || 0) + (w.focus_minutes || 0)
+  }
 
-  const { data: trees } = await supabaseAdmin.from('group_trees').select('user_id').eq('group_id', id)
-  const treeCount: Record<string, number> = {}; for (const t of trees ?? []) treeCount[t.user_id] = (treeCount[t.user_id] || 0) + 1
+  const { data: trees } = await supabaseAdmin.from('group_trees')
+    .select('user_id, planted_at').eq('group_id', id).gte('planted_at', termStart)
+  const weekTrees: Record<string, number> = {}
+  const termTrees: Record<string, number> = {}
+  for (const t of trees ?? []) {
+    termTrees[t.user_id] = (termTrees[t.user_id] || 0) + 1
+    if (String(t.planted_at).slice(0, 10) >= weekStart) weekTrees[t.user_id] = (weekTrees[t.user_id] || 0) + 1
+  }
 
-  const byName = (a: any, b: any, key: string) => (b[key] - a[key]) || uname[a.user_id].localeCompare(uname[b.user_id])
-  const weekly = (members ?? []).map(m => ({ user_id: m.user_id, username: uname[m.user_id], focus_minutes: weekMap[m.user_id] || 0 }))
-    .sort((a, b) => byName(a, b, 'focus_minutes'))
-  const allTime = (members ?? []).map(m => ({ user_id: m.user_id, username: uname[m.user_id], focus_minutes_total: m.focus_minutes_total, trees: treeCount[m.user_id] || 0 }))
-    .sort((a, b) => byName(a, b, 'focus_minutes_total'))
+  const rank = <T extends { username: string }>(key: keyof T) => (a: T, b: T) =>
+    (Number(b[key]) - Number(a[key])) || a.username.localeCompare(b.username)
+  const weekly = ids.map(uid => ({ user_id: uid, username: nameOf(uid), focus_minutes: weekMin[uid] || 0, trees: weekTrees[uid] || 0 }))
+    .sort(rank('focus_minutes'))
+  const allTime = ids.map(uid => ({ user_id: uid, username: nameOf(uid), focus_minutes_total: termMin[uid] || 0, trees: termTrees[uid] || 0 }))
+    .sort(rank('focus_minutes_total'))
 
   return NextResponse.json({ weekly, allTime })
 }

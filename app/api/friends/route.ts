@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { ilikeExact } from "@/lib/usernames"
+import { parseFriendCode } from "@/lib/social"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
@@ -59,8 +60,10 @@ export async function POST(req: Request) {
     // Resolve target by friend_code or username.
     let target: any = null
     if (typeof body.friend_code === 'string') {
+      const code = parseFriendCode(body.friend_code)
+      if (!code) return NextResponse.json({ error: "That isn't a friend code" }, { status: 400 })
       const { data } = await supabaseAdmin.from('player_profiles')
-        .select('user_id').eq('friend_code', body.friend_code.trim()).maybeSingle()
+        .select('user_id').eq('friend_code', code).maybeSingle()
       target = data
     } else if (typeof body.username === 'string') {
       const { data } = await supabaseAdmin.from('player_profiles')

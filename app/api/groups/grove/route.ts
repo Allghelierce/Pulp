@@ -17,7 +17,8 @@ export async function GET(req: Request) {
     .select('status').eq('group_id', id).eq('user_id', user.id).maybeSingle()
   if (!membership || membership.status !== 'active') return NextResponse.json({ error: "Not a member" }, { status: 403 })
 
+  // The party's most recent trees, newest first (the Party panel's grove strip).
   const { data } = await supabaseAdmin.from('group_trees')
-    .select('tree').eq('group_id', id).order('planted_at', { ascending: true }).limit(200)
-  return NextResponse.json({ trees: (data ?? []).map(r => r.tree) })
+    .select('user_id, tree, planted_at').eq('group_id', id).order('planted_at', { ascending: false }).limit(12)
+  return NextResponse.json({ trees: (data ?? []).map(r => ({ ...r.tree, user_id: r.user_id, planted_at: r.planted_at })) })
 }

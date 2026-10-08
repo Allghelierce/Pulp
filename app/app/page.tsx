@@ -4927,7 +4927,7 @@ export default function NoteApp() {
                   <button onClick={() => setLeaderboardOpen(false)}
                     style={{ position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', cursor: 'pointer',
                       color: theme === 'dark' ? '#a1a1aa' : '#6b6864', fontSize: 24, lineHeight: 1, zIndex: 2 }}>&times;</button>
-                  <PartyPanel theme={theme} />
+                  <PartyPanel theme={theme} onConfirm={openConfirm} />
                 </m.div>
               </m.div>
             )}
@@ -5248,7 +5248,6 @@ export default function NoteApp() {
           isHibernating={isHibernating}
           hidden={orchardOpen || statsOpen || showSettings || shopOpen || leaderboardOpen || reviewOpen}
           onStartReview={() => { setTimerOpen(false); startTransition(() => { closeAllPanels(); setReviewOpen(true) }) }}
-          activeGroupId={activeGroupId}
         />
 
         {/* Persistent timer toggle — visible even when the sidebar is collapsed (hidden while running to lock it in) */}

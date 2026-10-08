@@ -45,3 +45,27 @@ export function validateTerm(startISO: string, endISO: string): TermResult {
   if (end.getTime() > max.getTime()) return { ok: false, error: 'Term cannot exceed 4 months' }
   return { ok: true }
 }
+
+// ── Party rules (shared by the API routes and the Party panel) ──────
+export const PARTY_CAP = 5
+export const SEASON_MONTHS = 3
+
+// A new season: today through SEASON_MONTHS from now (ISO dates).
+export function seasonDates(from: Date = new Date()): { term_start: string; term_end: string } {
+  const end = new Date(from)
+  end.setMonth(end.getMonth() + SEASON_MONTHS)
+  return { term_start: from.toISOString().slice(0, 10), term_end: end.toISOString().slice(0, 10) }
+}
+
+// When a season is over: the END of its term_end day, anywhere on Earth
+// (UTC-12), so no time zone sees it close early. Parsing the bare date gives
+// UTC midnight, which archived parties a day early.
+export function seasonOverAt(termEnd: string): number {
+  return Date.parse(`${termEnd}T00:00:00Z`) + 36 * 3600 * 1000
+}
+
+// "#PULP-AB2C" / "pulp-ab2c" -> "PULP-AB2C"; null if it isn't a friend code.
+export function parseFriendCode(raw: string): string | null {
+  const v = (raw ?? '').trim()
+  return /^#?PULP-[A-Z0-9]{4}$/i.test(v) ? v.replace(/^#/, '').toUpperCase() : null
+}

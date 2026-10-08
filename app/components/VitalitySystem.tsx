@@ -137,7 +137,6 @@ interface VitalitySystemProps {
   isHibernating?: boolean
   hidden?: boolean
   onStartReview?: () => void
-  activeGroupId?: number | null
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -149,7 +148,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   goalStreak, setGoalStreak,
   goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
   quotaTier,
-  isHibernating = false, hidden = false, onStartReview, activeGroupId,
+  isHibernating = false, hidden = false, onStartReview,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
@@ -403,14 +402,11 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTreeDead(false)
     setDeathReason(null)
     setTimerRunning(true)
-    if (activeGroupId) {
-      try { window.dispatchEvent(new CustomEvent('pulp-group-session', { detail: { kind: 'start', groupId: activeGroupId, timerEnd: Date.now() + timerTotal * 1000 } })) } catch {}
-    }
     setWaterCount(0)
     // Presence check: sessions of 10+ min need a tap on the watering can every 15 min (+90s grace).
     setWilting(false)
     setWaterDeadline(timerTotal >= WATER_REQUIRED_THRESHOLD ? Date.now() + WATER_INTERVAL_MS : null)
-  }, [timerTotal, activeTabId, selectedSeed, inventory, setInventory, activeGroupId])
+  }, [timerTotal, activeTabId, selectedSeed, inventory, setInventory])
 
   const [waterCount, setWaterCount] = useState(0)
 
@@ -565,7 +561,6 @@ export const VitalitySystem = memo(function VitalitySystem({
 
     updateGoalStreak(sessionMinutes)
     logFocusSession(sessionMinutes, 0)
-    recordFocus(sessionMinutes, activeGroupId)
 
     checkAchievement('iron_will', a => ({ progress: (a.progress || 0) + 1 }))
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
@@ -576,21 +571,13 @@ export const VitalitySystem = memo(function VitalitySystem({
 
     const computeStage = (ratio: number) => ratio >= 1 ? 4 : ratio >= 0.6 ? 3 : ratio >= 0.3 ? 2 : ratio >= 0.1 ? 1 : 0
 
-    if (activeGroupId) {
-      const treeSnapshot = { type: treeType, stage: computeStage(Math.min(1, sessionMinutes / growthTarget)) }
-      apiFetch('/api/groups/report', {
-        method: 'POST',
-        body: JSON.stringify({ groupId: activeGroupId, minutes: Math.round(sessionMinutes), tree: treeSnapshot }),
-      }).catch(() => {})
-      try { window.dispatchEvent(new CustomEvent('pulp-group-session', { detail: { kind: 'complete', groupId: activeGroupId } })) } catch {}
-    }
-
     // No notes written -> no tree. The session still counts (stats/streak above), and the seed comes back.
     // (Unknown — e.g. a session started before this shipped — keeps the old behavior.)
     // Notes scale with session length: about a sentence (~40 chars) per 10 minutes.
     const writtenNow = sessionWrittenText(selectedNotebookId)
     const notesNeeded = Math.max(MIN_TOPIC_TEXT, Math.round((sessionMinutes / 10) * MIN_TOPIC_TEXT))
     if (writtenNow !== null && writtenNow.length < notesNeeded) {
+      recordFocus(sessionMinutes) // party minutes still count; no tree for the communal grove
       try { sessionStorage.removeItem(SNAPSHOT_KEY) } catch { }
       if (selectedSeed && selectedSeed !== 'tangerine') setInventory(inv => [...inv, selectedSeed])
       emitPlanted({ treeId: Date.now(), type: treeType, stage: 0, notebookId: selectedNotebookId ?? undefined, recallNeeded: 0, tagging: false, noTree: true, wroteSome: writtenNow.length >= MIN_TOPIC_TEXT })
@@ -610,6 +597,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       setGrove(next)
       checkAchievement('full_grove', () => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
       emitPlanted({ treeId: existingPartial.id, type: treeType, stage: computeStage(ratio), notebookId: existingPartial.notebookId, recallNeeded: 0, tagging: false, grew: true })
+      recordFocus(sessionMinutes) // grew an old tree; only new trees join the party's grove
     } else {
       const ratio = Math.min(1, sessionMinutes / growthTarget)
       const newTree: Tree = {
@@ -622,6 +610,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       }
       const tagging = tagSessionTopic(newTree.id, newTree.recallNeeded!, selectedNotebookId)
       emitPlanted({ treeId: newTree.id, type: treeType, stage: newTree.stage, notebookId: newTree.notebookId, recallNeeded: newTree.recallNeeded!, tagging })
+      recordFocus(sessionMinutes, { type: treeType, stage: newTree.stage })
       const next = [...grove, newTree]
       setGrove(next)
       checkAchievement('full_grove', () => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
@@ -634,7 +623,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, setInventory, checkAchievement, activeTabId, grove, setSap, updateGoalStreak, isHibernating, activeGroupId, selectedNotebookId, tagSessionTopic])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, setInventory, checkAchievement, activeTabId, grove, setSap, updateGoalStreak, isHibernating, selectedNotebookId, tagSessionTopic])
 
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 

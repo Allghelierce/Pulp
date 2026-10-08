@@ -2,15 +2,8 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
-import { generateInviteCode, validateTerm } from "@/lib/social"
-
-async function archiveIfExpired(group: any) {
-  if (group.status === 'active' && new Date(group.term_end).getTime() < Date.now()) {
-    await supabaseAdmin.from('study_groups').update({ status: 'archived' }).eq('id', group.id)
-    group.status = 'archived'
-  }
-  return group
-}
+import { generateInviteCode, validateTerm, PARTY_CAP } from "@/lib/social"
+import { archiveIfExpired, activePartyOf, IN_A_PARTY } from "@/lib/partyServer"
 
 export async function GET(req: Request) {
   const ip = getRateLimitKey(req)
@@ -61,6 +54,8 @@ export async function POST(req: Request) {
   if (name.length < 2) return NextResponse.json({ error: "Name too short" }, { status: 400 })
   const term = validateTerm(body.term_start, body.term_end)
   if (!term.ok) return NextResponse.json({ error: term.error }, { status: 400 })
+  // One active party per player.
+  if (await activePartyOf(user.id)) return NextResponse.json({ error: IN_A_PARTY }, { status: 409 })
 
   let group: any = null
   for (let attempt = 0; attempt < 5 && !group; attempt++) {
@@ -68,7 +63,7 @@ export async function POST(req: Request) {
       owner_id: user.id, name, school: body.school ?? null,
       invite_code: generateInviteCode(),
       term_start: body.term_start, term_end: body.term_end,
-      ...(Number.isInteger(body.max_members) ? { max_members: Math.min(30, Math.max(2, body.max_members)) } : {}),
+      max_members: PARTY_CAP,
     }).select().single()
     if (!error) group = data
   }
