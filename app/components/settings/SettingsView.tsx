@@ -655,6 +655,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   <ShortcutKey label="Previous Page" id="prevPage" currentKey={shortcuts.prevPage || "alt+arrowleft"} defaultKey="alt+arrowleft" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                   <ShortcutKey label="Next Page" id="nextPage" currentKey={shortcuts.nextPage || "alt+arrowright"} defaultKey="alt+arrowright" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                   <ShortcutKey label="Cycle Heading Style" id="cycleHeader" currentKey={shortcuts.cycleHeader || "alt+1"} defaultKey="alt+1" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Card From Highlight" id="makeCard" currentKey={shortcuts.makeCard || "ctrl+shift+c"} defaultKey="ctrl+shift+c" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                 </div>
               </SettingSection>
 
@@ -1262,6 +1263,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       [formatShortcut("alt") + " + Arrow", "Snap box to edge"],
                       ["Delete", "Delete selection"],
                       [formatShortcut(shortcuts.slash || "/"), "Slash commands"],
+                      [formatShortcut(shortcuts.makeCard || "ctrl+shift+c"), "Recall card from highlighted text"],
                       ["Esc", "Close menus and panels"],
                     ].map(([key, desc], i) => (
                       <div key={i} className="flex items-center justify-between py-1.5">

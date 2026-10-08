@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react"
 import { requestUpgrade } from "@/lib/billing"
 import { playSound } from "@/lib/sound"
 import type { NoteData } from "@/app/types"
-import { extractTextFromHTML } from "@/lib/sanitize"
 import { apiFetch } from "@/lib/apiFetch"
 import {
   type Deck, type ScheduledCard, type Grade,
@@ -15,7 +14,7 @@ import { MAX_TEXT, type GradeResult, type Verdict } from "@/lib/recallPrompt"
 import { normalizeTopic } from "@/lib/topics"
 import { readableOn } from "@/lib/accent"
 import {
-  uncoveredPages, notebookLines, markCovered, seedCoverage, exclusiveCarding, cardsLimitedToday, setCardsLimitedToday,
+  uncoveredPages, notebookLines, notebookReviewText, markCovered, seedCoverage, exclusiveCarding, cardsLimitedToday, setCardsLimitedToday,
   shuffled, saveProgress, loadProgress, claimFullReviewSap, MAX_PAGES_PER_START, type TopicScore, type FullTally,
 } from "@/lib/fullReview"
 
@@ -51,22 +50,6 @@ interface ReviewViewProps {
   onShowTopic?: (topic: string) => void
 }
 
-function gatherNotebookText(note: NoteData): string {
-  const pageTexts = note.pages.map((html, i) => {
-    const text = extractTextFromHTML(html)
-    return text ? `[Page ${i + 1}]\n${text}` : ""
-  }).filter(Boolean)
-  const boxTexts: string[] = []
-  for (const [pageIdx, boxes] of Object.entries(note.boxes)) {
-    for (const box of boxes) {
-      if (!box.content.trim()) continue
-      const text = extractTextFromHTML(box.content)
-      if (text) boxTexts.push(`[Page ${Number(pageIdx) + 1} - Text Box]\n${text}`)
-    }
-  }
-  return [...pageTexts, ...boxTexts].join("\n\n")
-}
-
 function relDue(due: number, now: number): string {
   const ms = due - now
   if (ms <= 0) return "now"
@@ -94,7 +77,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   const onAccent = readableOn(accent) // text on accent-filled buttons
   const font = "'Crimson Pro', serif"
 
-  const noteText = useMemo(() => gatherNotebookText(note), [note])
+  const noteText = useMemo(() => notebookReviewText(note), [note])
   const noteHash = useMemo(() => hashNotes(noteText), [noteText])
 
   // Topic mode: only cards tagged with `topic` are studied/counted.
