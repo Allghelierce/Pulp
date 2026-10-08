@@ -17,6 +17,10 @@ function cleanTree(raw: unknown): { type: string; stage: number } | null {
   return { type, stage }
 }
 
+// A report must credit at least this many minutes to plant a tree (a real session),
+// so 1-minute reports can't fill the grove.
+const PLANT_MIN_MINUTES = 10
+
 // A finished focus session, credited to your party. The client says how long
 // it was, so the minutes are bounded here: one session per report at most, and
 // about 16h a day (see parseReportMinutes / weekCapAt).
@@ -43,8 +47,8 @@ export async function POST(req: Request) {
     const credited = await creditFocus(supabaseAdmin, { groupId, userId: user.id, week, minutes, cap: weekCapAt(week) })
     if (credited == null) return NextResponse.json({ error: "Not a member" }, { status: 403 })
 
-    // A capped-out report plants nothing either, so the grove can't be farmed.
-    const tree = credited > 0 ? cleanTree(body.tree) : null
+    // Short or capped-out reports plant nothing.
+    const tree = credited >= PLANT_MIN_MINUTES ? cleanTree(body.tree) : null
     if (tree) must(await supabaseAdmin.from('group_trees').insert({ group_id: groupId, user_id: user.id, tree }), 'group_trees')
     return NextResponse.json({ ok: true, credited })
   })

@@ -4,6 +4,7 @@
 import { apiFetch } from "./apiFetch"
 import { supabase } from "./supabase"
 import { PARTY_CAP, seasonOverAt, parseInviteCode } from "./social"
+import { TREE_TYPES } from "@/app/constants"
 
 export { PARTY_CAP }
 const ID_KEY = "pulp-party-id"           // current party's group id (for focus reporting)
@@ -192,7 +193,7 @@ export async function loadParty(): Promise<PartyState> {
     ? rows.filter(r => r.status === "pending").map(r => ({ userId: r.user_id, username: name(r) }))
     : []
   const grove = groveRows
-    .filter(t => typeof t.type === "string")
+    .filter(t => typeof t.type === "string" && Object.prototype.hasOwnProperty.call(TREE_TYPES, t.type))
     .map(t => ({ type: t.type as string, stage: typeof t.stage === "number" ? t.stage : 3, userId: t.user_id }))
   const meRow = members.find(m => m.isYou)
 

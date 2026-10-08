@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { parseId } from "@/lib/social"
 import { must, guarded } from "@/lib/partyServer"
+import { TREE_TYPES } from "@/app/constants"
 
 export async function GET(req: Request) {
   const ip = getRateLimitKey(req)
@@ -23,6 +24,13 @@ export async function GET(req: Request) {
     // The party's most recent trees, newest first (the Party panel's grove strip).
     const data = must(await supabaseAdmin.from('group_trees')
       .select('user_id, tree, planted_at').eq('group_id', id).order('planted_at', { ascending: false }).limit(12), 'group_trees')
-    return NextResponse.json({ trees: (data ?? []).map(r => ({ ...r.tree, user_id: r.user_id, planted_at: r.planted_at })) })
+    // Older rows were stored unchecked: pass on only a known species and stage.
+    const trees = (data ?? []).flatMap(r => {
+      const t = (r.tree ?? {}) as { type?: unknown; stage?: unknown }
+      if (typeof t.type !== 'string' || !Object.prototype.hasOwnProperty.call(TREE_TYPES, t.type)) return []
+      const stage = typeof t.stage === 'number' && Number.isInteger(t.stage) && t.stage >= 0 && t.stage <= 4 ? t.stage : 3
+      return [{ type: t.type, stage, user_id: r.user_id, planted_at: r.planted_at }]
+    })
+    return NextResponse.json({ trees })
   })
 }

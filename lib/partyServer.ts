@@ -38,7 +38,9 @@ export async function countActive(groupId: number): Promise<number> {
 // load tries again.
 export async function archiveIfExpired<T extends { id: number; status: string; term_end: string }>(group: T): Promise<T> {
   if (group.status === 'active' && seasonOver(group)) {
-    const { error } = await supabaseAdmin.from('study_groups').update({ status: 'archived' }).eq('id', group.id)
+    // Only if it's still the season we judged over — a renew in between must win.
+    const { error } = await supabaseAdmin.from('study_groups').update({ status: 'archived' })
+      .eq('id', group.id).eq('status', 'active').eq('term_end', group.term_end)
     if (error) console.error('archiveIfExpired:', error.message)
     group.status = 'archived'
   }

@@ -68,8 +68,9 @@ export async function POST(req: Request) {
       // A request doesn't take a seat; approving re-checks the cap.
       if (await countActive(group.id) >= capOf(group)) return bad("Group full")
 
+      // ignoreDuplicates: a repeat join must never knock an approved member back to pending.
       must(await members().upsert({ group_id: group.id, user_id: user.id, role: 'member', status: 'pending' },
-        { onConflict: 'group_id,user_id' }), 'join')
+        { onConflict: 'group_id,user_id', ignoreDuplicates: true }), 'join')
       return NextResponse.json({ ok: true, groupId: group.id, status: 'pending' })
     }
 

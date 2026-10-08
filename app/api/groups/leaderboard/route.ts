@@ -49,14 +49,18 @@ export async function GET(req: Request) {
       if (w.week_start === weekStart) weekMin[w.user_id] = (weekMin[w.user_id] || 0) + (w.focus_minutes || 0)
     }
 
-    const trees = must(await supabaseAdmin.from('group_trees')
-      .select('user_id, planted_at').eq('group_id', id).gte('planted_at', seasonStart), 'group_trees')
+    // Counted in the database (a row fetch would stop at PostgREST's 1000-row default).
+    const countTrees = async (uid: string, since: string) => {
+      const { count, error } = await supabaseAdmin.from('group_trees').select('id', { count: 'exact', head: true })
+        .eq('group_id', id).eq('user_id', uid).gte('planted_at', since)
+      if (error) throw new Error(`group_trees: ${error.message}`)
+      return count ?? 0
+    }
     const weekTrees: Record<string, number> = {}
     const termTrees: Record<string, number> = {}
-    for (const t of trees ?? []) {
-      termTrees[t.user_id] = (termTrees[t.user_id] || 0) + 1
-      if (String(t.planted_at).slice(0, 10) >= weekStart) weekTrees[t.user_id] = (weekTrees[t.user_id] || 0) + 1
-    }
+    await Promise.all(ids.map(async uid => {
+      ;[termTrees[uid], weekTrees[uid]] = await Promise.all([countTrees(uid, seasonStart), countTrees(uid, weekStart)])
+    }))
 
     const rank = <T extends { username: string }>(key: keyof T) => (a: T, b: T) =>
       (Number(b[key]) - Number(a[key])) || a.username.localeCompare(b.username)
