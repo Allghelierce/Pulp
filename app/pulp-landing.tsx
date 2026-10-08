@@ -493,6 +493,18 @@ export default function PulpLanding() {
     } catch { setCheckoutError("couldn't open checkout — try again") }
     setCheckoutBusy(null)
   }, [])
+  // Back from Stripe Checkout (browser Back restores this page as it was): drop the
+  // "opening checkout…" state; a cancelled checkout lands on pricing with a clean URL.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => { if (e.persisted) setCheckoutBusy(null) }
+    window.addEventListener('pageshow', onShow)
+    const q = new URLSearchParams(window.location.search)
+    if (q.has('upgrade_cancelled')) {
+      q.delete('upgrade_cancelled')
+      window.history.replaceState(null, '', window.location.pathname + (q.toString() ? `?${q}` : '') + window.location.hash)
+    }
+    return () => window.removeEventListener('pageshow', onShow)
+  }, [])
   useEffect(() => {
     const plan = new URLSearchParams(window.location.search).get('checkout')
     if (plan !== 'plus_monthly' && plan !== 'plus_yearly') return

@@ -50,3 +50,26 @@ test("back from sign-in (?checkout=plan): checkout opens right away on the site"
   await expect(page).toHaveURL(/checkout\.stripe\.com/)
   expect(bodies).toEqual([{ plan: "plus_yearly", from: "site" }])
 })
+
+test("Stripe's back arrow (cancel) returns to the site's pricing, not the app", async ({ page }) => {
+  await fakeSession(page)
+  const seen = visitedApp(page)
+  await page.goto(`${BASE}/?upgrade_cancelled=1#pricing`)
+  await expect(page.getByRole("button", { name: "upgrade now" })).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`^${BASE}/#pricing$`))
+  await page.waitForTimeout(1500)
+  expect(seen.some(u => new URL(u).pathname === "/app")).toBe(false)
+})
+
+test("browser Back out of Stripe Checkout lands on the site, ready to try again", async ({ page }) => {
+  await fakeSession(page)
+  await mockStripe(page)
+  const seen = visitedApp(page)
+  await page.goto(`${BASE}/?checkout=plus_yearly`)
+  await expect(page).toHaveURL(/checkout\.stripe\.com/)
+  await page.goBack()
+  await expect(page.getByRole("button", { name: "upgrade now" })).toBeVisible()
+  await page.waitForTimeout(1500)
+  expect(new URL(page.url()).pathname).toBe("/")
+  expect(seen.some(u => new URL(u).pathname === "/app")).toBe(false)
+})
