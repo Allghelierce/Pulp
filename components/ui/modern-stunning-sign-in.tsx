@@ -179,30 +179,6 @@ const SignIn1: React.FC<SignInProps> = ({
           </a>
         </div>
       </form>
-
-      {/* Social proof */}
-      <div className="relative z-10 mt-10 flex flex-col items-center text-center">
-        <div className="flex mb-2">
-          {[
-            { letter: "A", bg: "#4285F4" },
-            { letter: "M", bg: "#0F9D58" },
-            { letter: "J", bg: "#DB4437" },
-            { letter: "S", bg: "#8B44AC" },
-          ].map(({ letter, bg }, i) => (
-            <div
-              key={i}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-medium select-none"
-              style={{
-                background: bg,
-                border: "2px solid #0e0c0b",
-                marginLeft: i > 0 ? -8 : 0,
-              }}
-            >
-              {letter}
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }

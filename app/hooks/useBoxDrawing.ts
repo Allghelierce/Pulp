@@ -25,6 +25,19 @@ interface UseBoxDrawingOptions {
   drawingCanRedo?: boolean
 }
 
+// Is the page itself on screen (not behind the market, stats, a dialog…)? Probes the middle
+// of its visible part.
+const paperShowing = () => {
+  const paper = document.getElementById('editor-paper')
+  if (!paper) return false
+  const r = paper.getBoundingClientRect()
+  const left = Math.max(r.left, 0), right = Math.min(r.right, window.innerWidth)
+  const top = Math.max(r.top, 0), bottom = Math.min(r.bottom, window.innerHeight)
+  if (right <= left || bottom <= top) return false
+  const hit = document.elementFromPoint((left + right) / 2, (top + bottom) / 2)
+  return !!hit && paper.contains(hit)
+}
+
 export function useBoxDrawing({
   activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
   drawLineMode, setDrawLineMode,
@@ -98,14 +111,17 @@ export function useBoxDrawing({
       const target = e.target as HTMLElement
       if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable) return
 
-      // Ctrl/Cmd+A — select all boxes on current page
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+      // Ctrl/Cmd+A — select all boxes on the current page. Never the browser's select-all,
+      // which highlights the app's buttons and labels; and nothing when the page isn't showing
+      // (market, stats…), so a Delete there can't wipe boxes you can't see.
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+        window.getSelection()?.removeAllRanges() // no leftover text highlight
+        if (!paperShowing()) return
         const tid = activeTabIdRef.current
         const pidx = currentPageIdxRef.current
         const allIds = new Set((notesRef.current.find(n => n.id === tid)?.boxes[pidx] || []).map(b => b.id))
-        if (allIds.size === 0) return
-        e.preventDefault()
-        setSelectedBoxIds(allIds)
+        if (allIds.size) setSelectedBoxIds(allIds)
         return
       }
 

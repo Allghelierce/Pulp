@@ -5,6 +5,12 @@ html {
   scroll-padding-top: 80px;
 }
 
+/* Button labels are UI, not text: a select-all or a drag across the page never highlights them. */
+button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }

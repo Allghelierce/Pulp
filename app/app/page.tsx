@@ -2606,6 +2606,8 @@ export default function NoteApp() {
         : (anchor as HTMLElement).closest('[contenteditable]')) as HTMLElement | null
       if (!ce) return
       if (slashMenuRef.current) return
+      // Never in code: "dir C:" stays lowercase.
+      if (ce.closest(".pulp-code-block, pre, code") || (anchor.nodeType === Node.TEXT_NODE ? anchor.parentElement : anchor as HTMLElement)?.closest("pre, code")) return
       // Use Range to get ALL text before cursor, across any HTML elements/text nodes
       const preRange = document.createRange()
       preRange.setStart(ce, 0)
@@ -2941,23 +2943,20 @@ export default function NoteApp() {
     return () => { cancelled = true }
   }, [isLoading, user, openAlert])
 
-  // Deep-link checkout from the landing pricing buttons (?checkout=<plan>).
-  // Intent persists in localStorage across the login round-trip.
+  // Deep-link checkout (/app?checkout=<plan>, from old links). Signed out: sign in first; the
+  // login page then finishes the upgrade on the site. Only a plan in the URL counts: a leftover
+  // flag in storage (older builds kept one) used to send every later guest visit to /login.
   useEffect(() => {
     if (isLoading) return
     try {
-      const params = new URLSearchParams(window.location.search)
-      const urlPlan = params.get('checkout')
-      if (urlPlan) {
-        localStorage.setItem('pulp-pending-checkout', urlPlan)
-        params.delete('checkout')
-        const q = params.toString()
-        window.history.replaceState({}, '', '/app' + (q ? '?' + q : ''))
-      }
-      const plan = localStorage.getItem('pulp-pending-checkout')
-      if (!plan) return
-      if (!user) { window.location.href = '/login'; return }
       localStorage.removeItem('pulp-pending-checkout')
+      const params = new URLSearchParams(window.location.search)
+      const plan = params.get('checkout')
+      if (plan !== 'plus_monthly' && plan !== 'plus_yearly') return
+      params.delete('checkout')
+      const q = params.toString()
+      window.history.replaceState({}, '', '/app' + (q ? '?' + q : ''))
+      if (!user) { window.location.href = `/login?checkout=${plan}`; return }
       window.location.href = `/checkout?plan=${encodeURIComponent(plan)}`
     } catch { /* no-op */ }
   }, [user, isLoading])
