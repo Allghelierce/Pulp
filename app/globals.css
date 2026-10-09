@@ -366,19 +366,19 @@ details.toggle-block summary:focus {
 }
 
 /* Nested lists change shape per level, like Google Docs (ul: ● ○ ■, ol: 1. a. i.).
-   More specific than the page's base list rules, so these win at each depth. */
-#editor-paper ul ul,
-#editor-paper ol ul { list-style-type: circle !important; }
-#editor-paper ul ul ul,
-#editor-paper ol ul ul,
-#editor-paper ul ol ul { list-style-type: square !important; }
-#editor-paper ul ul ul ul { list-style-type: disc !important; }
-#editor-paper ul ul ul ul ul { list-style-type: circle !important; }
-#editor-paper ul ul ul ul ul ul { list-style-type: square !important; }
-#editor-paper ol ol,
-#editor-paper ul ol { list-style-type: lower-alpha !important; }
-#editor-paper ol ol ol,
-#editor-paper ul ol ol,
-#editor-paper ol ul ol { list-style-type: lower-roman !important; }
-#editor-paper ol ol ol ol { list-style-type: decimal !important; }
-#editor-paper ul ul, #editor-paper ol ol, #editor-paper ul ol, #editor-paper ol ul { margin: 0 !important; }
+   More specific than the page's base list rules (editor + scroll-mode previews), so these win at each depth. */
+:is(#editor-paper, .pulp-scroll-page) ul ul,
+:is(#editor-paper, .pulp-scroll-page) ol ul { list-style-type: circle !important; }
+:is(#editor-paper, .pulp-scroll-page) ul ul ul,
+:is(#editor-paper, .pulp-scroll-page) ol ul ul,
+:is(#editor-paper, .pulp-scroll-page) ul ol ul { list-style-type: square !important; }
+:is(#editor-paper, .pulp-scroll-page) ul ul ul ul { list-style-type: disc !important; }
+:is(#editor-paper, .pulp-scroll-page) ul ul ul ul ul { list-style-type: circle !important; }
+:is(#editor-paper, .pulp-scroll-page) ul ul ul ul ul ul { list-style-type: square !important; }
+:is(#editor-paper, .pulp-scroll-page) ol ol,
+:is(#editor-paper, .pulp-scroll-page) ul ol { list-style-type: lower-alpha !important; }
+:is(#editor-paper, .pulp-scroll-page) ol ol ol,
+:is(#editor-paper, .pulp-scroll-page) ul ol ol,
+:is(#editor-paper, .pulp-scroll-page) ol ul ol { list-style-type: lower-roman !important; }
+:is(#editor-paper, .pulp-scroll-page) ol ol ol ol { list-style-type: decimal !important; }
+:is(#editor-paper, .pulp-scroll-page) ul ul, :is(#editor-paper, .pulp-scroll-page) ol ol, :is(#editor-paper, .pulp-scroll-page) ul ol, :is(#editor-paper, .pulp-scroll-page) ol ul { margin: 0 !important; }

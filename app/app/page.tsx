@@ -274,6 +274,7 @@ const ScrollModePage = memo(function ScrollModePage({
   return (
     <div
       data-page-idx={pageIdx}
+      className="pulp-scroll-page"
       onClick={isActive ? undefined : onClick}
       style={{
         position: "relative",
@@ -308,11 +309,15 @@ const ScrollModePage = memo(function ScrollModePage({
       {boxes.map(box => (
         <div
           key={box.id}
+          data-box-style={box.boxHeadingStyle || "default"}
           style={{
             // Same text metrics as the editable box (BoxItem), so pages look the same here.
+            // fontWeight 500 matches the editor's [contenteditable] rule.
             position: "absolute", left: box.x, top: box.y, width: box.w, boxSizing: "border-box", padding: "9px 13px",
-            minHeight: box.h, pointerEvents: "none", userSelect: "none",
-            fontFamily: box.boxFontFamily || (/^h[123]$/.test(box.boxHeadingStyle || "") ? "var(--pulp-heading-font, Georgia, serif)" : "var(--pulp-body-font, Georgia, serif)"),
+            minHeight: box.h, pointerEvents: "none", userSelect: "none", fontWeight: 500, letterSpacing: "0.1px",
+            textAlign: box.textAlign || "left",
+            fontStyle: (box.boxHeadingStyle as string) === "margin" ? "italic" : undefined,
+            fontFamily: (box.boxHeadingStyle as string) === "margin" ? "cursive" : box.boxFontFamily || (/^h[123]$/.test(box.boxHeadingStyle || "") ? "var(--pulp-heading-font, Georgia, serif)" : "var(--pulp-body-font, Georgia, serif)"),
             fontSize: box.boxFontSize || `calc(${BOX_HEADING_SIZES[box.boxHeadingStyle || "default"] ?? 20}px * var(--pulp-font-scale, 1))`,
             lineHeight: (box.boxHeadingStyle || "default") === "default" ? "var(--pulp-rule, var(--pulp-line-height, 1.8))" : "var(--pulp-line-height, 1.8)",
             wordWrap: "break-word",
@@ -4520,9 +4525,9 @@ export default function NoteApp() {
                                position: absolute;
                                top: 0.35em;
                              }
-                             #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0 !important; }
-                             #editor-paper ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0 !important; }
-                             #editor-paper li { margin-bottom: 0 !important; }
+                             :is(#editor-paper, .pulp-scroll-page) ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0 !important; }
+                             :is(#editor-paper, .pulp-scroll-page) ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0 !important; }
+                             :is(#editor-paper, .pulp-scroll-page) li { margin-bottom: 0 !important; }
                              .pulp-table-wrap { position: relative; }
                              .pulp-table-wrap::before {
                                content: "⠿";
