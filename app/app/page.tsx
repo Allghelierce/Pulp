@@ -4327,8 +4327,8 @@ export default function NoteApp() {
                       if (idx >= currentPageIdx) return null
                       const inkColor = getInkColor(paperStyle, theme === "dark")
                       return (
-                        <div key={`scroll-page-${idx}`} ref={el => { if (el) scrollPageRefs.current.set(idx, el); else scrollPageRefs.current.delete(idx) }} data-page-idx={idx} style={{ marginBottom: 32 }}>
-                          {idx > 0 && <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
+                        <div key={`scroll-page-${idx}`} ref={el => { if (el) scrollPageRefs.current.set(idx, el); else scrollPageRefs.current.delete(idx) }} data-page-idx={idx} style={{ marginBottom: 20 }}>
+                          {idx > 0 && <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 0", marginBottom: 6 }}>
                             <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
                             <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: theme === "dark" ? "#71717a" : "#a1a1aa", userSelect: "none" }}>Page {idx + 1}</span>
                             <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
@@ -4355,7 +4355,7 @@ export default function NoteApp() {
                     <div style={{ position: "relative", overflow: "visible" }} ref={el => { if (el && scrollMode) scrollPageRefs.current.set(currentPageIdx, el); }} data-page-idx={currentPageIdx}>
                       {/* Active page divider in scroll mode */}
                       {scrollMode && currentPageIdx > 0 && (
-                        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
+                        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 0", marginBottom: 6 }}>
                           <div style={{ flex: 1, height: 1, background: accentUi }} />
                           <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: accentUi, fontWeight: 600, userSelect: "none" }}>Page {currentPageIdx + 1}</span>
                           <div style={{ flex: 1, height: 1, background: accentUi }} />
@@ -4691,8 +4691,8 @@ export default function NoteApp() {
                       if (idx <= currentPageIdx) return null
                       const inkColor = getInkColor(paperStyle, theme === "dark")
                       return (
-                        <div key={`scroll-page-${idx}`} ref={el => { if (el) scrollPageRefs.current.set(idx, el); else scrollPageRefs.current.delete(idx) }} data-page-idx={idx} style={{ marginTop: 32 }}>
-                          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
+                        <div key={`scroll-page-${idx}`} ref={el => { if (el) scrollPageRefs.current.set(idx, el); else scrollPageRefs.current.delete(idx) }} data-page-idx={idx} style={{ marginTop: 20 }}>
+                          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 0", marginBottom: 6 }}>
                             <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
                             <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: theme === "dark" ? "#71717a" : "#a1a1aa", userSelect: "none" }}>Page {idx + 1}</span>
                             <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
@@ -4725,7 +4725,7 @@ export default function NoteApp() {
                           setCurrentPageIdx(pageIdx)
                         }}
                         className="no-print group"
-                        style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", marginTop: 32, padding: "10px 0", background: "none", border: "none", cursor: "pointer" }}
+                        style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", marginTop: 20, padding: "10px 0", background: "none", border: "none", cursor: "pointer" }}
                         title="Add a page at the end"
                       >
                         <span style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
