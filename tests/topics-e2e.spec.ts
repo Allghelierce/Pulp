@@ -40,7 +40,8 @@ const makeCardsDueNow = (page: Page) => page.evaluate(() => {
 async function openRecallViaOrange(page: Page) {
   await page.getByText(/\d+ cards? to recall/).click({ timeout: 15_000 })
   await page.getByRole("button", { name: /^Photosynthesis · \d+$/ }).click()
-  await page.getByRole("button", { name: /^Recall Photosynthesis/ }).click()
+  // The tree's card reviews the session that planted it (its cards are this topic's).
+  await page.getByRole("button", { name: /^(Review this session|Recall Photosynthesis)/ }).click()
 }
 const topicTrees = async (page: Page) => (await readGrove(page)).filter(t => t.topic === "Photosynthesis")
 
@@ -124,6 +125,37 @@ test.describe("topics as trees (e2e)", () => {
     await expect(bubble).toBeHidden()
     await makeCardsDueNow(page) // same count -> stays hidden
     await expect(bubble).toBeHidden()
+  })
+
+  test("2b. AI can't name the session: a guess from the notes, named for real on a later visit", async ({ page }) => {
+    await mockAI(page)
+    await page.route("**/api/recall/topic", r => r.fulfill({ status: 503, json: { error: "AI service not configured" } }))
+    await openApp(page)
+    await startTimer(page)
+    await page.locator('[contenteditable="true"]').first().click()
+    await page.keyboard.type(NOTES)
+    await page.getByRole("button", { name: "Claim Reward" }).click({ timeout: 60_000 })
+    await expect.poll(async () => (await readGrove(page)).find(t => t.recallNeeded)?.topic, { timeout: 15_000 }).toBe("Photosynthesis converts light")
+    const [guessed] = (await readGrove(page)).filter(t => t.recallNeeded) as (GroveTree & { topicGuess?: boolean })[]
+    expect(guessed.topicGuess).toBe(true)
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem("pulp-tag-pending") || "[]").length)).toBe(1)
+
+    // Next visit, the AI is back: the session is named, its cards made for that tree.
+    await page.unroute("**/api/recall/topic")
+    await page.route("**/api/recall/topic", r => r.fulfill({ json: { topic: "Photosynthesis", cards: CARDS } }))
+    await page.reload()
+    await expect.poll(async () => (await readGrove(page)).find(t => t.id === guessed.id)?.topic, { timeout: 20_000 }).toBe("Photosynthesis")
+    const named = (await readGrove(page)).find(t => t.id === guessed.id) as GroveTree & { topicGuess?: boolean }
+    expect(named.topicGuess).toBeUndefined()
+    expect(await page.evaluate(() => localStorage.getItem("pulp-tag-pending"))).toBeNull()
+    const cards = await page.evaluate(() => {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k?.startsWith("pulp-recall-")) return JSON.parse(localStorage.getItem(k)!).cards as { treeId?: number }[]
+      }
+      return []
+    })
+    expect(cards.filter(c => c.treeId === guessed.id)).toHaveLength(CARDS.length)
   })
 
   test("4. focus mode: stage bar above the plot, hover shows time left, give up always shown", async ({ page }) => {

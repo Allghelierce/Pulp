@@ -41,11 +41,13 @@ interface ReviewViewProps {
   onComplete?: (result: { noteId: string; reviewed: number; again: number }) => void
   /** Fired after a graded answer with a 0..1 growth weight (correct = 1, partial = 0.5)
    *  and the answered card's topic tag (undefined for untagged cards). */
-  onCorrect?: (weight: number, topic?: string, meta?: { cardId: string; full: boolean }) => number | void
+  onCorrect?: (weight: number, topic?: string, meta?: { cardId: string; full: boolean; treeId?: number }) => number | void
   /** "due" = spaced-repetition session (default); "full" = every card in the notebook. */
   mode?: "due" | "full"
   /** Limit the session to cards tagged with this topic ("Review <topic>" from the orchard). */
   topic?: string
+  /** Limit the session to the cards one focus session made (its tree, tapped in the orchard). */
+  treeId?: number
   /** Summary "show in orchard" for a topic whose tree grew this session. */
   onShowTopic?: (topic: string) => void
 }
@@ -72,7 +74,7 @@ const GRADES: { g: Grade; label: string; key: string }[] = [
   { g: "easy", label: "Easy", key: "4" },
 ]
 
-export const ReviewView = memo(function ReviewView({ note, theme, accent, onClose, onComplete, onCorrect, topic, onShowTopic, mode: initialMode = "due" }: ReviewViewProps) {
+export const ReviewView = memo(function ReviewView({ note, theme, accent, onClose, onComplete, onCorrect, topic, treeId, onShowTopic, mode: initialMode = "due" }: ReviewViewProps) {
   const isDark = theme === "dark"
   const onAccent = readableOn(accent) // text on accent-filled buttons
   const font = "'Crimson Pro', serif"
@@ -80,11 +82,14 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   const noteText = useMemo(() => notebookReviewText(note), [note])
   const noteHash = useMemo(() => hashNotes(noteText), [noteText])
 
-  // Topic mode: only cards tagged with `topic` are studied/counted.
-  const topicKey = topic?.trim() ? normalizeTopic(topic) : null
+  // Session mode: only the cards that one focus session made (its tree's).
+  const session = treeId != null
+  // Topic mode: only cards tagged with `topic` are studied/counted. Either one is a
+  // scoped review (no whole-notebook tab); the key re-runs the initial load.
+  const topicKey = session ? `tree:${treeId}` : topic?.trim() ? normalizeTopic(topic) : null
   const inScope = useCallback(
-    (c: ScheduledCard) => !topicKey || (!!c.topic && normalizeTopic(c.topic) === topicKey),
-    [topicKey],
+    (c: ScheduledCard) => !topicKey || (session ? c.treeId === treeId : !!c.topic && normalizeTopic(c.topic) === topicKey),
+    [topicKey, session, treeId],
   )
   const scoped = useCallback((d: Deck): Deck => (topicKey ? { ...d, cards: d.cards.filter(inScope) } : d), [topicKey, inScope])
 
@@ -375,7 +380,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     let granted = 0
     let nextGrown = grown
     if (weight > 0 && firstAttempt && !reviewingAhead.current) {
-      const r = onCorrect?.(weight, current.topic, { cardId: current.id, full })
+      const r = onCorrect?.(weight, current.topic, { cardId: current.id, full, treeId: current.treeId })
       granted = typeof r === "number" ? r : weight
       const t = current.topic
       if (t && granted > 0) {
@@ -488,7 +493,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
       {/* Header */}
       <div style={{ padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${border}` }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: accent, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{topic?.trim() ? `Review ${topic.trim()}` : full ? "Full review" : "Recall Review"}</div>
+          <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: accent, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{session ? `Review session${topic?.trim() ? ` · ${topic.trim()}` : ""}` : topic?.trim() ? `Review ${topic.trim()}` : full ? "Full review" : "Recall Review"}</div>
           <div style={{ fontSize: 15, color: fg, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{note.subject}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -561,8 +566,8 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
 
         {phase === "empty" && topicKey && (
           <div style={{ textAlign: "center", maxWidth: 360 }}>
-            <div style={{ fontSize: 17, color: fg, marginBottom: 6 }}>No cards for {topic!.trim()} yet</div>
-            <div style={{ fontSize: 13.5, color: muted, lineHeight: 1.55, marginBottom: 20 }}>Cards for this topic are made when a focus session on it ends. Reviewing this notebook&apos;s untagged cards can still grow it.</div>
+            <div style={{ fontSize: 17, color: fg, marginBottom: 6 }}>{session ? "No cards from this session" : `No cards for ${topic?.trim()} yet`}</div>
+            <div style={{ fontSize: 13.5, color: muted, lineHeight: 1.55, marginBottom: 20 }}>{session ? "This session's cards weren't made — the AI couldn't read its notes at the time." : "Cards for this topic are made when a focus session on it ends."} Reviewing this notebook&apos;s untagged cards can still grow it.</div>
             <button onClick={onClose} style={{ background: accent, color: onAccent, border: "none", borderRadius: 10, padding: "11px 26px", fontSize: 15, cursor: "pointer", fontFamily: font, fontWeight: 500 }}>Close</button>
           </div>
         )}
@@ -588,20 +593,22 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
             <div style={{ fontSize: 40 }}>🌿</div>
             <div style={{ fontSize: 18, color: fg, marginTop: 8 }}>All caught up</div>
             <div style={{ fontSize: 13.5, color: muted, marginTop: 8, lineHeight: 1.55 }}>
-              Nothing due right now.{stats.nextDue ? ` Next card in ${relDue(stats.nextDue, now)}.` : ""}
+              {session ? "None of this session's cards are due yet." : "Nothing due right now."}{stats.nextDue ? ` Next card in ${relDue(stats.nextDue, now)}.` : ""}
+              {session && " Waiting is what makes them stick — or practice them now (no growth)."}
             </div>
             <div style={{ fontSize: 12.5, color: muted, marginTop: 6 }}>{stats.mature} mature · {stats.learning} learning · {stats.newCount} new</div>
             <div style={{ marginTop: 22, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
               {!topicKey && (
                 <button onClick={() => switchMode("full")} style={{ background: accent, color: onAccent, border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Review whole notebook</button>
               )}
-              {deck && deck.cards.some(c => inScope(c) && c.reps > 0) && (
+              {deck && deck.cards.some(c => inScope(c) && (c.reps > 0 || session)) && (
                 <button onClick={() => {
-                  const ahead = deck.cards.filter(c => inScope(c) && c.reps > 0).sort((a, b) => a.due - b.due).slice(0, 25)
+                  // A session's cards can be practiced before their first review (still no growth).
+                  const ahead = deck.cards.filter(c => inScope(c) && (c.reps > 0 || session)).sort((a, b) => a.due - b.due).slice(0, 25)
                   if (ahead.length) { studied.current = new Set(); reviewingAhead.current = true; setLog([]); resetAttempt(); setQueue(ahead); setPhase("card") }
-                }} style={{ background: accent, color: onAccent, border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Review ahead</button>
+                }} style={{ background: accent, color: onAccent, border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>{session ? "Practice now" : "Review ahead"}</button>
               )}
-              <button onClick={() => generate()} style={{ background: "transparent", color: subtle, border: `1px solid ${border}`, borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Add more cards</button>
+              {!session && <button onClick={() => generate()} style={{ background: "transparent", color: subtle, border: `1px solid ${border}`, borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Add more cards</button>}
             </div>
           </div>
         )}

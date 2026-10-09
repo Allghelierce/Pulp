@@ -73,8 +73,10 @@ export function recallTarget(grove: Tree[], topic: string | undefined, notebookI
     return oldest(waiting.filter(t => t.topic && normalizeTopic(t.topic) === k))
   }
   const inNotebook = waiting.filter(t => (t.notebookId ?? undefined) === (notebookId ?? undefined))
+  // A guessed topic has no cards of its own yet, so it counts as topic-less here.
+  const untagged = (t: Tree) => !t.topic || !!t.topicGuess
   // Fallback: a topic-less sapling anywhere (paper sessions, no notebook) so none get stuck.
-  return oldest(inNotebook.filter(t => !t.topic)) ?? oldest(inNotebook) ?? oldest(waiting.filter(t => !t.topic))
+  return oldest(inNotebook.filter(untagged)) ?? oldest(inNotebook) ?? oldest(waiting.filter(untagged))
 }
 
 export function applyRecall(grove: Tree[], topic: string | undefined, weight: number, notebookId?: string, treeId?: number): Tree[] {

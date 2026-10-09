@@ -74,7 +74,14 @@ TOPICS AND TREES
 - Studying the same topic again plants a NEW tree next to the first one.
   The orchard already groups trees into clusters, so a topic becomes a
   small grove — a bigger grove means you've studied it more.
-- Topic names show on hover only, so the orchard doesn't get cluttered.
+- Each topic tree has a small wooden marker at its foot naming the topic,
+  kept small and quiet so the trees stay the focus.
+- Tapping a tree shows its topic and offers "Review this session" (just
+  the cards that session made), "All of <topic>", or for an untitled
+  tree, a box to name it.
+- If the AI can't name a session (offline, signed out, AI down), the tree
+  gets a topic guessed from the notes, marked as a guess, and the naming
+  call is retried on a later visit.
 
 
 SHOWING HOW FRESH A TOPIC IS

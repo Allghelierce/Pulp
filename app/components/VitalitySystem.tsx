@@ -8,10 +8,11 @@ import { logFocusSession, logCharsWritten } from "@/app/lib/dailyStats"
 import { apiFetch } from "@/lib/apiFetch"
 import { recordFocus } from "@/lib/party"
 import { extractTextFromHTML } from "@/lib/sanitize"
-import { SAPLING_STAGE, FULL_STAGE, timerStage, recallNeededFor, isTopicTree, isFullyGrown, takeBanked } from "@/lib/topics"
-import { MIN_TOPIC_TEXT, type Card } from "@/lib/recallPrompt"
-import { addTopicCards, firstRecallDue, hashNotes, loadDeck } from "@/lib/recallSchedule"
-import { markCovered, seedCoverage } from "@/lib/fullReview"
+import { SAPLING_STAGE, timerStage, recallNeededFor, isTopicTree, isFullyGrown } from "@/lib/topics"
+import { MIN_TOPIC_TEXT } from "@/lib/recallPrompt"
+import { hashNotes, loadDeck } from "@/lib/recallSchedule"
+import { seedCoverage } from "@/lib/fullReview"
+import { type PendingTag, savePendingTag, clearPendingTag, pendingTags, nameSession, guessTopic, giveTopic } from "@/lib/treeSessions"
 
 // ─── Session topic tagging helpers ───
 const SNAPSHOT_KEY = 'pulp-timer-snapshot'
@@ -497,8 +498,10 @@ export const VitalitySystem = memo(function VitalitySystem({
 
   // Session-end topic tagging: diff notes vs the start snapshot, make ONE AI
   // call that names the topic + writes cards. Patches the planted tree (if any)
-  // and queues the cards in that notebook's deck. Fails silently.
-  const tagSessionTopic = useCallback((treeId: number | null, recallNeeded: number, noteId: string | null): boolean => {
+  // and queues the cards in that notebook's deck. If the AI can't name it now
+  // (offline, signed out, AI down) the tree gets a topic guessed from the notes,
+  // and the call is kept to retry on a later visit.
+  const tagSessionTopic = useCallback((treeId: number | null, noteId: string | null): boolean => {
     const snap = readSnapshot()
     try { sessionStorage.removeItem(SNAPSHOT_KEY) } catch { }
     if (!noteId || !snap || snap.noteId !== noteId) return false
@@ -508,47 +511,46 @@ export const VitalitySystem = memo(function VitalitySystem({
     const endReview = reviewText(note)
     // Known topic names (e.g. from an import) so the AI reuses them and banked growth reaches this tree.
     const known = Array.from(new Set((loadDeck(noteId)?.cards ?? []).map(c => (c.topic || '').trim()).filter(Boolean))).slice(0, 30)
+    // Full review coverage: a deck from before tracking stands for the notes at session start.
+    seedCoverage(noteId, (snap.lines || "").split("\n"))
+    // If the deck was in sync with the notes at session start, it now covers the new text too.
+    const deck = loadDeck(noteId)
+    const inSync = !deck || deck.noteHash === hashNotes(snap.review || "")
+    const pending: PendingTag = { treeId, noteId, text: written, title: note?.subject || '', topics: known, at: Date.now() }
+    savePendingTag(pending)
     void (async () => {
-      try {
-        const res = await apiFetch('/api/recall/topic', {
-          method: 'POST',
-          body: JSON.stringify({ text: written, title: note?.subject || '', topics: known }),
-        })
-        if (!res.ok) { emitTagged(treeId, null); return }
-        const data = await res.json() as { topic?: string; cards?: Card[] }
-        const topic = typeof data?.topic === 'string' ? data.topic.trim() : ''
-        if (!topic) { emitTagged(treeId, null); return }
-        const cards = Array.isArray(data.cards) ? data.cards : []
-        let added = 0
-        // Full review coverage: a deck from before tracking stands for the notes at session start.
-        seedCoverage(noteId, (snap!.lines || "").split("\n"))
-        if (cards.length) {
-          // If the deck was in sync with the notes at session start, it now covers the new text too.
-          const deck = loadDeck(noteId)
-          const inSync = !deck || deck.noteHash === hashNotes(snap!.review || "")
-          added = addTopicCards(noteId, cards, topic, Date.now(), inSync ? hashNotes(endReview) : undefined, treeId ?? undefined, firstRecallDue(Date.now()))
-          markCovered(noteId, written.split("\n")) // full review won't re-card what this session carded
-          if (added > 0) {
-            try { window.dispatchEvent(new CustomEvent('pulp-cards-queued', { detail: { noteId, topic, count: added } })) } catch { }
-          }
-        }
-        if (treeId == null) { emitTagged(treeId, { topic, cards: added, recallDone: 0, recallNeeded: 0 }); return }
-        // Take only what the tree still needs, and nothing if it's gone — excess stays banked.
-        const tree = groveRef.current.find(t => t.id === treeId)
-        if (!tree) { emitTagged(treeId, null); return }
-        const need = Math.max(0, (tree.recallNeeded ?? recallNeeded) - (tree.recallDone || 0))
-        const banked = takeBanked(topic, need)
-        setGrove(g => g.map(t => {
-          if (t.id !== treeId) return t
-          const recallDone = (t.recallDone || 0) + banked
-          const full = recallDone >= (t.recallNeeded ?? recallNeeded)
-          return { ...t, topic, recallDone, ...(full ? { stage: FULL_STAGE, progress: 100 } : {}) }
-        }))
-        const done = Math.min((tree.recallDone || 0) + banked, tree.recallNeeded ?? recallNeeded)
-        emitTagged(treeId, { topic, cards: added, recallDone: done, recallNeeded: tree.recallNeeded ?? recallNeeded })
-      } catch { emitTagged(treeId, null) }
+      const r = await nameSession(pending, inSync ? hashNotes(endReview) : undefined)
+      if ('failed' in r) {
+        if (treeId == null) { emitTagged(null, null); return }
+        const guess = guessTopic(written, pending.title)
+        const given = giveTopic(groveRef.current, setGrove, treeId, guess, { guess: true })
+        emitTagged(treeId, given ? { topic: guess, cards: 0, ...given } : null)
+        return
+      }
+      if (treeId == null) { emitTagged(null, { topic: r.topic, cards: r.cards, recallDone: 0, recallNeeded: 0 }); return }
+      // Takes only what the tree still needs, and nothing if it's gone — excess stays banked.
+      const given = giveTopic(groveRef.current, setGrove, treeId, r.topic)
+      emitTagged(treeId, given ? { topic: r.topic, cards: r.cards, ...given } : null)
     })()
     return true
+  }, [setGrove])
+
+  // Sessions the AI couldn't name at the time: try again a little after load
+  // (a few per visit), and swap the guessed topic for the real one.
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      for (const p of pendingTags().slice(-3).reverse()) {
+        if (p.treeId == null) continue
+        const tree = groveRef.current.find(t => t.id === p.treeId)
+        // Named since (or by hand), or a month old: stop trying.
+        if ((tree?.topic && !tree.topicGuess) || Date.now() - p.at > 30 * 86_400_000) { clearPendingTag(p.treeId); continue }
+        if (!tree) continue // grove may still be loading
+        const r = await nameSession(p)
+        if ('failed' in r) { if (r.status === 401 || r.status === 402 || r.status === 429) break; continue }
+        giveTopic(groveRef.current, setGrove, p.treeId, r.topic)
+      }
+    }, 6000)
+    return () => clearTimeout(timer)
   }, [setGrove])
 
   const claimReward = useCallback(async () => {
@@ -608,7 +610,7 @@ export const VitalitySystem = memo(function VitalitySystem({
         focusMinutes: sessionMinutes, growthTarget,
         recallNeeded: recallNeededFor(treeType), recallDone: 0,
       }
-      const tagging = tagSessionTopic(newTree.id, newTree.recallNeeded!, selectedNotebookId)
+      const tagging = tagSessionTopic(newTree.id, selectedNotebookId)
       emitPlanted({ treeId: newTree.id, type: treeType, stage: newTree.stage, notebookId: newTree.notebookId, recallNeeded: newTree.recallNeeded!, tagging })
       recordFocus(sessionMinutes, { type: treeType, stage: newTree.stage })
       const next = [...grove, newTree]
@@ -617,7 +619,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       checkAchievement('tangerine_grove', () => ({ progress: next.filter(t => t.type === 'tangerine').length }))
     }
 
-    if (existingPartial) tagSessionTopic(null, 0, selectedNotebookId)
+    if (existingPartial) tagSessionTopic(null, selectedNotebookId)
 
     setTimerElapsed(0)
     setTimerDone(false)

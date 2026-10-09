@@ -21,7 +21,7 @@ export interface TopicRow {
   lastStudied: number    // newest card review or tree plant, epoch ms
 }
 
-function readDecks(): Deck[] {
+export function readDecks(): Deck[] {
   const out: Deck[] = []
   try {
     for (let i = 0; i < localStorage.length; i++) {

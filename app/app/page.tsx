@@ -1445,11 +1445,12 @@ export default function NoteApp() {
   }, [reviewOpen])
   // Orchard "Review <topic>": topic filter + notebook override (cleared by closeAllPanels).
   const [reviewTopic, setReviewTopic] = useState<string | undefined>(undefined)
+  const [reviewTreeId, setReviewTreeId] = useState<number | undefined>(undefined) // one session's cards (a tree tapped in the orchard)
   // "full" = study every card in the notebook (full review); "due" = spaced-repetition session.
   const [reviewMode, setReviewMode] = useState<"due" | "full">("due")
   const [reviewNoteId, setReviewNoteId] = useState<string | undefined>(undefined)
   fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || topicsOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setReviewMode("due"); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false) }, [])
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewTreeId(undefined); setReviewNoteId(undefined); setReviewMode("due"); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false) }, [])
   const openParty = useCallback(() => { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) }, [closeAllPanels])
 
   useEffect(() => {
@@ -4768,10 +4769,11 @@ export default function NoteApp() {
               quotaTier={quotaTier}
               reduceMotion={reduceMotion}
               grade={grade}
-              onReviewTopic={(topic: string, notebookId?: string) => {
+              onReviewTopic={(topic: string, notebookId?: string, treeId?: number) => {
                 startTransition(() => {
                   closeAllPanels()
                   setReviewTopic(topic)
+                  setReviewTreeId(treeId)
                   setReviewNoteId(notebookId)
                   setReviewOpen(true)
                 })
@@ -4850,13 +4852,14 @@ export default function NoteApp() {
               >
                 <Suspense fallback={<PulpLoader variant="panel" />}>
                   <ReviewView
-                    key={`${reviewNote.id}:${reviewTopic ?? ''}:${reviewMode}`}
+                    key={`${reviewNote.id}:${reviewTopic ?? ''}:${reviewTreeId ?? ''}:${reviewMode}`}
                     note={reviewNote}
                     topic={reviewTopic}
+                    treeId={reviewTreeId}
                     mode={reviewMode}
                     theme={theme}
                     accent={accentUi}
-                    onClose={() => { setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setReviewMode("due") }}
+                    onClose={() => { setReviewOpen(false); setReviewTopic(undefined); setReviewTreeId(undefined); setReviewNoteId(undefined); setReviewMode("due") }}
                     onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}
                     onCorrect={(weight, topic, meta) => {
                       // Topics as trees: recall finishes that topic's sapling, or banks
@@ -4867,13 +4870,13 @@ export default function NoteApp() {
                         // Full review is paced: a card counts once a day, and a tree grows at
                         // most about a third of the way per day (no finishing it in one sitting).
                         // Capped per the tree applyRecall will actually feed (tagged or not).
-                        const tree = recallTarget(current, topic, reviewNote.id)
+                        const tree = recallTarget(current, topic, reviewNote.id, meta.treeId)
                         if (!tree && !topic?.trim()) return 0 // nothing would grow or bank
                         const cap = tree ? Math.max(1, Math.ceil((tree.recallNeeded ?? 3) / 3)) : 2
                         weight = claimFullReviewGrowth(meta.cardId, tree ? `tree:${tree.id}` : `bank:${normalizeTopic(topic!)}`, weight, cap)
                         if (weight <= 0) return 0
                       }
-                      const next = applyRecall(current, topic, weight, reviewNote.id)
+                      const next = applyRecall(current, topic, weight, reviewNote.id, meta?.treeId)
                       if (next !== current) setGrove(next)
                       return weight
                     }}

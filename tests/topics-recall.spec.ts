@@ -5,7 +5,8 @@ import type { Tree } from "@/app/types"
 import {
   bankNutrients, getBanked, takeBanked, isFullyGrown, topicFreshness, FULL_STAGE, SAPLING_STAGE,
 } from "@/lib/topics"
-import { applyRecall } from "@/app/lib/treeGrowth"
+import { applyRecall, recallTarget } from "@/app/lib/treeGrowth"
+import { guessTopic, backfillTopics, giveTopic, sessionsByTree } from "@/lib/treeSessions"
 import { buildDeck, mergeCards, deckStorageKey, type Deck } from "@/lib/recallSchedule"
 
 // ── in-memory localStorage ──────────────────────────────────────────
@@ -202,5 +203,55 @@ test.describe("mergeCards", () => {
     expect(merged.cards).toHaveLength(1)
     expect(merged.cards[0].topic).toBe("Photosynthesis")
     expect(merged.cards[0].reps).toBe(2)
+  })
+})
+
+test.describe("tree sessions", () => {
+  test("guessTopic: a heading, else the notebook's own title, else the lead words", () => {
+    expect(guessTopic("Light reactions\nThey happen in the thylakoid.", "Bio")).toBe("Light reactions")
+    expect(guessTopic("- Krebs Cycle\nmore", "")).toBe("Krebs Cycle")
+    expect(guessTopic("Plants make sugar from light in their leaves, mostly.", "Biology 101")).toBe("Biology 101")
+    expect(guessTopic("Mitosis is how a cell divides into two identical cells.", "My First Notebook")).toBe("Mitosis")
+    expect(guessTopic("Photosynthesis converts light energy into chemical energy.", "Untitled")).toBe("Photosynthesis converts light")
+  })
+
+  test("sessionsByTree counts each tree's cards and due; backfill gives untitled and guessed trees that topic", () => {
+    const now = 1_700_000_000_000
+    const card = (id: string, treeId: number | undefined, due: number, topic?: string) =>
+      ({ id, q: id, a: "a", ease: 2.5, intervalDays: 0, reps: 0, lapses: 0, state: "new", due, last: 0, topic, treeId })
+    store.setItem("pulp-recall-n1", JSON.stringify({ noteId: "n1", generatedAt: now, noteHash: "", cards: [
+      card("a", 1, now - 1, "Optics"), card("b", 1, now + DAY, "Optics"), card("c", 2, now - 1, "Waves"), card("d", undefined, now - 1, "Waves"),
+    ] }))
+    const s = sessionsByTree(now)
+    expect(s.get(1)).toEqual({ cards: 2, due: 1, topic: "Optics", noteId: "n1" })
+    expect(s.get(2)).toEqual({ cards: 1, due: 1, topic: "Waves", noteId: "n1" })
+    const grove = [sapling({ id: 1, topic: undefined }), sapling({ id: 2, topic: "Wavy guess", topicGuess: true }), sapling({ id: 3, topic: "Kept" })]
+    const next = backfillTopics(grove, s)
+    expect(next.map(t => t.topic)).toEqual(["Optics", "Waves", "Kept"])
+    expect(next[1].topicGuess).toBeUndefined()
+    expect(backfillTopics(next, s)).toBe(next) // nothing left to fill: same grove
+  })
+
+  test("giveTopic: a real name takes banked growth, a guess never does", () => {
+    bankNutrients("Optics", 3)
+    let grove = [sapling({ id: 1, topic: undefined, recallNeeded: 5, recallDone: 0 })]
+    const set = (fn: (g: Tree[]) => Tree[]) => { grove = fn(grove) }
+    expect(giveTopic(grove, set, 1, "Optics", { guess: true })).toEqual({ recallDone: 0, recallNeeded: 5 })
+    expect(grove[0]).toMatchObject({ topic: "Optics", topicGuess: true, recallDone: 0 })
+    expect(getBanked("Optics")).toBe(3)
+    expect(giveTopic(grove, set, 1, "Optics")).toEqual({ recallDone: 0, recallNeeded: 5 }) // same name: already counted as this topic
+    expect(grove[0].topicGuess).toBeUndefined()
+    grove = [sapling({ id: 2, topic: "Guess", topicGuess: true, recallNeeded: 5, recallDone: 0 })]
+    expect(giveTopic(grove, set, 2, "Optics")).toEqual({ recallDone: 3, recallNeeded: 5 })
+    expect(getBanked("Optics")).toBe(0)
+    expect(giveTopic(grove, set, 99, "Optics")).toBeNull()
+  })
+
+  test("a guessed topic counts as untagged for recall, so the notebook's cards can finish it", () => {
+    const guessed = sapling({ id: 1, topic: "Lead words", topicGuess: true, notebookId: "n1", plantedAt: 1 })
+    const tagged = sapling({ id: 2, topic: "Optics", notebookId: "n1", plantedAt: 2 })
+    expect(recallTarget([guessed, tagged], undefined, "n1")?.id).toBe(1)
+    // A card from a session grows that session's own tree first.
+    expect(recallTarget([guessed, tagged], "Optics", "n1", 1)?.id).toBe(1)
   })
 })

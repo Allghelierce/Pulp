@@ -1,6 +1,7 @@
-// Orchard signposts: trees that share a topic stand together as a grove, with a
-// wooden sign in front naming the topic, a due badge when it has cards to recall,
-// and a click that opens that topic's recall. Runs against the dev server at PULP_URL.
+// Orchard signposts: trees that share a topic stand together as a grove, each tree with a
+// small wooden marker naming its topic. Tapping a tree (or its marker) shows its topic and
+// lets you review that session's cards, the whole topic, or name an untitled tree.
+// Runs against the dev server at PULP_URL.
 // Set SIGNPOST_SHOTS=<dir> to save light/dark screenshots of the grove there.
 import { test, expect, type Page } from "@playwright/test"
 import { BASE } from "./import-helpers"
@@ -14,6 +15,8 @@ const OPTICS = "Optics" // only in the second notebook
 type Plant = [topic: string | undefined, nb: "a" | "b"]
 // Due cards per notebook deck: [topic, how many due now].
 type Due = { a?: [string, number][]; b?: [string, number][] }
+// Cards one session made: tree index in the plan -> how many (all due now).
+type Sessions = Record<number, number>
 
 // Notebook A: topic trees planted interleaved (so the grove layout has to gather them)
 // + untagged trees. Notebook B ("Physics"): two Optics trees and one Photosynthesis tree.
@@ -25,13 +28,15 @@ const PLAN: Plant[] = [
 const DUE: Due = { a: [[PHOTO, 2]], b: [[PHOTO, 1]] }
 
 // "Start Now" resets the grove, so seed after it, before boot.
-async function seedOrchard(page: Page, { theme = "light", plan = PLAN, due = DUE }: { theme?: "light" | "dark"; plan?: Plant[]; due?: Due } = {}) {
+async function seedOrchard(page: Page, { theme = "light", plan = PLAN, due = DUE, sessions = {}, extra = {} }: {
+  theme?: "light" | "dark"; plan?: Plant[]; due?: Due; sessions?: Sessions; extra?: Record<number, object>
+} = {}) {
   await page.goto(`${BASE}/app`)
   await page.evaluate(() => localStorage.clear())
   await page.reload()
   await page.getByText("Start Now").first().click()
   await expect(page.locator('[contenteditable="true"]').first()).toBeVisible()
-  await page.addInitScript(({ theme, plan, due, MITOSIS }) => {
+  await page.addInitScript(({ theme, plan, due, sessions, extra, MITOSIS }) => {
     if (sessionStorage.getItem("seeded")) return
     sessionStorage.setItem("seeded", "1")
     const now = Date.now()
@@ -44,21 +49,27 @@ async function seedOrchard(page: Page, { theme = "light", plan = PLAN, due = DUE
     const grove = plan.map(([topic, nb], i) => ({
       id: 7000 + i, type: "tangerine", stage: 4, progress: 100, plantedAt: now - (plan.length - i) * 3_600_000, notebookId: ids[nb],
       ...(topic ? { topic, recallNeeded: 5, recallDone: 5 } : {}),
+      ...(extra[i] || {}),
     }))
     const saved = JSON.parse(localStorage.getItem("pulp-grove") || "{}")
     delete saved.pulp_g_k // unsigned data is accepted
     localStorage.setItem("pulp-grove", JSON.stringify({ ...saved, juice: 0, gems: 0, grove, inventory: [] }))
 
-    const card = (id: string, topic: string, due: number) =>
+    const card = (id: string, topic: string, due: number): Record<string, unknown> =>
       ({ id, q: `${topic} question ${id}`, a: "x", ease: 2.5, intervalDays: 1, reps: 1, lapses: 0, state: "review", due, last: now - 86_400_000, topic })
     for (const nb of ["a", "b"] as const) {
       const cards = (due[nb] ?? []).flatMap(([topic, n]) => Array.from({ length: n }, (_, i) => card(`${nb}-${topic}-${i}`, topic, now - 60_000)))
       if (nb === "a") cards.push(card("m1", MITOSIS, now + 3 * 86_400_000)) // has cards, none due
+      for (const [i, n] of Object.entries(sessions)) {
+        const [topic, tnb] = plan[Number(i)]
+        if (tnb !== nb) continue
+        for (let k = 0; k < n; k++) cards.push({ ...card(`s${i}-${k}`, topic || "", now - 60_000), q: `Session ${i} question ${k}`, treeId: 7000 + Number(i) })
+      }
       localStorage.setItem(`pulp-recall-${ids[nb]}`, JSON.stringify({ noteId: ids[nb], generatedAt: now, noteHash: "", cards }))
     }
     const settings = JSON.parse(localStorage.getItem("pulp-settings") || "{}")
     localStorage.setItem("pulp-settings", JSON.stringify({ ...settings, theme }))
-  }, { theme, plan, due, MITOSIS })
+  }, { theme, plan, due, sessions, extra, MITOSIS })
   await page.reload()
   await expect(page.locator('[contenteditable="true"]').first()).toBeVisible()
 }
@@ -76,8 +87,6 @@ async function filterTo(page: Page, name: RegExp) {
   await page.getByRole("button", { name }).click()
   await page.waitForTimeout(600)
 }
-
-const sign = (page: Page, topic: string) => page.locator(`[data-grove-sign="${topic.toLowerCase()}"]`)
 
 // Every tree on screen: id, topic, where its art is drawn (bottom = trunk base) and its inline transform.
 type TreeBox = { id: string; topic: string; cx: number; cy: number; left: number; right: number; bottom: number; transform: string }
@@ -100,18 +109,20 @@ const readingOrder = async (page: Page) => rows(await trees(page)).flat().map(t 
 // Grove order as shown: each topic once, in reading order.
 const groveSequence = async (page: Page) => [...new Set((await readingOrder(page)).filter(Boolean))]
 
-// Each sign hangs in front of the row of its grove it labels: plank below those trunks, centred on them.
-async function expectSignsInFront(page: Page, topics: string[]) {
-  const all = await trees(page)
-  for (const t of topics) {
-    const s = (await sign(page, t).boundingBox())!
-    const mine = all.filter(b => b.topic === t.toLowerCase())
-    const row = rows(mine).reduce((a, r) => (r.length >= a.length ? r : a))
-    const cx = s.x + s.width / 2
-    expect(cx, `${t} sign centred on its grove`).toBeGreaterThan(Math.min(...row.map(b => b.left)))
-    expect(cx, `${t} sign centred on its grove`).toBeLessThan(Math.max(...row.map(b => b.right)))
-    expect(s.y, `${t} plank below its trunks`).toBeGreaterThan(Math.max(...row.map(b => b.bottom)) - 3)
-  }
+// Every marker's label box, with its tree.
+const markers = (page: Page) => page.evaluate(() =>
+  [...document.querySelectorAll<HTMLElement>("[data-tree-marker]")].map(el => {
+    const label = el.querySelector("span")!
+    const r = label.getBoundingClientRect()
+    return { tree: el.closest<HTMLElement>("[data-grove-tree]")!.dataset.groveTree!, text: label.textContent || "", title: label.title, truncated: label.scrollWidth > label.clientWidth, left: r.left, right: r.right, top: r.top, bottom: r.bottom }
+  }))
+
+// The open tree card.
+const card = (page: Page) => page.locator("[data-tree-card]")
+async function openTree(page: Page, id: number) {
+  const box = (await trees(page)).find(b => b.id === String(id))!
+  await page.mouse.click(box.cx, box.cy + 8)
+  await expect(card(page)).toBeVisible()
 }
 
 // Edit-mode drag from one tree to a point (the grove layer hit-tests the drawn canopy).
@@ -127,20 +138,33 @@ async function drag(page: Page, from: TreeBox, to: { x: number; y: number }) {
 test.use({ viewport: { width: 1440, height: 900 }, screenshot: "only-on-failure" })
 
 for (const theme of ["light", "dark"] as const) {
-  test(`groves get one signpost per topic, with due badge and recall on click (${theme})`, async ({ page }) => {
+  test(`every topic tree has a small marker naming it, beside its trunk (${theme})`, async ({ page }) => {
     test.setTimeout(120_000)
     await seedOrchard(page, { theme })
     await openOrchard(page)
 
-    // One sign per topic in the "All notebooks" view; untagged trees get none.
-    const signs = page.locator("[data-grove-sign]")
-    await expect(signs).toHaveCount(4)
-    for (const t of [PHOTO, KREBS, OPTICS]) await expect(sign(page, t).locator("[data-sign-label]")).toHaveText(t)
-    // Long names are truncated on the plank but kept whole in the title.
-    await expect(sign(page, MITOSIS)).toHaveAttribute("title", MITOSIS)
-    const label = sign(page, MITOSIS).locator("[data-sign-label]")
-    expect(await label.evaluate(el => el.scrollWidth > el.clientWidth)).toBe(true)
-    await expect(sign(page, PHOTO)).toHaveAttribute("aria-label", `${PHOTO} grove, open recall (3 due)`)
+    // One marker per topic tree (11 of 13); untagged trees get none.
+    const all = await markers(page)
+    expect(all).toHaveLength(11)
+    const boxes = await trees(page)
+    for (const m of all) {
+      const tree = boxes.find(b => b.id === m.tree)!
+      expect(m.text.toLowerCase()).toBe(tree.topic)
+      expect(m.title).toBe(m.text)
+      // In front of the tree, just below its trunk and centred on it, and small next to it.
+      expect(m.top, `${m.text} marker below its trunk`).toBeGreaterThan(tree.bottom - 4)
+      expect(m.top, `${m.text} marker near its trunk`).toBeLessThan(tree.bottom + 40)
+      expect(Math.abs((m.left + m.right) / 2 - tree.cx), `${m.text} marker centred on its tree`).toBeLessThan(6)
+      expect(m.right - m.left, `${m.text} marker no wider than its tree`).toBeLessThan(Math.max(80, tree.right - tree.left))
+    }
+    // Long names are truncated on the marker but kept whole in the title.
+    expect(all.find(m => m.title === MITOSIS)!.truncated).toBe(true)
+    // Markers never cover one another.
+    for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
+      const p = all[i], q = all[j]
+      const overlap = p.left < q.right - 1 && q.left < p.right - 1 && p.top < q.bottom - 1 && q.top < p.bottom - 1
+      expect(overlap, `markers ${p.text} and ${q.text} overlap`).toBe(false)
+    }
 
     // Topic trees planted interleaved (and across notebooks) now stand together: one unbroken run each.
     const order = (await readingOrder(page)).filter(Boolean)
@@ -150,91 +174,95 @@ for (const theme of ["light", "dark"] as const) {
       seen.add(t)
     })
 
-    // Each sign stands in front of its own grove — never over its trunks — and signs don't overlap.
-    await expectSignsInFront(page, [PHOTO, MITOSIS, KREBS, OPTICS])
-    const boxes = await signs.evaluateAll(els => els.map(el => el.getBoundingClientRect().toJSON() as DOMRect))
-    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
-      const p = boxes[i], q = boxes[j]
-      const overlap = p.left < q.right && q.left < p.right && p.top < q.bottom && q.top < p.bottom
-      expect(overlap, `signs ${i} and ${j} overlap`).toBe(false)
-    }
-
-    // Due badge only where cards are due; in the All view it counts every notebook (2 + 1).
-    await expect(sign(page, PHOTO).locator("[data-sign-due]")).toHaveText("3")
-    for (const t of [MITOSIS, KREBS, OPTICS]) await expect(sign(page, t).locator("[data-sign-due]")).toHaveCount(0)
-
-    // Hover a tree, then move onto a sign: the tree lets go (no card left hanging), the
-    // plank lifts, and its grove lights up while the rest fade.
-    const photo = sign(page, PHOTO)
-    const plank = photo.locator(".grove-sign-plank")
-    expect(await plank.evaluate(el => getComputedStyle(el).cursor)).toBe("pointer")
-    const krebsTree = (await trees(page)).find(b => b.topic === KREBS.toLowerCase())!
-    await page.mouse.move(krebsTree.cx, krebsTree.cy)
-    await expect(page.locator(".grove-tree.is-hovered")).toHaveCount(1)
-    const before = (await plank.boundingBox())!
-    await page.mouse.move(before.x + before.width / 2, before.y + before.height / 2, { steps: 6 })
-    await expect(page.locator(".grove-tree.is-hovered")).toHaveCount(0)
-    await expect.poll(async () => (await plank.boundingBox())!.y).toBeLessThan(before.y - 1)
-    await expect(page.locator(".grove-lit")).toHaveCount(4)
-    await expect(page.locator('[data-grove-topic="photosynthesis"].grove-lit')).toHaveCount(4)
-    // Only the wood takes the pointer: beside the post is the field (and the trees) again.
-    const post = (await photo.boundingBox())!
-    await page.mouse.move(post.x + 3, post.y + post.height - 2)
-    await expect(page.locator(".grove-lit")).toHaveCount(0)
-
     const dir = process.env.SIGNPOST_SHOTS
     if (dir) {
       await page.mouse.move(5, 450)
       await page.waitForTimeout(400)
       await page.screenshot({ path: `${dir}/signposts-${theme}.png` })
-      await photo.hover()
-      await page.waitForTimeout(400)
-      await page.screenshot({ path: `${dir}/signposts-${theme}-hover.png` })
     }
 
-    // A screenshot hides the UI chrome (badges included) and puts it back as it was.
-    const badge = sign(page, PHOTO).locator("[data-sign-due]")
-    expect(await badge.evaluate(el => getComputedStyle(el).display)).toBe("flex")
-    await page.getByTitle("Screenshot").click()
-    await page.getByRole("button", { name: "Close", exact: true }).click({ timeout: 30_000 })
-    expect(await badge.evaluate(el => getComputedStyle(el).display)).toBe("flex")
-
-    // Click opens recall for that topic, where most of its cards are due (notebook A).
-    await photo.click()
-    await expect(page.getByText(`Review ${PHOTO}`)).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByText(`${PHOTO} question a-${PHOTO}-0`).or(page.getByText(`${PHOTO} question a-${PHOTO}-1`)).first()).toBeVisible()
+    // A marker is part of its tree: hovering it shows the tree's card, tapping it opens the tree.
+    const krebs = all.find(m => m.text === KREBS)!
+    await page.mouse.move((krebs.left + krebs.right) / 2, (krebs.top + krebs.bottom) / 2)
+    await expect(page.locator(`.grove-tree.is-hovered[data-grove-tree="${krebs.tree}"]`)).toHaveCount(1)
+    await page.mouse.click((krebs.left + krebs.right) / 2, (krebs.top + krebs.bottom) / 2)
+    await expect(card(page).locator("[data-tree-topic]")).toHaveText(KREBS)
+    if (dir) await page.screenshot({ path: `${dir}/signposts-${theme}-card.png` })
   })
 }
 
-test("per-notebook filter shows only that notebook's groves and counts; signs go inert in edit mode", async ({ page }) => {
+test("a tree's card shows its topic and reviews that session, or all of the topic", async ({ page }) => {
+  test.setTimeout(120_000)
+  // Tree 4 (Photosynthesis, notebook A) made 3 cards in its session; the topic has 2 more due in A.
+  await seedOrchard(page, { theme: "dark", sessions: { 4: 3 } })
+  await openOrchard(page)
+
+  await openTree(page, 7004)
+  await expect(card(page).locator("[data-tree-topic]")).toHaveText(PHOTO)
+  await expect(card(page).getByText("Session cards")).toBeVisible()
+  await expect(card(page).locator("[data-review-session]")).toHaveText("Review this session · 3 due")
+  // The topic reaches further than this session: all of it, everywhere (2 + 1 + 3 due).
+  await expect(card(page).locator("[data-review-topic]")).toHaveText(`All of ${PHOTO} · 6 due`)
+  if (process.env.SIGNPOST_SHOTS) await page.screenshot({ path: `${process.env.SIGNPOST_SHOTS}/tree-card-session.png` })
+
+  // Review this session: only the cards this tree's session made.
+  await card(page).locator("[data-review-session]").click()
+  await expect(page.getByText(`Review session · ${PHOTO}`)).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText(/^Session 4 question \d$/)).toBeVisible()
+  await expect(page.getByText(/1 of 3/)).toBeVisible()
+
+  // Another Photosynthesis tree with no session cards: its card recalls the topic.
+  await page.getByTitle("Close", { exact: true }).last().click()
+  await openOrchard(page)
+  await openTree(page, 7000)
+  await expect(card(page).locator("[data-review-session]")).toHaveCount(0)
+  await expect(card(page).locator("[data-review-topic]")).toHaveText(`Recall ${PHOTO} · 6 due`)
+  await card(page).locator("[data-review-topic]").click()
+  await expect(page.getByText(`Review ${PHOTO}`)).toBeVisible({ timeout: 15_000 })
+})
+
+test("an untitled tree can be named from its card; a guessed topic says so", async ({ page }) => {
+  test.setTimeout(120_000)
+  // Tree 2 is untitled; tree 7 carries a topic guessed from the notes (the AI couldn't name it).
+  await seedOrchard(page, { extra: { 7: { topic: "Cell Membranes", topicGuess: true, recallNeeded: 5, recallDone: 0, stage: 2 } } })
+  await openOrchard(page)
+  const before = (await markers(page)).length
+
+  await openTree(page, 7002)
+  await card(page).getByRole("button", { name: /Untitled session/ }).click()
+  await card(page).getByLabel("Topic").fill("Enzymes")
+  await card(page).getByRole("button", { name: "Save" }).click()
+  await expect(card(page).locator("[data-tree-topic]")).toHaveText("Enzymes")
+  await page.mouse.click(150, 880) // backdrop
+  await expect(card(page)).toHaveCount(0)
+  await expect.poll(async () => (await markers(page)).length).toBe(before + 1)
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("pulp-grove")!).grove.find((t: { id: number }) => t.id === 7002).topic)).toBe("Enzymes")
+
+  await openTree(page, 7007)
+  await expect(card(page).locator("[data-tree-topic]")).toHaveText("Cell Membranes")
+  await expect(card(page).getByText(/Guessed from your notes/)).toBeVisible()
+  await card(page).getByRole("button", { name: "rename" }).click()
+  await card(page).getByLabel("Topic").fill("Membranes")
+  await card(page).getByRole("button", { name: "Save" }).click()
+  await expect(card(page).locator("[data-tree-topic]")).toHaveText("Membranes")
+  await expect(card(page).getByText(/Guessed from your notes/)).toHaveCount(0)
+})
+
+test("per-notebook filter shows only that notebook's trees; the recall strip opens a tree", async ({ page }) => {
   test.setTimeout(120_000)
   await seedOrchard(page, { theme: "dark" })
   await openOrchard(page)
-  await expect(page.locator("[data-grove-sign]")).toHaveCount(4)
 
-  // Edit mode: signs step aside (and say so) so drags reach the trees under them.
-  await page.getByTitle("Edit layout").click()
-  expect(await sign(page, OPTICS).locator(".grove-sign-plank").evaluate(el => getComputedStyle(el).pointerEvents)).toBe("none")
-  await expect(sign(page, OPTICS)).toHaveAttribute("aria-disabled", "true")
-  await page.getByTitle("Edit layout").click()
-  expect(await sign(page, OPTICS).locator(".grove-sign-plank").evaluate(el => getComputedStyle(el).pointerEvents)).toBe("auto")
-  await expect(sign(page, OPTICS)).not.toHaveAttribute("aria-disabled")
-
-  // The focused-tree card keeps its own Recall button.
-  await page.getByRole("button", { name: /^Photosynthesis · 3$/ }).click() // "Ready to recall" chip focuses a tree
-  await expect(page.getByRole("button", { name: /^Recall Photosynthesis/ })).toBeVisible()
+  // The "Ready to recall" chip focuses that topic's newest tree, whose card recalls it.
+  await page.getByRole("button", { name: /^Photosynthesis · 3$/ }).click()
+  await expect(card(page).locator("[data-review-topic]")).toHaveText(/^Recall Photosynthesis/)
   await page.mouse.click(150, 880) // backdrop
-  await expect(page.getByRole("button", { name: /^Recall Photosynthesis/ })).toHaveCount(0)
+  await expect(card(page)).toHaveCount(0)
 
-  // Physics only: its two groves, and the badge counts what's due in Physics — what a click opens.
+  // Physics only: its three trees, each with its marker.
   await filterTo(page, /^Physics\s*3$/)
-  await expect(page.locator("[data-grove-sign]")).toHaveCount(2)
   await expect(page.locator("[data-grove-tree]")).toHaveCount(3)
-  await expect(sign(page, OPTICS).locator("[data-sign-label]")).toHaveText(OPTICS)
-  await expect(sign(page, PHOTO).locator("[data-sign-due]")).toHaveText("1")
-  await sign(page, PHOTO).click()
-  await expect(page.getByText(`Review ${PHOTO}`)).toBeVisible({ timeout: 15_000 })
-  await expect(page.getByText(`${PHOTO} question b-${PHOTO}-0`)).toBeVisible()
+  expect((await markers(page)).map(m => m.text).sort()).toEqual([OPTICS, OPTICS, PHOTO])
 })
 
 test("edit-mode drags rearrange within groves or trade whole groves, and never strand a tree", async ({ page }) => {
@@ -250,8 +278,6 @@ test("edit-mode drags rearrange within groves or trade whole groves, and never s
   const krebs = all.filter(b => b.topic === "krebs cycle").sort((p, q) => p.cx - q.cx).at(-1)!
   await drag(page, all.filter(b => b.topic === "photosynthesis").sort((p, q) => p.cx - q.cx).at(-1)!, { x: krebs.cx, y: krebs.cy + 20 })
   expect(await groveSequence(page)).toEqual([KREBS, MITOSIS, PHOTO, OPTICS].map(t => t.toLowerCase()))
-  await expect(sign(page, KREBS)).toHaveCount(1)
-  await expectSignsInFront(page, [PHOTO, MITOSIS, KREBS, OPTICS])
 
   // Within a grove, two trees swap places.
   all = await trees(page)
@@ -291,7 +317,7 @@ test("edit-mode drags rearrange within groves or trade whole groves, and never s
   expect(await groveSequence(page)).toEqual([KREBS, MITOSIS, PHOTO, OPTICS].map(t => t.toLowerCase()))
 })
 
-test("a busy plot keeps each grove on one row, its sign in front and clear of the recall strip", async ({ page }) => {
+test("a busy plot keeps each grove on one row, markers clear of each other and the recall strip", async ({ page }) => {
   test.setTimeout(120_000)
   // 36 trees: 3 untagged, then groves of 7, 5, 4, 6, 3 and 8, planted round-robin. Packed tight
   // they'd wrap rows; the 4 spare slots are enough to give every grove a row of its own.
@@ -302,21 +328,24 @@ test("a busy plot keeps each grove on one row, its sign in front and clear of th
   await seedOrchard(page, { plan, due: { a: [["Alpha", 12]] } })
   await openOrchard(page)
   await expect(page.locator("[data-grove-tree]")).toHaveCount(36)
-  await expect(page.locator("[data-grove-sign]")).toHaveCount(6)
-  await expect(sign(page, "Alpha").locator("[data-sign-due]")).toHaveText("12")
 
   const byRow = rows(await trees(page))
   for (const [t] of sizes) {
     const rowsWith = byRow.filter(r => r.some(b => b.topic === t.toLowerCase()))
     expect(rowsWith.length, `${t} wraps across rows`).toBe(1)
   }
-  // Back rows: each sign hangs below its grove's trunks. The front row's stands on the open
-  // ground before the field, and never under the "Ready to recall" strip.
-  await expectSignsInFront(page, ["Alpha", "Bravo", "Charlie", "Delta", "Echo"])
-  const strip = (await page.locator("[data-recall-strip]").boundingBox())!
-  for (const [t] of sizes) {
-    const plank = (await sign(page, t).locator(".grove-sign-plank").boundingBox())!
-    const under = plank.x < strip.x + strip.width && strip.x < plank.x + plank.width && plank.y + plank.height > strip.y
-    expect(under, `${t} plank under the recall strip`).toBe(false)
+  const all = await markers(page)
+  expect(all).toHaveLength(33)
+  for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
+    const p = all[i], q = all[j]
+    const overlap = p.left < q.right - 1 && q.left < p.right - 1 && p.top < q.bottom - 1 && q.top < p.bottom - 1
+    expect(overlap, `markers ${p.text} and ${q.text} overlap`).toBe(false)
   }
+  // The front row's markers stand clear of the "Ready to recall" strip.
+  const strip = (await page.locator("[data-recall-strip]").boundingBox())!
+  for (const m of all) {
+    const under = m.left < strip.x + strip.width && strip.x < m.right && m.bottom > strip.y
+    expect(under, `${m.text} marker under the recall strip`).toBe(false)
+  }
+  if (process.env.SIGNPOST_SHOTS) await page.screenshot({ path: `${process.env.SIGNPOST_SHOTS}/signposts-busy.png` })
 })
